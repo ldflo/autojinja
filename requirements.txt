@@ -1,0 +1,6 @@
+pytest
+tox
+twine
+wheel
+-r examples/cmake-cpp-client-server/requirements.txt
+-r examples/python-http-client-server/requirements.txt

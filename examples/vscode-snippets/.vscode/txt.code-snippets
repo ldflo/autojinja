@@ -1,0 +1,12 @@
+{
+    // <<[ additional_snippets ]>>
+    //// Insert snippets here ////
+    // <<[ end ]>>
+
+    // Generated snippets
+    "email-sig.txt": {
+        "prefix": ["email-sig"],
+        "body": ["Best regards,",
+                 "${1:firstname} ${2:lastname}$0"],
+    },
+}

@@ -1,0 +1,18 @@
+{
+    // <<[ additional_snippets ]>>
+    //// Insert snippets here ////
+    // <<[ end ]>>
+
+    // Generated snippets
+    "class.py": {
+        "prefix": ["class"],
+        "body": ["class ${1:name}:",
+                 "    def __init__(self, *args, **kwargs):",
+                 "        pass$0"],
+    },
+    "for.py": {
+        "prefix": ["for"],
+        "body": ["for ${1:index} in range(${2:count}):",
+                 "    $0"],
+    },
+}

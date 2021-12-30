@@ -1,0 +1,23 @@
+<ServerApi>
+    <Function name="add">
+        <Description value="Returns arg1 + arg1"/>
+        <ReturnType type="float"/>
+        <Arg name="arg1" type="int"/>
+        <Arg name="arg2" type="float" default="0.1f"/>
+    </Function>
+    <Function name="strip">
+        <Description value="Strips whitespaces, tabulations and end-of-lines"/>
+        <ReturnType type="std::string"/>
+        <Arg name="str" type="const std::string&amp;"/>
+    </Function>
+    <Function name="tochars">
+        <Description value="Returns a vector containing each character of the given string"/>
+        <ReturnType type="std::vector&lt;char&gt;" />
+        <Arg name="str" type="const std::string&amp;"/>
+    </Function>
+    <Function name="fromchars">
+        <Description value="Returns the string of the given character vector"/>
+        <ReturnType type="std::string"/>
+        <Arg name="vector" type="const std::vector&lt;char&gt;&amp;"/>
+    </Function>
+</ServerApi>

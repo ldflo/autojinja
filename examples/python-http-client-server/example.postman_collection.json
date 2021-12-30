@@ -1,0 +1,159 @@
+{
+	"info": {
+		"_postman_id": "0e18c29c-8399-4b6f-91fd-96c8da0db7f8",
+		"name": "Example",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "HelloWorld",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:12345/helloworld",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "12345",
+					"path": [
+						"helloworld"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetParameter",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:12345/parameter?name=param1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "12345",
+					"path": [
+						"parameter"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "param1"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SetParameters",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n    {\"name\": \"param1\", \"value\": \"abc\"},\r\n    {\"name\": \"param2\", \"value\": \"45\"},\r\n    {\"name\": \"param3\", \"value\": \"test\"}\r\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:12345/parameter",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "12345",
+					"path": [
+						"parameter"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SetParameter",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "param1",
+							"type": "text"
+						},
+						{
+							"key": "value",
+							"value": "abc",
+							"type": "text"
+						}
+					],
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:12345/parameter",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "12345",
+					"path": [
+						"parameter"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ClearAllParameters",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:12345/clear/parameters",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "12345",
+					"path": [
+						"clear",
+						"parameters"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "NotImplemented",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:12345/notimplemented",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "12345",
+					"path": [
+						"notimplemented"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

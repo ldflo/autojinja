@@ -1,0 +1,2 @@
+Best regards,
+${1:firstname} ${2:lastname}$0

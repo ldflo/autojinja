@@ -1,0 +1,20 @@
+{
+    // <<[ additional_snippets ]>>
+    //// Insert snippets here ////
+    // <<[ end ]>>
+
+    // Generated snippets
+    "class.cpp": {
+        "prefix": ["class"],
+        "body": ["class ${1:name} {",
+                 "  public:",
+                 "    ${1:name}() {$0}",
+                 "};"],
+    },
+    "for.cpp": {
+        "prefix": ["for"],
+        "body": ["for (int ${1:index}=0; ${1:index} < ${2:count}; ++${1:index}) {",
+                 "    $0",
+                 "}"],
+    },
+}
