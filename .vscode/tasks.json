@@ -37,10 +37,10 @@
             "label": "autojinja: pip-publish",
             "type": "shell",
             "linux": {
-                "command": "python3 setup.py sdist bdist_wheel ; twine check dist/* ; twine upload dist/*",
+                "command": "python3 setup.py sdist bdist_wheel ; python3 -m twine check dist/* ; python3 -m twine upload dist/*",
             },
             "windows": {
-                "command": "python setup.py sdist bdist_wheel ; twine check dist/* ; twine upload dist/*",
+                "command": "python setup.py sdist bdist_wheel ; python -m twine check dist/* ; python -m twine upload dist/*",
             },
         },
         {
