@@ -46,7 +46,7 @@ The template can then be generated with a Python3 script that provides the `valu
 
 ```python
 # main.py
-from autojinja import *
+from autojinja import CogTemplate
 
 template = CogTemplate.from_file("main.cpp")
 template.context(value = "Python here !").render_file()
