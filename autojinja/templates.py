@@ -171,7 +171,6 @@ class BaseTemplate:
                 if self.input and os.path.samefile(self.input, output): # Same file
                     old_content = self.string
                 elif not os.path.isfile(output): # File doesn't exist
-
                     old_content = None
                 else: # File exists
                     with open(output, 'r', encoding = encoding or self.encoding or "utf-8") as file:
