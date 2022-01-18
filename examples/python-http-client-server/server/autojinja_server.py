@@ -31,10 +31,10 @@ def generate_handlers(collection):
 def generator_defs(item):
     with ignore(KeyError):
         for arg in [x for x in item['request']['url']['query']]:
-            yield "{} = request.args['{}']".format(arg['key'], arg['key'])
+            yield f"{arg['key']} = request.args['{arg['key']}']"
     with ignore(KeyError):
         for form in [x for x in item['request']['body']['formdata']]:
-            yield "{} = request.form['{}']".format(form['key'], form['key'])
+            yield f"{form['key']} = request.form['{form['key']}']"
 
 def generator_bodies(item):
     with ignore(KeyError):

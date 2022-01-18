@@ -76,14 +76,14 @@ In the _main_ section of `client/client.py`, a call to each function is generate
 if __name__ == "__main__":
     ### [[[ {{ '\n\n'.join(examples) }} ]]]
     # SetParameters
-    print("Executing {}".format(SetParameters))
+    print("Executing SetParameters")
     rr = SetParameters([
         {"name": "param1", "value": "abc"},
         {"name": "param2", "value": "45"},
         {"name": "param3", "value": "test"}
     ])
-    print("Status code: {}".format(rr.status_code))
-    print("Content: {}".format(rr.text))
+    print(f"Status code: {rr.status_code}")
+    print(f"Content: {rr.text}")
     print()
     ...
     ### [[[ end ]]]

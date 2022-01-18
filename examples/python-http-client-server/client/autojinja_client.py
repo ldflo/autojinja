@@ -38,10 +38,10 @@ def generator_function_args(item):
 def generator_function_defs(item):
     with ignore(KeyError):
         params = [x for x in item['request']['url']['query']]
-        yield "params = {}".format(bound_json(params))
+        yield f"params = {bound_json(params)}"
     with ignore(KeyError):
         forms = [x for x in item['request']['body']['formdata']]
-        yield "forms = {}".format(bound_json(forms))
+        yield f"forms = {bound_json(forms)}"
 
 def generator_function_bodies(item):
     with ignore(KeyError):
@@ -67,16 +67,16 @@ def generator_function_binds(item):
 def bound_json(args):
     """ Allows to create a Json binding to the given arguments, without quotes
     """
-    object = {arg['key']: "@@{}@@".format(arg['key']) for arg in args} # Usage of @@ marker
+    object = {arg['key']: f"@@{arg['key']}@@" for arg in args} # Usage of @@ marker
     return json.dumps(object).replace('"@@', '').replace('@@"', '') # Remove quotes and @@ markers
 
 ### Prepare a template for examples
 example_template = RawTemplate.from_string("""
 # {{ name }}
-print("Executing {}".format({{ name }}))
+print("Executing {{ name }}")
 rr = {{ name }}({{ ', '.join(args) }})
-print("Status code: {}".format(rr.status_code))
-print("Content: {}".format(rr.text))
+print(f"Status code: {rr.status_code}")
+print(f"Content: {rr.text}")
 print()
 """.strip())
 
@@ -89,9 +89,9 @@ def generate_examples(item):
 # Prepare a context generator for above template
 def generator_example_args(item):
     with ignore(KeyError):
-        yield from ['"{}"'.format(x['value']) for x in item['request']['url']['query']]
+        yield from [f"\"{x['value']}\"" for x in item['request']['url']['query']]
     with ignore(KeyError):
-        yield from ['"{}"'.format(x['value']) for x in item['request']['body']['formdata']]
+        yield from [f"\"{x['value']}\"" for x in item['request']['body']['formdata']]
     with ignore(KeyError):
         yield item['request']['body']['raw'].replace('\r', '')
 

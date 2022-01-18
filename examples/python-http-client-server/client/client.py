@@ -36,48 +36,48 @@ def NotImplemented():
 if __name__ == "__main__":
     ### [[[ {{ '\n\n'.join(examples) }} ]]]
     # HelloWorld
-    print("Executing {}".format(HelloWorld))
+    print("Executing HelloWorld")
     rr = HelloWorld()
-    print("Status code: {}".format(rr.status_code))
-    print("Content: {}".format(rr.text))
+    print(f"Status code: {rr.status_code}")
+    print(f"Content: {rr.text}")
     print()
     
     # GetParameter
-    print("Executing {}".format(GetParameter))
+    print("Executing GetParameter")
     rr = GetParameter("param1")
-    print("Status code: {}".format(rr.status_code))
-    print("Content: {}".format(rr.text))
+    print(f"Status code: {rr.status_code}")
+    print(f"Content: {rr.text}")
     print()
     
     # SetParameters
-    print("Executing {}".format(SetParameters))
+    print("Executing SetParameters")
     rr = SetParameters([
         {"name": "param1", "value": "abc"},
         {"name": "param2", "value": "45"},
         {"name": "param3", "value": "test"}
     ])
-    print("Status code: {}".format(rr.status_code))
-    print("Content: {}".format(rr.text))
+    print(f"Status code: {rr.status_code}")
+    print(f"Content: {rr.text}")
     print()
     
     # SetParameter
-    print("Executing {}".format(SetParameter))
+    print("Executing SetParameter")
     rr = SetParameter("param1", "abc")
-    print("Status code: {}".format(rr.status_code))
-    print("Content: {}".format(rr.text))
+    print(f"Status code: {rr.status_code}")
+    print(f"Content: {rr.text}")
     print()
     
     # ClearAllParameters
-    print("Executing {}".format(ClearAllParameters))
+    print("Executing ClearAllParameters")
     rr = ClearAllParameters()
-    print("Status code: {}".format(rr.status_code))
-    print("Content: {}".format(rr.text))
+    print(f"Status code: {rr.status_code}")
+    print(f"Content: {rr.text}")
     print()
     
     # NotImplemented
-    print("Executing {}".format(NotImplemented))
+    print("Executing NotImplemented")
     rr = NotImplemented()
-    print("Status code: {}".format(rr.status_code))
-    print("Content: {}".format(rr.text))
+    print(f"Status code: {rr.status_code}")
+    print(f"Content: {rr.text}")
     print()
     ### [[[ end ]]]
