@@ -3,7 +3,7 @@ Visits directories and executes python scripts to perform content generation
 
 Usage
 -----
-autojinja [OPTIONS] (PYTHON_SCRIPT | DIRECTORY) ...
+autojinja [OPTIONS] (PYTHON_SCRIPT | DIRECTORY)...
 
 Examples
 --------
