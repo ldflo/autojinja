@@ -168,11 +168,11 @@ class BaseTemplate:
                 assert output != None, "output filepath parameter can't be None"
                 ### Retrieve output edits
                 self.parser.edits_to_generate = self.parser.edit_markers.copy()
-                if self.input and os.path.samefile(self.input, output): # Same file
-                    old_content = self.string
-                elif not os.path.isfile(output): # File doesn't exist
+                if not os.path.isfile(output): # File doesn't exist
                     old_content = None
-                else: # File exists
+                elif self.input and os.path.samefile(self.input, output): # Same file
+                    old_content = self.string
+                else: # Not same file
                     with open(output, 'r', encoding = encoding or self.encoding or "utf-8") as file:
                         old_content = file.read()
                         edit_markers = utils.edit_markers_from_string(old_content, self.settings)
