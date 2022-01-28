@@ -94,10 +94,8 @@ def parse_envvars(env, values):
 
 def parse_envfile(env, envfile):
     """ Loads the given environment file and appends all environment variables to the given environment dictionary.
-        For each variable, relative paths (relatively to the environment file) are made absolute if such paths exist.
-        This also works for multiple paths between ':' (on Unix) or ';' (on Windows and Unix).
+        The special environment variable ${THIS_DIRPATH} can be used to refer to the environment file location. 
     """
-    envdir = path(envfile).abspath.dirpath
     with open(envfile, encoding = "utf-8") as file:
         lines = [line.split('#', 1)[0].strip() for line in file.readlines()] # Remove comments
         lines = [line for line in lines if line] # Remove empty lines
@@ -105,24 +103,15 @@ def parse_envfile(env, envfile):
             splits = line.split('=', 1)
             name = splits[0].strip()
             if len(splits) == 1:
-                env[name] = ""
+                env[name] = "" # No value defined
             else:
+                exists = defaults.AUTOJINJA_THIS_DIRPATH in env
+                if not exists:
+                    env[defaults.AUTOJINJA_THIS_DIRPATH] = path(envfile).abspath.dirpath[:-1]
                 value = evaluate_env(env, splits[1].strip())
-                tmp = ""
-                separator = os_pathsep(value)
-                splits = [split.strip() for split in value.split(separator)]
-                lines = [split for split in splits if split] # Remove empty splits
-                for split in splits:
-                    abspath = split if path(split).isabs else envdir.join(split)
-                    if abspath.exists:
-                        tmp = f"{tmp}{separator}{abspath}"
-                    else:
-                        tmp = None # Not an existing path
-                        break
-                if tmp == None:
-                    env[name] = value.strip()
-                else:
-                    env[name] = tmp.strip(separator)
+                env[name] = value.strip()
+                if not exists:
+                    del env[defaults.AUTOJINJA_THIS_DIRPATH]
 
 def evaluate_env(env, value):
     """ Evaluates the given string with the appropriate environment variables' value.

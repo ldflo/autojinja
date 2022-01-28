@@ -36,12 +36,12 @@ class ParserSettings:
     def remove_markers(self, remove_markers):
         if remove_markers != None:
             self._removeMarkers = remove_markers
-        elif AUTOJINJA_ARG_REMOVE_MARKERS not in os.environ:
+        elif AUTOJINJA_REMOVE_MARKERS not in os.environ:
             self._removeMarkers = False
         else:
-            value = os.environ[AUTOJINJA_ARG_REMOVE_MARKERS]
+            value = os.environ[AUTOJINJA_REMOVE_MARKERS]
             if not value.isdigit() or int(value) < 0 or int(value) > 1:
-                raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_ARG_REMOVE_MARKERS}'")
+                raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_REMOVE_MARKERS}'")
             self._removeMarkers = True if int(value) else False
 
 class Parser:

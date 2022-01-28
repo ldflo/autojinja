@@ -101,16 +101,16 @@ file11 = root.join("script_remove_markers.py")
 with open(file11, 'w') as f:
     f.write(f"import os\n" \
             f"with open('{output}', 'a') as f:\n" \
-            f"    if '{autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS}' in os.environ:\n" \
-            f"        f.write(os.environ['{autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS}'] + '\\n')\n")
+            f"    if '{autojinja.defaults.AUTOJINJA_REMOVE_MARKERS}' in os.environ:\n" \
+            f"        f.write(os.environ['{autojinja.defaults.AUTOJINJA_REMOVE_MARKERS}'] + '\\n')\n")
 
 # TestSilent
 file12 = root.join("script_silent.py")
 with open(file12, 'w') as f:
     f.write(f"import os\n" \
             f"with open('{output}', 'a') as f:\n" \
-            f"    if '{autojinja.defaults.AUTOJINJA_ARG_SILENT}' in os.environ:\n" \
-            f"        f.write(os.environ['{autojinja.defaults.AUTOJINJA_ARG_SILENT}'] + '\\n')\n")
+            f"    if '{autojinja.defaults.AUTOJINJA_SILENT}' in os.environ:\n" \
+            f"        f.write(os.environ['{autojinja.defaults.AUTOJINJA_SILENT}'] + '\\n')\n")
 file13 = root.join("script_silent_faulty.py")
 with open(file13, 'w') as f:
     f.write(f"import sys\n" \
@@ -292,69 +292,69 @@ class TestRemoveMarkers:
 
     def test_4(self):
         clear_output()
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS] = "0"
+        os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS] = "0"
         autojinja.main(file11)
         assert read_output() == f"0\n"
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS]
+        del os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS]
 
     def test_5(self):
         clear_output()
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS] = "0"
+        os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS] = "0"
         autojinja.main("--remove-markers", "0", file11)
         assert read_output() == f"0\n"
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS]
+        del os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS]
 
     def test_6(self):
         clear_output()
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS] = "0"
+        os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS] = "0"
         autojinja.main("--remove-markers", "1", file11)
         assert read_output() == f"1\n"
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS]
+        del os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS]
 
     def test_7(self):
         clear_output()
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS] = "1"
+        os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS] = "1"
         autojinja.main(file11)
         assert read_output() == f"1\n"
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS]
+        del os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS]
 
     def test_8(self):
         clear_output()
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS] = "1"
+        os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS] = "1"
         autojinja.main("--remove-markers", "0", file11)
         assert read_output() == f"0\n"
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS]
+        del os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS]
 
     def test_9(self):
         clear_output()
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS] = "1"
+        os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS] = "1"
         autojinja.main("--remove-markers", "1", file11)
         assert read_output() == f"1\n"
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS]
+        del os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS]
 
     def test_10(self):
         clear_output()
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS] = "0"
-        autojinja.main("--env", f"{autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS}=1", file11)
+        os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS] = "0"
+        autojinja.main("--env", f"{autojinja.defaults.AUTOJINJA_REMOVE_MARKERS}=1", file11)
         assert read_output() == f"1\n"
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS]
+        del os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS]
 
     def test_11(self):
         clear_output()
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS] = "0"
-        autojinja.main("--remove-markers", "1", "--env", f"{autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS}=0", file11)
+        os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS] = "0"
+        autojinja.main("--remove-markers", "1", "--env", f"{autojinja.defaults.AUTOJINJA_REMOVE_MARKERS}=0", file11)
         assert read_output() == f"1\n"
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS]
+        del os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS]
 
     def test_12(self):
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS] = "abc"
-        message = f"Expected 0 or 1 for environment variable '{autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS}'"
+        os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS] = "abc"
+        message = f"Expected 0 or 1 for environment variable '{autojinja.defaults.AUTOJINJA_REMOVE_MARKERS}'"
         invalid_autojinja(Exception, message, file11)
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS]
+        del os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS]
 
     def test_13(self):
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS] = "abc"
-        message = f"Expected 0 or 1 for environment variable '{autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS}'"
+        os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS] = "abc"
+        message = f"Expected 0 or 1 for environment variable '{autojinja.defaults.AUTOJINJA_REMOVE_MARKERS}'"
         try:
             autojinja.ParserSettings()
         except BaseException as e:
@@ -363,7 +363,7 @@ class TestRemoveMarkers:
             exception = None
         if str(exception) != str(message):
             raise CustomException(exception, message)
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_REMOVE_MARKERS]
+        del os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS]
 
 class TestSilent:
     def test_1(self):
@@ -378,40 +378,40 @@ class TestSilent:
 
     def test_3(self):
         clear_output()
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_SILENT] = "0"
+        os.environ[autojinja.defaults.AUTOJINJA_SILENT] = "0"
         autojinja.main(file12)
         assert read_output() == f"0\n"
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_SILENT]
+        del os.environ[autojinja.defaults.AUTOJINJA_SILENT]
 
     def test_4(self):
         clear_output()
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_SILENT] = "1"
+        os.environ[autojinja.defaults.AUTOJINJA_SILENT] = "1"
         autojinja.main(file12)
         assert read_output() == f"1\n"
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_SILENT]
+        del os.environ[autojinja.defaults.AUTOJINJA_SILENT]
 
     def test_5(self):
         clear_output()
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_SILENT] = "0"
+        os.environ[autojinja.defaults.AUTOJINJA_SILENT] = "0"
         autojinja.main("--silent", file12)
         assert read_output() == f"1\n"
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_SILENT]
+        del os.environ[autojinja.defaults.AUTOJINJA_SILENT]
 
     def test_6(self):
         clear_output()
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_SILENT] = "1"
+        os.environ[autojinja.defaults.AUTOJINJA_SILENT] = "1"
         autojinja.main("--silent", file12)
         assert read_output() == f"1\n"
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_SILENT]
+        del os.environ[autojinja.defaults.AUTOJINJA_SILENT]
 
     def test_7(self):
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_SILENT] = "abc"
-        message = f"Expected 0 or 1 for environment variable '{autojinja.defaults.AUTOJINJA_ARG_SILENT}'"
+        os.environ[autojinja.defaults.AUTOJINJA_SILENT] = "abc"
+        message = f"Expected 0 or 1 for environment variable '{autojinja.defaults.AUTOJINJA_SILENT}'"
         invalid_autojinja(Exception, message, file12)
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_SILENT]
+        del os.environ[autojinja.defaults.AUTOJINJA_SILENT]
 
     def test_8(self):
-        os.environ[autojinja.defaults.AUTOJINJA_ARG_SILENT] = "1"
+        os.environ[autojinja.defaults.AUTOJINJA_SILENT] = "1"
         message_start = f"error1\nprint1\nerror2\nprint2\n"
         message_end = f"Error 1 while executing script at path \"{file13}\""
         try:
@@ -422,4 +422,4 @@ class TestSilent:
             exception = None
         assert str(exception).startswith(message_start) == True
         assert str(exception).endswith(message_end) == True
-        del os.environ[autojinja.defaults.AUTOJINJA_ARG_SILENT]
+        del os.environ[autojinja.defaults.AUTOJINJA_SILENT]

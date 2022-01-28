@@ -1019,11 +1019,11 @@ Environments files are composed of one definition per line :
 ```bash
 # file.env
 VAR2=/tmp/dir1
-VAR3 = input.txt
+VAR3=${THIS_DIRPATH}/input.txt
 VAR4=${VAR2}/${VAR3}
 ```
 
-When using an environment file, relative paths are made absolute if such paths exist relatively to the environment file location. This also works for multiple paths between `:` separator (for Unix) or `;` separator (for Windows and Unix).
+The special environment variable `THIS_DIRPATH` can be used to refer to the environment file location, which allows to construct absolute paths that can be directly used inside the Python scripts.
 
 # Advanced Jinja2 features
 

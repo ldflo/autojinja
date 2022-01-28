@@ -98,13 +98,13 @@ def main(*arguments):
                              "Appended to environment variable 'PYTHONPATH'")
     parser.add_argument("--remove-markers",
                         help=f"removes markers from generated outputs\n"
-                             f"Default value is '0' or environment variable '{AUTOJINJA_ARG_REMOVE_MARKERS}'\n"
-                             f"Overrides environment variable '{AUTOJINJA_ARG_REMOVE_MARKERS}'")
+                             f"Default value is '0' or environment variable '{AUTOJINJA_REMOVE_MARKERS}'\n"
+                             f"Overrides environment variable '{AUTOJINJA_REMOVE_MARKERS}'")
     parser.add_argument("--silent",
                         action="store_true",
                         help=f"prevents executed python scripts from writing to stdout/stderr\n"
-                             f"Enabled if environment variable '{AUTOJINJA_ARG_SILENT}' == 1\n"
-                             f"Overrides environment variable '{AUTOJINJA_ARG_SILENT}'")
+                             f"Enabled if environment variable '{AUTOJINJA_SILENT}' == 1\n"
+                             f"Overrides environment variable '{AUTOJINJA_SILENT}'")
 
     args = parser.parse_args(arguments)
 
@@ -184,23 +184,23 @@ def main(*arguments):
 
     # Additional options
     if args.remove_markers == None:
-        if not AUTOJINJA_ARG_REMOVE_MARKERS in env:
+        if not AUTOJINJA_REMOVE_MARKERS in env:
             args.remove_markers = "0"
         else:
-            args.remove_markers = env[AUTOJINJA_ARG_REMOVE_MARKERS]
+            args.remove_markers = env[AUTOJINJA_REMOVE_MARKERS]
             if not args.remove_markers.isdigit() or int(args.remove_markers) < 0 or int(args.remove_markers) > 1:
-                raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_ARG_REMOVE_MARKERS}'")
-    env[AUTOJINJA_ARG_REMOVE_MARKERS] = args.remove_markers
+                raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_REMOVE_MARKERS}'")
+    env[AUTOJINJA_REMOVE_MARKERS] = args.remove_markers
 
     if not args.silent:
-        if not AUTOJINJA_ARG_SILENT in env:
+        if not AUTOJINJA_SILENT in env:
             args.silent = 0
         else:
-            args.silent = env[AUTOJINJA_ARG_SILENT]
+            args.silent = env[AUTOJINJA_SILENT]
             if not args.silent.isdigit() or int(args.silent) < 0 or int(args.silent) > 1:
-                raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_ARG_SILENT}'")
+                raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_SILENT}'")
             args.silent = int(args.silent)
-    env[AUTOJINJA_ARG_SILENT] = "1" if args.silent else "0"
+    env[AUTOJINJA_SILENT] = "1" if args.silent else "0"
 
     ### Execute python scripts
     for script in files:

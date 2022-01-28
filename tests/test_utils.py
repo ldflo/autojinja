@@ -36,7 +36,7 @@ with open(file4, 'w') as f:
     f.write("VAR1=42\n" \
             "VAR3 = ${VAR1}\n" \
             "VAR4 = Test string \n" \
-            "   VAR5 =Test string= ")
+            "   VAR5 =${THIS_DIRPATH}/")
 
 class Test:
     def test_file_tagged(self):
@@ -179,7 +179,7 @@ class Test:
         assert env["VAR2"] == "2"
         assert env["VAR3"] == "42"
         assert env["VAR4"] == "Test string"
-        assert env["VAR5"] == "Test string="
+        assert env["VAR5"] == autojinja.path(file4).abspath.dirpath
 
     def test_evaluate(self):
         env = {"VAR1" : "1",
