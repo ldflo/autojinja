@@ -74,7 +74,7 @@ In the _main_ section of `client/client.py`, a call to each function is generate
 
 ```python
 if __name__ == "__main__":
-    ### [[[ {{ '\n\n'.join(examples) }} ]]]
+    ### [[[ {{ examples }} ]]]
     # SetParameters
     print("Executing SetParameters")
     rr = SetParameters([

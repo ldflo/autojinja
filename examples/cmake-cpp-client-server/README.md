@@ -51,7 +51,7 @@ float add(int arg1, float arg2) {
 
 ```cpp
 switch (deserialize<unsigned int>(ptr)) {
-    // [[[ {{ '\n'.join(server_impls) }} ]]]
+    // [[[ {{ server_impls }} ]]]
     case 1u: { /* add */
         int arg1 = deserialize<int>(ptr);
         float arg2 = deserialize<float>(ptr);
