@@ -3,7 +3,7 @@ autojinja(__jinja__.py
         ServerApi.cpp
         Server.cpp
     DEPENDS
-        "${XML_DIRPATH}/**"
+        ${SERVER_XML}
 )
 
 add_library(libserver STATIC ${autojinja})

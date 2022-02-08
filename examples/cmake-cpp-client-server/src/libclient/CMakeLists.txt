@@ -2,7 +2,7 @@ autojinja(__jinja__.py
     GENERATES 
         ClientApi.cpp 
     DEPENDS 
-        "${XML_DIRPATH}/**"
+        ${SERVER_XML}
 )
 
 add_library(libclient STATIC ${autojinja})

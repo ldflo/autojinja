@@ -6,7 +6,6 @@ include(autojinja.cmake)
 ### autojinja environment
 autojinja_environment(autojinja.env)
 autojinja_dependencies(utility/**)
-set(XML_DIRPATH "${CMAKE_CURRENT_SOURCE_DIR}/xml")
 
 ### project
 project(cmake-cpp-client-server LANGUAGES CXX)
