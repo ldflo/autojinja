@@ -9,7 +9,7 @@ parameters = {}
 ###        Server API       ###
 ###############################
 
-### [[[ {{ '\n\n'.join(handlers) }} ]]]
+### [[[ {{ handlers }} ]]]
 @app.route('/helloworld', methods=['GET'])
 def HelloWorld():
     # <<[ impl_HelloWorld ]>>
@@ -60,6 +60,7 @@ def NotImplemented():
     # <<[ impl_NotImplemented ]>>
     return "Not implemented", 501
     # <<[ end ]>>
+
 ### [[[ end ]]]
 
 if __name__ == "__main__":

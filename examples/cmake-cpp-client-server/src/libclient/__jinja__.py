@@ -2,7 +2,7 @@ from autojinja import *
 from lxml import etree
 import utility
 
-# Read XML
+### Read XML
 xroot = etree.parse(os.environ["SERVER_XML"])
 xfunctions = xroot.xpath("Function")
 
@@ -10,16 +10,15 @@ xfunctions = xroot.xpath("Function")
 ###           ClientApi.h           ###
 #######################################
 
-# Load 'ClientApi.h' file as a template
+### Insert inside 'ClientApi.h'
 file_template = CogTemplate.from_file("ClientApi.h")
-### Generate 'ClientApi.h'
 file_template.context(api_defs = utility.function_defs(xfunctions)).render_file()
 
 #######################################
 ###          ClientApi.cpp          ###
 #######################################
 
-### Prepare a template for client API implementations
+# Prepare a template for client API implementations
 implementation = RawTemplate.from_string("""
 std::unique_lock<std::mutex> lock(shared_memory::mutex);
 shared_memory::clear();
@@ -43,7 +42,6 @@ def implementation_func(xfunction):
                                   Args = xfunction.xpath("Arg"),
                                   ReturnType = xfunction.xpath("ReturnType/@type")[0]).render()
 
-# Load 'ClientApi.cpp' file as a template
+### Insert inside 'ClientApi.cpp'
 file_template = CogTemplate.from_file("ClientApi.cpp")
-### Generate 'ClientApi.cpp'
 file_template.context(api_impls = utility.function_impls(xfunctions, implementation_func)).render_file()

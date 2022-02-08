@@ -1,7 +1,12 @@
 from autojinja import *
 from collections import defaultdict
 
-### Prepare a template for creating VSCode snippet files
+### Find recursively all files in 'snippets/' directory and group by extenstion
+snippet_dict = defaultdict(list)
+for snippet_file in path("snippets/").files("**"):
+    snippet_dict[snippet_file.ext].append(snippet_file)
+
+### Prepare a template for creating each VSCode snippet file
 file_template = JinjaTemplate.from_string("""
 {
     // <<[ additional_snippets ]>>
@@ -9,35 +14,28 @@ file_template = JinjaTemplate.from_string("""
     // <<[ end ]>>
 
     // Generated snippets
-    {% for snippet in snippets %}
-    "{{ snippet.id }}": {
-        "prefix": ["{{ snippet.name }}"],
-        "body": ["{{ '",\n                 "'.join(snippet.lines) }}"],
+    {% for snippet_file in snippet_files %}
+    "{{ snippet_id(snippet_file) }}": {
+        "prefix": ["{{ snippet_name(snippet_file) }}"],
+        "body": ["{{ '",\n                 "'.join(snippet_lines(snippet_file)) }}"],
     },
     {% endfor %}
 }
 """.lstrip())
 
-# Prepare a context generator for above template
-def generator_snippets(snippet_files):
-    for snippet_file in snippet_files:
-        with open(snippet_file) as file:
-            class Snippet:
-                id = snippet_file.filename
-                name = snippet_file.filename.no_ext
-                lines = file.read().replace('\\', '\\\\').replace('\t', '\\t').splitlines()
-            yield Snippet
-
-# Find recursively all files in 'snippets/' directory
-snippets_files = path("snippets/").files("**")
-
-# Group by file extension
-snippet_dict = defaultdict(list)
-for snippet_file in snippets_files:
-    snippet_dict[snippet_file.ext].append(snippet_file)
+# Prepare some helpers for above template
+def snippet_id(snippet_file):
+    return snippet_file.filename
+def snippet_name(snippet_file):
+    return snippet_file.filename.no_ext
+def snippet_lines(snippet_file):
+    with open(snippet_file) as file:
+        return file.read().replace('\\', '\\\\').replace('\t', '\\t').splitlines()
 
 for extension in snippet_dict.keys():
     # Resolve destination file based on file extension
     filepath = f".vscode/{extension[1:]}.code-snippets"
-    ### Generate the destination snippet file
-    file_template.context(snippets = generator_snippets(snippet_dict[extension])).render_file(filepath)
+    snippet_files = snippet_dict[extension]
+    # Generate the above template.
+    # The template has direct access to the current Python scope
+    file_template.context(**locals()).render_file(filepath)

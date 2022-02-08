@@ -6,7 +6,7 @@ TARGET = "http://127.0.0.1:12345"
 ###        Client API        ###
 ################################
 
-### [[[ {{ '\n'.join(functions) }} ]]]
+### [[[ {{ functions }} ]]]
 def HelloWorld():
     return requests.get(TARGET + '/helloworld')
 def GetParameter(name):
@@ -34,7 +34,7 @@ def NotImplemented():
 ################################
 
 if __name__ == "__main__":
-    ### [[[ {{ '\n\n'.join(examples) }} ]]]
+    ### [[[ {{ examples }} ]]]
     # HelloWorld
     print("Executing HelloWorld")
     rr = HelloWorld()
@@ -80,4 +80,5 @@ if __name__ == "__main__":
     print(f"Status code: {rr.status_code}")
     print(f"Content: {rr.text}")
     print()
+    
     ### [[[ end ]]]

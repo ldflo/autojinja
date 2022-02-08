@@ -1,4 +1,9 @@
-autojinja(__jinja__.py GENERATES ClientApi.cpp)
+autojinja(__jinja__.py 
+    GENERATES 
+        ClientApi.cpp 
+    DEPENDS 
+        "${XML_DIRPATH}/**"
+)
 
 add_library(libclient STATIC ${autojinja})
 target_include_directories(libclient PUBLIC .)
