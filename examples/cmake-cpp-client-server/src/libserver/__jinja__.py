@@ -18,7 +18,7 @@ file_template.context(api_defs = utility.function_defs(xfunctions)).render_file(
 ###          ServerApi.cpp          ###
 #######################################
 
-### Prepare a template for server API implementations
+# Prepare a template for server API implementations
 implementation = RawTemplate.from_string("""
 // <<[ impl_{{ Name }} ]>>
 static_assert(false, "ServerApi::{{ Name }} is not implemented...");
