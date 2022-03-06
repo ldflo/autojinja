@@ -17,7 +17,7 @@ setuptools.setup(
     long_description=README,
     platforms="OS Independent",
     classifiers=[
-        'Development Status :: 4 - Beta',
+        "Development Status :: 4 - Beta",
         "Environment :: Console",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: BSD License",
@@ -31,5 +31,5 @@ setuptools.setup(
     ],
     packages=["autojinja"],
     install_requires=["jinja2"],
-    entry_points={"console_scripts": ["autojinja=autojinja.__main__:entry_point"]}
+    entry_points={"console_scripts": ["autojinja=autojinja.__main__:entry_point"]},
 )
