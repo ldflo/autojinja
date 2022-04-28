@@ -335,6 +335,17 @@ class Test:
         assert autojinja.path.slash("/dir1\\")              == "/dir1/"
         assert autojinja.path.slash("/dir1/file.txt")       == "/dir1/file.txt/"
         assert autojinja.path.slash("/dir1\\dir2/file.txt") == "/dir1/dir2/file.txt/"
+        
+    def no_slash(self):
+        assert autojinja.path.no_slash("")                     == ""
+        assert autojinja.path.no_slash("file.txt")             == "file.txt"
+        assert autojinja.path.no_slash("/file.txt")            == "/file.txt"
+        assert autojinja.path.no_slash("C:/")                  == "C:"
+        assert autojinja.path.no_slash("\\")                   == ""
+        assert autojinja.path.no_slash("/dir1")                == "/dir1"
+        assert autojinja.path.no_slash("/dir1\\")              == "/dir1"
+        assert autojinja.path.no_slash("/dir1/file.txt")       == "/dir1/file.txt"
+        assert autojinja.path.no_slash("/dir1\\dir2/file.txt") == "/dir1/dir2/file.txt"
 
     def no_antislash(self):
         assert autojinja.path.no_antislash("")                     == ""
@@ -664,6 +675,17 @@ class TestPath:
         assert autojinja.path("/dir1\\").slash              == "/dir1/"
         assert autojinja.path("/dir1/file.txt").slash       == "/dir1/file.txt/"
         assert autojinja.path("/dir1\\dir2/file.txt").slash == "/dir1/dir2/file.txt/"
+        
+    def no_slash(self):
+        assert autojinja.path("").no_slash                     == ""
+        assert autojinja.path("file.txt").no_slash             == "file.txt"
+        assert autojinja.path("/file.txt").no_slash            == "/file.txt"
+        assert autojinja.path("C:/").no_slash                  == "C:"
+        assert autojinja.path("\\").no_slash                   == ""
+        assert autojinja.path("/dir1").no_slash                == "/dir1"
+        assert autojinja.path("/dir1\\").no_slash              == "/dir1"
+        assert autojinja.path("/dir1/file.txt").no_slash       == "/dir1/file.txt"
+        assert autojinja.path("/dir1\\dir2/file.txt").no_slash == "/dir1/dir2/file.txt"
 
     def no_antislash(self):
         assert autojinja.path("").no_antislash                     == ""

@@ -162,6 +162,13 @@ def slash(path): # type: (str) -> str
         return path
     return path + '/'
 
+def no_slash(path): # type: (str) -> str
+    if not path:
+        return ""
+    if path[-1] in ['/', '\\']:
+        return no_antislash(path[:-1])
+    return no_antislash(path)
+
 def no_antislash(path): # type: (str) -> str
     """ \dir1\dir2\file.txt -> /dir1/dir2/file.txt/
         \dir1\dir2\         -> /dir1/dir2/
@@ -262,6 +269,9 @@ class Path(str):
     @property
     def slash(self):
         path = slash(self)
+        return Path(path)
+    def no_slash(self):
+        path = no_slash(self)
         return Path(path)
 
 class PathWrapper:
