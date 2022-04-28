@@ -66,7 +66,7 @@ class jsonitem:
             item['request']['body']['raw']
             if nobinds: nobinds = False; yield '' # First comma
             yield "json = payload"
-            
+
     def bound_json(args):
         """ Allows to create a Json binding to the given arguments, without quotes
         """

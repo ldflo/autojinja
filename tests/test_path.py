@@ -25,7 +25,7 @@ class Test:
         assert autojinja.path.join("/dir1", "file.txt")       == "/dir1/file.txt"
         assert autojinja.path.join("\\dir1/", "file.txt")     == "/dir1/file.txt"
         assert autojinja.path.join("/dir1\\dir2", "file.txt") == "/dir1/dir2/file.txt"
-        
+
     def test_join_brackets(self):
         assert autojinja.path.join["file.txt"]                == "file.txt/"
         assert autojinja.path.join["", "file.txt"]            == "file.txt/"
@@ -290,7 +290,7 @@ class Test:
         assert autojinja.path.no_ext("/dir1\\")              == "/dir1/"
         assert autojinja.path.no_ext("/dir1/file")           == "/dir1/file"
         assert autojinja.path.no_ext("/dir1\\dir2/file.txt") == "/dir1/dir2/file"
-        
+
     def test_fullext(self):
         assert autojinja.path.fullext("")                     == ""
         assert autojinja.path.fullext("file.ext.txt")         == ".ext.txt"
@@ -335,7 +335,7 @@ class Test:
         assert autojinja.path.slash("/dir1\\")              == "/dir1/"
         assert autojinja.path.slash("/dir1/file.txt")       == "/dir1/file.txt/"
         assert autojinja.path.slash("/dir1\\dir2/file.txt") == "/dir1/dir2/file.txt/"
-        
+
     def no_slash(self):
         assert autojinja.path.no_slash("")                     == ""
         assert autojinja.path.no_slash("file.txt")             == "file.txt"
@@ -366,7 +366,7 @@ class TestPath:
         assert autojinja.path("/dir1").join("file.txt")       == "/dir1/file.txt"
         assert autojinja.path("\\dir1/").join("file.txt")     == "/dir1/file.txt"
         assert autojinja.path("/dir1\\dir2").join("file.txt") == "/dir1/dir2/file.txt"
-        
+
     def test_join_brackets(self):
         assert autojinja.path("").join["file.txt"]                 == "file.txt/"
         assert autojinja.path("/").join["file.txt"]                == "/file.txt/"
@@ -374,7 +374,7 @@ class TestPath:
         assert autojinja.path("/dir1").join["file.txt", "a"]       == "/dir1/file.txt/a/"
         assert autojinja.path("\\dir1/").join["file.txt", "a"]     == "/dir1/file.txt/a/"
         assert autojinja.path("/dir1\\dir2").join["file.txt", "a"] == "/dir1/dir2/file.txt/a/"
-        
+
     def test_add(self):
         assert autojinja.path("").add("file.txt")            == "file.txt"
         assert autojinja.path("/").add("file.txt")           == "/file.txt"
@@ -630,7 +630,7 @@ class TestPath:
         assert autojinja.path("/dir1\\").no_ext              == "/dir1/"
         assert autojinja.path("/dir1/file.txt").no_ext       == "/dir1/file"
         assert autojinja.path("/dir1\\dir2/file.txt").no_ext == "/dir1/dir2/file"
-        
+
     def test_fullext(self):
         assert autojinja.path("").fullext                     == ""
         assert autojinja.path("file.ext.txt").fullext         == ".ext.txt"
@@ -675,7 +675,7 @@ class TestPath:
         assert autojinja.path("/dir1\\").slash              == "/dir1/"
         assert autojinja.path("/dir1/file.txt").slash       == "/dir1/file.txt/"
         assert autojinja.path("/dir1\\dir2/file.txt").slash == "/dir1/dir2/file.txt/"
-        
+
     def no_slash(self):
         assert autojinja.path("").no_slash                     == ""
         assert autojinja.path("file.txt").no_slash             == "file.txt"

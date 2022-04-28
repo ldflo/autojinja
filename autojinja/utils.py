@@ -94,7 +94,7 @@ def parse_envvars(env, values):
 
 def parse_envfile(env, envfile):
     """ Loads the given environment file and appends all environment variables to the given environment dictionary.
-        The special environment variable ${THIS_DIRPATH} can be used to refer to the environment file location. 
+        The special environment variable ${THIS_DIRPATH} can be used to refer to the environment file location.
     """
     with open(envfile, encoding = "utf-8") as file:
         lines = [line.split('#', 1)[0].strip() for line in file.readlines()] # Remove comments

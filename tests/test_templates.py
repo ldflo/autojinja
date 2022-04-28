@@ -189,7 +189,7 @@ class Test_CogTemplate:
         template = autojinja.CogTemplate.from_file(input_file)
         output = template.render_file(output_file)
         assert output == "test"
-        
+
     def test_1(self):
         input    = "  std::cout << {{ var }} << std::endl;  "
         expected = input
