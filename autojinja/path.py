@@ -14,17 +14,27 @@ import sys
 
 this_module = sys.modules[__name__]
 
+class _join_class:
+    def __call__(self, arg1, *args): # type: (str, *str) -> str
+        """ /dir1/dir2   file.txt -> /dir1/dir2/file.txt
+            /dir1/dir2/  dir3/    -> /dir1/dir2/dir3/
+        """
+        return no_antislash(os.path.join(arg1, *args))
+    def __getitem__(self, args): # type: (*str) -> str
+        """ /dir1/dir2   file.txt -> /dir1/dir2/file.txt/
+            /dir1/dir2/  dir3/    -> /dir1/dir2/dir3/
+        """
+        if type(args) == tuple:
+            return slash(join.__call__(*args))
+        return slash(join.__call__(args))
+
+join = _join_class()
+
 def add(arg1, *args): # type: (str, *str) -> str
     """ /dir1/dir2   file.txt -> /dir1/dir2file.txt
         /dir1/dir2/  dir3/    -> /dir1/dir2/dir3/
     """
     return no_antislash("".join([arg1, *args]))
-
-def join(arg1, *args): # type: (str, *str) -> str
-    """ /dir1/dir2   file.txt -> /dir1/dir2/file.txt
-        /dir1/dir2/  dir3/    -> /dir1/dir2/dir3/
-    """
-    return no_antislash(os.path.join(arg1, *args))
 
 def files(path, pattern = "*"): # type: (str, str) -> list(str)
     """ /dir1/dir2/  *.txt -> [/dir1/dir2/file.txt]
@@ -96,22 +106,50 @@ def parent_dirname(path): # type: (str) -> str
     return dirname(os.path.dirname(no_antislash(path)))
 
 def ext(path): # type: (str) -> str
-    """ /dir1/dir2/file.txt -> .txt
-        /dir1/dir2/         ->
+    """ /dir1/dir2/file.ext.txt -> .txt
+        /dir1/dir2/             ->
     """
     return os.path.splitext(path)[1]
 
 def set_ext(path, extension): # type: (str, str) -> str
-    """ /dir1/dir2/file.txt -> /dir1/dir2/file.new
-        /dir1/dir2/         -> /dir1/dir2/.new
+    """ /dir1/dir2/file.ext.txt -> /dir1/dir2/file.ext.new
+        /dir1/dir2/             -> /dir1/dir2/.new
     """
     return no_ext(path) + extension
 
 def no_ext(path): # type: (str) -> str
-    """ /dir1/dir2/file.txt -> /dir1/dir2/file
-        /dir1/dir2/         -> /dir1/dir2/
+    """ /dir1/dir2/file.ext.txt -> /dir1/dir2/file.ext
+        /dir1/dir2/             -> /dir1/dir2/
     """
     return no_antislash(os.path.splitext(path)[0])
+
+def fullext(path): # type: (str) -> str
+    """ /dir1/dir2/file.ext.txt -> .ext.txt
+        /dir1/dir2/             ->
+    """
+    if not path:
+        return ""
+    if path[-1] in ['/', '\\']:
+        return ""
+    splits = os.path.basename(path).split('.', 1)
+    if len(splits) == 1:
+        return ""
+    return '.' + splits[1]
+
+def set_fullext(path, extension): # type: (str, str) -> str
+    """ /dir1/dir2/file.ext.txt -> /dir1/dir2/file.new
+        /dir1/dir2/             -> /dir1/dir2/.new
+    """
+    return no_fullext(path) + extension
+
+def no_fullext(path): # type: (str) -> str
+    """ /dir1/dir2/file.ext.txt -> /dir1/dir2/file
+        /dir1/dir2/             -> /dir1/dir2/
+    """
+    extension = fullext(path)
+    if not extension:
+        return no_antislash(path)
+    return no_antislash(path[:-len(extension)])
 
 def slash(path): # type: (str) -> str
     """ /dir1/dir2/file.txt -> /dir1/dir2/file.txt/
@@ -141,17 +179,30 @@ class Path(str):
         return str.__new__(cls, no_antislash(args[0]), *args[1:], **kwargs)
     def __getattribute__(self, attr):
         try:
-          attribute = object.__getattribute__(self, attr)
-          return PathWrapper(attribute) if callable(attribute) else attribute
+            attribute = object.__getattribute__(self, attr)
+            return PathWrapper(attribute) if callable(attribute) else attribute
         except:
-          result = os.path.__getattribute__(attr)(self)
-          return Path(result) if type(result) == str else result
+            result = os.path.__getattribute__(attr)(self)
+            return Path(result) if type(result) == str else result
 
+    class _join_class:
+        def __init__(self, path):
+            self.path = path
+        def __call__(self, *args):
+            path = join.__call__(self.path, *args)
+            return Path(path)
+        def __getitem__(self, args):
+            if type(args) == tuple:
+                path = slash(join.__call__(self.path, *args))
+            else:
+                path = slash(join.__call__(self.path, args))
+            return Path(path)
+
+    @property
+    def join(self):
+        return Path._join_class(self)
     def add(self, *args):
         path = add(self, *args)
-        return Path(path)
-    def join(self, *args):
-        path = join(self, *args)
         return Path(path)
     def files(self, pattern = "*"):
         list = files(self, pattern)
@@ -198,6 +249,17 @@ class Path(str):
         path = no_ext(self)
         return Path(path)
     @property
+    def fullext(self):
+        path = fullext(self)
+        return Path(path)
+    def set_fullext(self, extension):
+        path = set_fullext(self, extension)
+        return Path(path)
+    @property
+    def no_fullext(self):
+        path = no_fullext(self)
+        return Path(path)
+    @property
     def slash(self):
         path = slash(self)
         return Path(path)
@@ -206,12 +268,15 @@ class PathWrapper:
     """ Helps forwarding to callables of os.path
     """
     def __init__(self, attribute):
-        self.Attribute = attribute
+        self.attribute = attribute
     def __call__(self, *args, **kwargs):
-        result = self.Attribute.__call__(*args, **kwargs)
+        result = self.attribute.__call__(*args, **kwargs)
+        return Path(result) if type(result) == str else result
+    def __getitem__(self, args):
+        result = self.attribute.__getitem__(args)
         return Path(result) if type(result) == str else result
     def __getattr__(self, attr):
-        return getattr(self.Attribute, attr)
+        return getattr(self.attribute, attr)
 
 class module_call:
     """ Overrides path(), path[] and path.attr

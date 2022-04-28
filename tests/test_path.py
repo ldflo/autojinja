@@ -18,14 +18,6 @@ open(file3, 'w')
 open(file4, 'w')
 
 class Test:
-    def test_add(self):
-        assert autojinja.path.add("", "file.txt")            == "file.txt"
-        assert autojinja.path.add("/", "file.txt")           == "/file.txt"
-        assert autojinja.path.add("C:/", "file.txt")         == "C:/file.txt"
-        assert autojinja.path.add("\\dir1", "file.txt")      == "/dir1file.txt"
-        assert autojinja.path.add("/dir1/", "file.txt")      == "/dir1/file.txt"
-        assert autojinja.path.add("/dir1\\dir2", "file.txt") == "/dir1/dir2file.txt"
-
     def test_join(self):
         assert autojinja.path.join("", "file.txt")            == "file.txt"
         assert autojinja.path.join("/", "file.txt")           == "/file.txt"
@@ -33,6 +25,23 @@ class Test:
         assert autojinja.path.join("/dir1", "file.txt")       == "/dir1/file.txt"
         assert autojinja.path.join("\\dir1/", "file.txt")     == "/dir1/file.txt"
         assert autojinja.path.join("/dir1\\dir2", "file.txt") == "/dir1/dir2/file.txt"
+        
+    def test_join_brackets(self):
+        assert autojinja.path.join["file.txt"]                == "file.txt/"
+        assert autojinja.path.join["", "file.txt"]            == "file.txt/"
+        assert autojinja.path.join["/", "file.txt"]           == "/file.txt/"
+        assert autojinja.path.join["C:/", "file.txt"]         == "C:/file.txt/"
+        assert autojinja.path.join["/dir1", "file.txt"]       == "/dir1/file.txt/"
+        assert autojinja.path.join["\\dir1/", "file.txt"]     == "/dir1/file.txt/"
+        assert autojinja.path.join["/dir1\\dir2", "file.txt"] == "/dir1/dir2/file.txt/"
+
+    def test_add(self):
+        assert autojinja.path.add("", "file.txt")            == "file.txt"
+        assert autojinja.path.add("/", "file.txt")           == "/file.txt"
+        assert autojinja.path.add("C:/", "file.txt")         == "C:/file.txt"
+        assert autojinja.path.add("\\dir1", "file.txt")      == "/dir1file.txt"
+        assert autojinja.path.add("/dir1/", "file.txt")      == "/dir1/file.txt"
+        assert autojinja.path.add("/dir1\\dir2", "file.txt") == "/dir1/dir2file.txt"
 
     def test_files(self):
         # dir
@@ -256,7 +265,7 @@ class Test:
         assert autojinja.path.ext("\\")                   == ""
         assert autojinja.path.ext("/dir1")                == ""
         assert autojinja.path.ext("/dir1\\")              == ""
-        assert autojinja.path.ext("/dir1/file.txt")       == ".txt"
+        assert autojinja.path.ext("/dir1/file")           == ""
         assert autojinja.path.ext("/dir1\\dir2/file.txt") == ".txt"
 
     def test_set_ext(self):
@@ -267,19 +276,54 @@ class Test:
         assert autojinja.path.set_ext("\\", ".md")                   == "/.md"
         assert autojinja.path.set_ext("/dir1", ".md")                == "/dir1.md"
         assert autojinja.path.set_ext("/dir1\\", ".md")              == "/dir1/.md"
-        assert autojinja.path.set_ext("/dir1/file.txt", ".md")       == "/dir1/file.md"
+        assert autojinja.path.set_ext("/dir1/file", ".md")           == "/dir1/file.md"
         assert autojinja.path.set_ext("/dir1\\dir2/file.txt", ".md") == "/dir1/dir2/file.md"
 
     def test_no_ext(self):
         assert autojinja.path.no_ext("")                     == ""
         assert autojinja.path.no_ext("file.txt")             == "file"
         assert autojinja.path.no_ext("/file.txt")            == "/file"
+        assert autojinja.path.no_ext("/file.ext.txt")        == "/file.ext"
         assert autojinja.path.no_ext("C:/")                  == "C:/"
         assert autojinja.path.no_ext("\\")                   == "/"
         assert autojinja.path.no_ext("/dir1")                == "/dir1"
         assert autojinja.path.no_ext("/dir1\\")              == "/dir1/"
-        assert autojinja.path.no_ext("/dir1/file.txt")       == "/dir1/file"
+        assert autojinja.path.no_ext("/dir1/file")           == "/dir1/file"
         assert autojinja.path.no_ext("/dir1\\dir2/file.txt") == "/dir1/dir2/file"
+        
+    def test_fullext(self):
+        assert autojinja.path.fullext("")                     == ""
+        assert autojinja.path.fullext("file.ext.txt")         == ".ext.txt"
+        assert autojinja.path.fullext("/file.ext.txt")        == ".ext.txt"
+        assert autojinja.path.fullext("C:/")                  == ""
+        assert autojinja.path.fullext("\\")                   == ""
+        assert autojinja.path.fullext("/dir1")                == ""
+        assert autojinja.path.fullext("/dir1\\")              == ""
+        assert autojinja.path.fullext("/dir1/file")           == ""
+        assert autojinja.path.fullext("/dir1\\dir2/file.txt") == ".txt"
+
+    def test_set_fullext(self):
+        assert autojinja.path.set_fullext("", ".md")                     == ".md"
+        assert autojinja.path.set_fullext("file.ext.txt", ".md")         == "file.md"
+        assert autojinja.path.set_fullext("/file.ext.txt", ".md")        == "/file.md"
+        assert autojinja.path.set_fullext("C:/", ".md")                  == "C:/.md"
+        assert autojinja.path.set_fullext("\\", ".md")                   == "/.md"
+        assert autojinja.path.set_fullext("/dir1", ".md")                == "/dir1.md"
+        assert autojinja.path.set_fullext("/dir1\\", ".md")              == "/dir1/.md"
+        assert autojinja.path.set_fullext("/dir1/file", ".md")           == "/dir1/file.md"
+        assert autojinja.path.set_fullext("/dir1\\dir2/file.txt", ".md") == "/dir1/dir2/file.md"
+
+    def test_no_fullext(self):
+        assert autojinja.path.no_fullext("")                     == ""
+        assert autojinja.path.no_fullext("file.txt")             == "file"
+        assert autojinja.path.no_fullext("/file.txt")            == "/file"
+        assert autojinja.path.no_fullext("/file.ext.txt")        == "/file"
+        assert autojinja.path.no_fullext("C:/")                  == "C:/"
+        assert autojinja.path.no_fullext("\\")                   == "/"
+        assert autojinja.path.no_fullext("/dir1")                == "/dir1"
+        assert autojinja.path.no_fullext("/dir1\\")              == "/dir1/"
+        assert autojinja.path.no_fullext("/dir1/file")           == "/dir1/file"
+        assert autojinja.path.no_fullext("/dir1\\dir2/file.txt") == "/dir1/dir2/file"
 
     def slash(self):
         assert autojinja.path.slash("")                     == "/"
@@ -304,14 +348,6 @@ class Test:
         assert autojinja.path.no_antislash("/dir1\\dir2/file.txt") == "/dir1/dir2/file.txt"
 
 class TestPath:
-    def test_add(self):
-        assert autojinja.path("").add("file.txt")            == "file.txt"
-        assert autojinja.path("/").add("file.txt")           == "/file.txt"
-        assert autojinja.path("C:/").add("file.txt")         == "C:/file.txt"
-        assert autojinja.path("\\dir1").add("file.txt")      == "/dir1file.txt"
-        assert autojinja.path("/dir1/").add("file.txt")      == "/dir1/file.txt"
-        assert autojinja.path("/dir1\\dir2").add("file.txt") == "/dir1/dir2file.txt"
-
     def test_join(self):
         assert autojinja.path("").join("file.txt")            == "file.txt"
         assert autojinja.path("/").join("file.txt")           == "/file.txt"
@@ -319,6 +355,22 @@ class TestPath:
         assert autojinja.path("/dir1").join("file.txt")       == "/dir1/file.txt"
         assert autojinja.path("\\dir1/").join("file.txt")     == "/dir1/file.txt"
         assert autojinja.path("/dir1\\dir2").join("file.txt") == "/dir1/dir2/file.txt"
+        
+    def test_join_brackets(self):
+        assert autojinja.path("").join["file.txt"]                 == "file.txt/"
+        assert autojinja.path("/").join["file.txt"]                == "/file.txt/"
+        assert autojinja.path("C:/").join["file.txt"]              == "C:/file.txt/"
+        assert autojinja.path("/dir1").join["file.txt", "a"]       == "/dir1/file.txt/a/"
+        assert autojinja.path("\\dir1/").join["file.txt", "a"]     == "/dir1/file.txt/a/"
+        assert autojinja.path("/dir1\\dir2").join["file.txt", "a"] == "/dir1/dir2/file.txt/a/"
+        
+    def test_add(self):
+        assert autojinja.path("").add("file.txt")            == "file.txt"
+        assert autojinja.path("/").add("file.txt")           == "/file.txt"
+        assert autojinja.path("C:/").add("file.txt")         == "C:/file.txt"
+        assert autojinja.path("\\dir1").add("file.txt")      == "/dir1file.txt"
+        assert autojinja.path("/dir1/").add("file.txt")      == "/dir1/file.txt"
+        assert autojinja.path("/dir1\\dir2").add("file.txt") == "/dir1/dir2file.txt"
 
     def test_files(self):
         # dir
@@ -560,12 +612,47 @@ class TestPath:
         assert autojinja.path("").no_ext                     == ""
         assert autojinja.path("file.txt").no_ext             == "file"
         assert autojinja.path("/file.txt").no_ext            == "/file"
+        assert autojinja.path("/file.ext.txt").no_ext        == "/file.ext"
         assert autojinja.path("C:/").no_ext                  == "C:/"
         assert autojinja.path("\\").no_ext                   == "/"
         assert autojinja.path("/dir1").no_ext                == "/dir1"
         assert autojinja.path("/dir1\\").no_ext              == "/dir1/"
         assert autojinja.path("/dir1/file.txt").no_ext       == "/dir1/file"
         assert autojinja.path("/dir1\\dir2/file.txt").no_ext == "/dir1/dir2/file"
+        
+    def test_fullext(self):
+        assert autojinja.path("").fullext                     == ""
+        assert autojinja.path("file.ext.txt").fullext         == ".ext.txt"
+        assert autojinja.path("/file.ext.txt").fullext        == ".ext.txt"
+        assert autojinja.path("C:/").fullext                  == ""
+        assert autojinja.path("\\").fullext                   == ""
+        assert autojinja.path("/dir1").fullext                == ""
+        assert autojinja.path("/dir1\\").fullext              == ""
+        assert autojinja.path("/dir1/file").fullext           == ""
+        assert autojinja.path("/dir1\\dir2/file.txt").fullext == ".txt"
+
+    def test_set_fullext(self):
+        assert autojinja.path("").set_fullext(".md")                     == ".md"
+        assert autojinja.path("file.ext.txt").set_fullext(".md")         == "file.md"
+        assert autojinja.path("/file.ext.txt").set_fullext(".md")        == "/file.md"
+        assert autojinja.path("C:/").set_fullext(".md")                  == "C:/.md"
+        assert autojinja.path("\\").set_fullext(".md")                   == "/.md"
+        assert autojinja.path("/dir1").set_fullext(".md")                == "/dir1.md"
+        assert autojinja.path("/dir1\\").set_fullext(".md")              == "/dir1/.md"
+        assert autojinja.path("/dir1/file").set_fullext(".md")           == "/dir1/file.md"
+        assert autojinja.path("/dir1\\dir2/file.txt").set_fullext(".md") == "/dir1/dir2/file.md"
+
+    def test_no_fullext(self):
+        assert autojinja.path("").no_fullext                     == ""
+        assert autojinja.path("file.txt").no_fullext             == "file"
+        assert autojinja.path("/file.txt").no_fullext            == "/file"
+        assert autojinja.path("/file.ext.txt").no_fullext        == "/file"
+        assert autojinja.path("C:/").no_fullext                  == "C:/"
+        assert autojinja.path("\\").no_fullext                   == "/"
+        assert autojinja.path("/dir1").no_fullext                == "/dir1"
+        assert autojinja.path("/dir1\\").no_fullext              == "/dir1/"
+        assert autojinja.path("/dir1/file").no_fullext           == "/dir1/file"
+        assert autojinja.path("/dir1\\dir2/file.txt").no_fullext == "/dir1/dir2/file"
 
     def slash(self):
         assert autojinja.path("").slash                     == "/"
