@@ -181,6 +181,15 @@ class Test_RawTemplate:
         Generator_RawTemplate.check(input, expected, list = ["var1", "var2"])
 
 class Test_CogTemplate:
+    def test_newfile(self):
+        if output_file.exists:
+            os.remove(output_file)
+        with open(input_file, 'w') as f:
+            f.write("test")
+        template = autojinja.CogTemplate.from_file(input_file)
+        output = template.render_file(output_file)
+        assert output == "test"
+        
     def test_1(self):
         input    = "  std::cout << {{ var }} << std::endl;  "
         expected = input
@@ -528,6 +537,15 @@ class Test_CogTemplate:
             raise CustomException(result, expected)
 
 class Test_JinjaTemplate:
+    def test_newfile(self):
+        if output_file.exists:
+            os.remove(output_file)
+        with open(input_file, 'w') as f:
+            f.write("test")
+        template = autojinja.JinjaTemplate.from_file(input_file)
+        output = template.render_file(output_file)
+        assert output == "test"
+
     def test_1(self):
         input    = "  std::cout << {{ var }} << std::endl;  "
         expected = "  std::cout << \"Hello world\" << std::endl;  "
