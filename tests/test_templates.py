@@ -607,15 +607,16 @@ class Test_JinjaTemplate:
     def test_4(self):
         input    = "  // <<[ {{ var }} ]>>\n" \
                    "  // <<[ end ]>>"
-        expected = input
+        expected = "  // <<[ \"Hello world\" ]>>\n" \
+                   "  // <<[ end ]>>"
         Generator.check(autojinja.JinjaTemplate, input, None, expected, None, var = "\"Hello world\"")
     def test_4_output(self):
         input    = "  // <<[ {{ var }} ]>>\n" \
                    "  // <<[ end ]>>"
-        expected = "  // <<[ {{ var }} ]>>\n" \
+        expected = "  // <<[ \"Hello world\" ]>>\n" \
                    "    Test\n" \
                    "  // <<[ end ]>>"
-        output   = "<<[ {{ var }} ]>>\n" \
+        output   = "<<[ \"Hello world\" ]>>\n" \
                    "  Test\n" \
                    "<<[ end ]>>"
         Generator.check(autojinja.JinjaTemplate, input, output, expected, None, var = "\"Hello world\"")
@@ -629,29 +630,29 @@ class Test_JinjaTemplate:
         input    = "  // [[[ {{ var }} ]]]\n" \
                    "  // [[[ end ]]]\n" \
                    "var\n" \
-                   "  // <<[ {{ var }} ]>>\n" \
+                   "  // <<[ \"Hello world\" ]>>\n" \
                    "  // <<[ end ]>>"
         expected = "  // [[[ {{ var }} ]]]\n" \
                    "  \"Hello world\"\n" \
                    "  // [[[ end ]]]\n" \
                    "var\n" \
-                   "  // <<[ {{ var }} ]>>\n" \
+                   "  // <<[ \"Hello world\" ]>>\n" \
                    "  // <<[ end ]>>"
         Generator.check(autojinja.JinjaTemplate, input, None, expected, None, var = "\"Hello world\"")
     def test_5_output(self):
         input    = "  // [[[ {{ var }} ]]]\n" \
                    "  // [[[ end ]]]\n" \
                    "var\n" \
-                   "  // <<[ {{ var }} ]>>\n" \
+                   "  // <<[ \"Hello world\" ]>>\n" \
                    "  // <<[ end ]>>"
         expected = "  // [[[ {{ var }} ]]]\n" \
                    "  \"Hello world\"\n" \
                    "  // [[[ end ]]]\n" \
                    "var\n" \
-                   "  // <<[ {{ var }} ]>>\n" \
+                   "  // <<[ \"Hello world\" ]>>\n" \
                    "    Test\n" \
                    "  // <<[ end ]>>"
-        output   = "<<[ {{ var }} ]>>\n" \
+        output   = "<<[ \"Hello world\" ]>>\n" \
                    "  Test\n" \
                    "<<[ end ]>>"
         Generator.check(autojinja.JinjaTemplate, input, output, expected, None, var = "\"Hello world\"")
@@ -937,5 +938,123 @@ class Test_JinjaTemplate:
         template = autojinja.JinjaTemplate.from_string(input)
         dummy = template.edits
         result = template.context().render(output)
+        if result != expected:
+            raise CustomException(result, expected)
+
+    def test_15(self):
+        input    = "{% for value in values %}\n" \
+                   "<<[ {{ value }} ]>> a <<[ end ]>>\n" \
+                   "{% endfor %}"
+        expected = "<<[ abc ]>> a <<[ end ]>>\n" \
+                   "<<[ def ]>> a <<[ end ]>>\n" \
+                   "<<[ ghi ]>> a <<[ end ]>>\n"
+        template = autojinja.JinjaTemplate.from_string(input)
+        result = template.context(values = ["abc", "def", "ghi"]).render()
+        if result != expected:
+            raise CustomException(result, expected)
+
+    def test_16(self):
+        input    = "{% for value in values %}\n" \
+                   "<<[ {{ value }} ]>> {{ value }} <<[ end ]>>\n" \
+                   "{% endfor %}"
+        expected = "<<[ abc ]>> abc <<[ end ]>>\n" \
+                   "<<[ def ]>> def <<[ end ]>>\n" \
+                   "<<[ ghi ]>> ghi <<[ end ]>>\n"
+        template = autojinja.JinjaTemplate.from_string(input)
+        result = template.context(values = ["abc", "def", "ghi"]).render()
+        if result != expected:
+            raise CustomException(result, expected)
+
+    def test_17(self):
+        input    = "<<[ {{ value1 }} ]>> {{ value1 }} <<[ end ]>>\n" \
+                   "{% for value in values %}\n" \
+                   "<<[ {{ value }} ]>> {{ value }} <<[ end ]>>\n" \
+                   "{% endfor %}"
+        expected = "<<[ hhh ]>> hhh <<[ end ]>>\n" \
+                   "<<[ abc ]>> abc <<[ end ]>>\n" \
+                   "<<[ def ]>> def <<[ end ]>>\n" \
+                   "<<[ ghi ]>> ghi <<[ end ]>>\n"
+        template = autojinja.JinjaTemplate.from_string(input)
+        result = template.context(values = ["abc", "def", "ghi"], value1 = "hhh").render()
+        if result != expected:
+            raise CustomException(result, expected)
+
+    def test_18(self):
+        input    = "<<[ {{ value1 }} ]>>\n" \
+                   "a\n" \
+                   "[[[ {{ value2 }} ]]][[[ end ]]]\n" \
+                   "b\n" \
+                   "<<[ end ]>>"
+        expected = "<<[ hhh ]>>\n" \
+                   "a\n" \
+                   "[[[ {{ value2 }} ]]] abc [[[ end ]]]\n" \
+                   "b\n" \
+                   "<<[ end ]>>"
+        template = autojinja.JinjaTemplate.from_string(input)
+        result = template.context(value1 = "hhh", value2 = "abc").render()
+        if result != expected:
+            raise CustomException(result, expected)
+
+    def test_19(self):
+        input    = "<<[ {{ value1 }} ]>> {{ value1 }} <<[ end ]>>\n" \
+                   "{% for value in values %}\n" \
+                   "<<[ {{ value }} ]>> {{ value }} <<[ end ]>>\n" \
+                   "{% endfor %}"
+        expected = "<<[ hhh ]>> zzz <<[ end ]>>\n" \
+                   "<<[ abc ]>> abc <<[ end ]>>\n" \
+                   "<<[ def ]>> def <<[ end ]>>\n" \
+                   "<<[ ghi ]>> ghi <<[ end ]>>\n"
+        output   = "<<[ hhh ]>> zzz <<[ end ]>>"
+        template = autojinja.JinjaTemplate.from_string(input)
+        result = template.context(values = ["abc", "def", "ghi"], value1 = "hhh").render(output)
+        if result != expected:
+            raise CustomException(result, expected)
+
+    def test_20(self):
+        input    = "<<[ {{ value1 }} ]>> {{ value1 }} <<[ end ]>>\n" \
+                   "{% for value in values %}\n" \
+                   "<<[ {{ value }} ]>> {{ value }} <<[ end ]>>\n" \
+                   "{% endfor %}"
+        expected = "<<[ hhh ]>> hhh <<[ end ]>>\n" \
+                   "<<[ abc ]>> abc <<[ end ]>>\n" \
+                   "<<[ def ]>> def <<[ end ]>>\n" \
+                   "<<[ ghi ]>> zzz <<[ end ]>>\n"
+        output   = "<<[ ghi ]>> zzz <<[ end ]>>"
+        template = autojinja.JinjaTemplate.from_string(input)
+        result = template.context(values = ["abc", "def", "ghi"], value1 = "hhh").render(output)
+        if result != expected:
+            raise CustomException(result, expected)
+
+    def test_21(self):
+        input    = "  <<[ {{ value1 }} ]>>\n" \
+                   "  a\n" \
+                   "  [[[ {{ value2 }} ]]][[[ end ]]]\n" \
+                   "  b\n" \
+                   "  <<[ end ]>>"
+        expected = "  <<[ hhh ]>>\n" \
+                   "  zzz\n" \
+                   "  <<[ end ]>>"
+        output   = "<<[ hhh ]>> zzz <<[ end ]>>"
+        template = autojinja.JinjaTemplate.from_string(input)
+        result = template.context(value1 = "hhh", value2 = "abc").render(output)
+        if result != expected:
+            raise CustomException(result, expected)
+
+    def test_22(self):
+        input    = "  <<[ {{ value1 }} ]>>\n" \
+                   "  a\n" \
+                   "      [[[ {{ value2 }} ]]]\n" \
+                   "      [[[ end ]]]\n" \
+                   "  b\n" \
+                   "  <<[ end ]>>"
+        expected = "  <<[ hhh ]>>\n" \
+                   "  a\n" \
+                   "      [[[ {{ value2 }} ]]]\n" \
+                   "      abc\n" \
+                   "      [[[ end ]]]\n" \
+                   "  b\n" \
+                   "  <<[ end ]>>"
+        template = autojinja.JinjaTemplate.from_string(input)
+        result = template.context(value1 = "hhh", value2 = "abc").render()
         if result != expected:
             raise CustomException(result, expected)

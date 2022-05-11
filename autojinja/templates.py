@@ -167,7 +167,7 @@ class BaseTemplate:
                 output = output or self.output
                 assert output != None, "output filepath parameter can't be None"
                 ### Retrieve output edits
-                self.parser.edits_to_generate = self.parser.edit_markers.copy()
+                edits_to_generate = {} # Dict[str, marker], for generation
                 if not os.path.isfile(output): # File doesn't exist
                     old_content = None
                 elif self.input and os.path.samefile(self.input, output): # Same file
@@ -176,9 +176,9 @@ class BaseTemplate:
                     with open(output, 'r', encoding = encoding or self.encoding or "utf-8") as file:
                         old_content = file.read()
                         edit_markers = utils.edit_markers_from_string(old_content, self.settings)
-                        self.parser.edits_to_generate.update(edit_markers)
+                        edits_to_generate.update(edit_markers)
                 ### Render
-                result = self.parser.generate(remove_markers or self.remove_markers, self.globals, self.args, self.kwargs)
+                result = self.parser.generate(edits_to_generate, remove_markers or self.remove_markers, self.globals, self.args, self.kwargs)
                 utils.generate_file(output, result, old_content, encoding or self.encoding, newline or self.newline)
                 return result
             except BaseException as e:
@@ -186,12 +186,12 @@ class BaseTemplate:
         def render(self, output = None, remove_markers = None):
             try:
                 ### Retrieve output edits
-                self.parser.edits_to_generate = self.parser.edit_markers.copy()
+                edits_to_generate = {} # Dict[str, marker], for generation
                 if output != None:
                     edit_markers = utils.edit_markers_from_string(output, self.settings)
-                    self.parser.edits_to_generate.update(edit_markers)
+                    edits_to_generate.update(edit_markers)
                 ### Render
-                return self.parser.generate(remove_markers or self.remove_markers, self.globals, self.args, self.kwargs)
+                return self.parser.generate(edits_to_generate, remove_markers or self.remove_markers, self.globals, self.args, self.kwargs)
             except BaseException as e:
                 raise exceptions.clean_traceback(e) from None
 
@@ -242,20 +242,20 @@ class JinjaTemplate(BaseTemplate):
 class BaseGenerator(parser.Parser):
     def __init__(self, string, settings):
         super().__init__(string, settings)
-        self.edits_to_generate = None # Dict[str, marker], for generation
 
-    def generate(self, remove_markers, globals, args, kwargs):
+    def generate(self, edits_to_generate, remove_markers, globals, args, kwargs):
         ### Save settings
         old_remove_markers = self.settings.remove_markers
         if self.settings.remove_markers != remove_markers:
             self.settings.remove_markers = remove_markers
         try:
             ### Generate
+            self.edits_to_generate = self.edit_markers.copy()
             self.edits_generated = {} # Dict[str, marker], for generation
             self.globals = globals
             self.args = args
             self.kwargs = kwargs
-            output = self.generate_output()
+            output = self.generate_output(edits_to_generate) # To inherit
             ### Check unused edits
             diff = set(self.edits_to_generate)-set(self.edits_generated)
             for key in diff:
@@ -266,7 +266,24 @@ class BaseGenerator(parser.Parser):
                 self.settings.remove_markers = old_remove_markers
         return output
 
-    def generate_output(self):
+    def evaluate(self, string):
+        generator = CogGenerator(string, self.settings)
+        generator.parse()
+        generator.edit_bodies = self.edit_bodies
+        generator.edits_to_generate = generator.edit_markers.copy()
+        generator.edits_to_generate.update(self.edits_to_generate)
+        generator.edits_generated = self.edits_generated
+        generator.globals = self.globals
+        generator.args = self.args
+        generator.kwargs = self.kwargs
+        return generator.generate_output({})
+
+class CogGenerator(BaseGenerator):
+    def __init__(self, string, settings):
+        super().__init__(string, settings)
+
+    def generate_output(self, edits_to_generate):
+        self.edits_to_generate.update(edits_to_generate) # Update for generation
         stringio = io.StringIO()
         idx = 0
         depth = 0
@@ -275,17 +292,17 @@ class BaseGenerator(parser.Parser):
             if marker.is_end:
                 depth -= 1
                 if depth == 0:
-                    ### Write header
                     if not self.settings.remove_markers:
+                        ### Write header
                         stringio.write(self.string[marker.header_start:marker.header_end])
                     idx = marker.header_end
             ### Open marker
             else:
                 depth += 1
                 if depth == 1:
-                    ### Write header
-                    self.write_outermarker(stringio, self.string[idx:marker.header_start])
+                    stringio.write(self.string[idx:marker.header_start])
                     if not self.settings.remove_markers:
+                        ### Write header
                         stringio.write(self.string[marker.header_start:marker.header_end])
                     ### Generate
                     output = self.generate_marker(marker)
@@ -305,11 +322,8 @@ class BaseGenerator(parser.Parser):
                         output = output.replace('\n', f"\n{bodyIndent}")
                         stringio.write(f"{bodyIndent}{output}\n")
         ### End of file
-        self.write_outermarker(stringio, self.string[idx:])
+        stringio.write(self.string[idx:])
         return stringio.getvalue()
-
-    def write_outermarker(self, stringio, string):
-        stringio.write(string)
 
     def generate_marker(self, marker):
         if not marker.is_edit:
@@ -345,33 +359,59 @@ class BaseGenerator(parser.Parser):
         except BaseException as e:
             raise exceptions.CommonException.from_exception(e, marker) from None
 
-    def evaluate(self, output):
-        generator = CogGenerator(output, self.settings)
-        generator.parse()
-        generator.edit_bodies = self.edit_bodies
-        generator.edits_to_generate = generator.edit_markers.copy()
-        generator.edits_to_generate.update(self.edits_to_generate)
-        generator.edits_generated = self.edits_generated
-        generator.globals = self.globals
-        generator.args = self.args
-        generator.kwargs = self.kwargs
-        return generator.generate_output()
-
-class CogGenerator(BaseGenerator):
-    def __init__(self, string, settings):
-        super().__init__(string, settings)
-
 class JinjaGenerator(BaseGenerator):
     def __init__(self, string, settings):
         super().__init__(string, settings)
 
-    def write_outermarker(self, stringio, string):
-        if len(string) == 0:
-            return
+    def generate_output(self, edits_to_generate):
+        to_reinsert = {} # str -> [Marker, Marker]
+        stringio = io.StringIO()
+        idx = 0
+        depth = 0
+        prev_list = None
+        for marker in self.markers:
+            ### End marker
+            if marker.is_end:
+                if not marker.is_edit:
+                    depth -= 1
+                    if depth == 0:
+                        prev_list[1] = marker # Update previous reinsert
+                        idx = marker.header_end
+                else:
+                    if depth == 0:
+                        stringio.write(self.string[idx:marker.header_end])
+                        idx = marker.header_end
+            ### Open marker
+            else:
+                if not marker.is_edit:
+                    depth += 1
+                    if depth == 1:
+                        prev_list = [marker, None]
+                        id = self.unique_id(idx)
+                        to_reinsert[id] = prev_list # Update reinserts
+                        stringio.write(self.string[idx:marker.header_start])
+                        stringio.write(id) # Write id for later reinsertion
+                else:
+                    if depth == 0:
+                        del self.edits_to_generate[marker.header] # Update for generation
+        ### End of file
+        stringio.write(self.string[idx:])
+        return self.generate_reinsert(stringio.getvalue(), to_reinsert, edits_to_generate)
+
+    def generate_reinsert(self, string, to_reinsert, edits_to_generate):
         ### Generate raw template
         template = RawTemplate(string, globals = self.globals)
         output = template.context(*self.args, **self.kwargs).render()
+        ### Reinsert cog markers
+        for id, (marker_start, marker_end) in to_reinsert.items():
+            if not marker_start.is_edit:
+                content = self.string[marker_start.header_start:marker_end.header_end]
+                output = output.replace(id, content)
         ### Parse and generate again
+        self.edits_to_generate.update(edits_to_generate) # Update for generation
         if len(output) > 0:
             output = self.evaluate(output)
-        stringio.write(output)
+        return output
+
+    def unique_id(self, idx):
+        return f"°#@[AUTOJINJA_{idx}]+&*"
