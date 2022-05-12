@@ -1058,3 +1058,41 @@ class Test_JinjaTemplate:
         result = template.context(value1 = "hhh", value2 = "abc").render()
         if result != expected:
             raise CustomException(result, expected)
+
+    def test_23(self):
+        input    = "  <<[ {{ value }} ]>>\n" \
+                   "  a\n" \
+                   "      [[[ {{ value }} ]]]\n" \
+                   "      [[[ end ]]]\n" \
+                   "  b\n" \
+                   "  <<[ end ]>>"
+        expected = "  <<[ hhh ]>>\n" \
+                   "  a\n" \
+                   "      [[[ {{ value }} ]]]\n" \
+                   "      hhh\n" \
+                   "      [[[ end ]]]\n" \
+                   "  b\n" \
+                   "  <<[ end ]>>"
+        template = autojinja.JinjaTemplate.from_string(input)
+        result = template.context(value = "hhh").render()
+        if result != expected:
+            raise CustomException(result, expected)
+
+    def test_24(self):
+        input    = "  <<[ {{ value1 }} ]>>\n" \
+                   "  a\n" \
+                   "      [[[ <<[ {{ value2 }} ]>><<[ end ]>> ]]]\n" \
+                   "      [[[ end ]]]\n" \
+                   "  b\n" \
+                   "  <<[ end ]>>"
+        expected = "  <<[ hhh ]>>\n" \
+                   "  a\n" \
+                   "      [[[ <<[ {{ value2 }} ]>><<[ end ]>> ]]]\n" \
+                   "      <<[ zzz ]>>  <<[ end ]>>\n" \
+                   "      [[[ end ]]]\n" \
+                   "  b\n" \
+                   "  <<[ end ]>>"
+        template = autojinja.JinjaTemplate.from_string(input)
+        result = template.context(value1 = "hhh", value2 = "zzz").render()
+        if result != expected:
+            raise CustomException(result, expected)
