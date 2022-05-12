@@ -7,7 +7,7 @@ with open(os.path.join(THIS_DIR, "README.md")) as file:
 
 setuptools.setup(
     name="autojinja",
-    version="1.2.0",
+    version="1.3.0",
     description="Content generation with Jinja templates in between comments",
     author="Florian Popek",
     author_email="florian.popek@gmail.com",
@@ -27,6 +27,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Topic :: Software Development :: Code Generators",
     ],
     packages=["autojinja"],
