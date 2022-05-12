@@ -220,6 +220,10 @@ class Path(str):
     def add(self, *args):
         path = add(self, *args)
         return Path(path)
+    def __add__(self, other):
+        return self.add(other)
+    def __radd__(self, other):
+        return Path(other.__add__(self))
     def files(self, pattern = "*"):
         list = files(self, pattern)
         return [Path(path) for path in list]
