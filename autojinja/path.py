@@ -175,6 +175,15 @@ def no_antislash(path): # type: (str) -> str
     """
     return path.replace('\\', '/')
 
+def realpath(path): # type: (str) -> str
+    return os.path.realpath(path)
+
+def relpath(path, start = "."): # type: (str, str) -> str
+    return os.path.relpath(path, start)
+
+def samefile(path1, path2): # type: (str, str) -> str
+    return os.path.samefile(path1, path2)
+
 class Path(str):
     """ Allows a functional API of the above functions:
 
@@ -270,8 +279,19 @@ class Path(str):
     def slash(self):
         path = slash(self)
         return Path(path)
+    @property
     def no_slash(self):
         path = no_slash(self)
+        return Path(path)
+    @property
+    def realpath(self):
+        path = realpath(self)
+        return Path(path)
+    def relpath(self, start = "."):
+        path = relpath(self, start)
+        return Path(path)
+    def samefile(self, path2):
+        path = samefile(self, path2)
         return Path(path)
 
 class PathWrapper:
