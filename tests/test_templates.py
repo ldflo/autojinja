@@ -1096,3 +1096,15 @@ class Test_JinjaTemplate:
         result = template.context(value1 = "hhh", value2 = "zzz").render()
         if result != expected:
             raise CustomException(result, expected)
+
+    def test_25(self):
+        input    = "{% for value in values %}\n" \
+                   "[[[ {{ value }} ]]] [[[ end ]]]\n" \
+                   "{% endfor %}"
+        expected = "[[[ {{ value }} ]]] zzz [[[ end ]]]\n" \
+                   "[[[ {{ value }} ]]] zzz [[[ end ]]]\n" \
+                   "[[[ {{ value }} ]]] zzz [[[ end ]]]\n"
+        template = autojinja.JinjaTemplate.from_string(input)
+        result = template.context(values = ["abc", "def", "ghi"], value = "zzz").render()
+        if result != expected:
+            raise CustomException(result, expected)

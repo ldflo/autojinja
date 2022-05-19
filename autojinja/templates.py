@@ -406,7 +406,7 @@ class JinjaGenerator(BaseGenerator):
         for id, (marker_start, marker_end) in to_reinsert.items():
             if not marker_start.is_edit:
                 content = self.string[marker_start.header_start:marker_end.header_end]
-                output = output.replace(id, content, 1)
+                output = output.replace(id, content)
         ### Parse and generate again
         self.edits_to_generate.update(edits_to_generate) # Update for generation
         if len(output) > 0:
