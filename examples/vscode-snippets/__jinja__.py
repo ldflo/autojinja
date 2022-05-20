@@ -1,7 +1,7 @@
 from autojinja import *
 from collections import defaultdict
 
-### Find recursively all files in 'snippets/' directory and group by extenstion
+### Find recursively all files in 'snippets/' directory and group by extension
 snippet_dict = defaultdict(list)
 for snippet_file in path("snippets/").files("**"):
     snippet_dict[snippet_file.ext].append(snippet_file)
