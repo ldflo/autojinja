@@ -206,7 +206,7 @@ For more information on these markers, see the [markers](#markers) section.
 
 ## _class_ autojinja.**RawTemplate**:
 
-The `RawTemplate` object simply wraps a `jinja2.Template` which allows loading and rendering native Jinja templates, just as you would do with Jinja2. These templates completely ignore special markers or hand-made modifications and are mostly used for generating simple intermediate results within Python scripts :
+The `RawTemplate` object simply wraps a `jinja2.Template` which allows rendering native Jinja templates, just as you would do with Jinja2. These templates completely ignore special markers or hand-made modifications and are mostly used for generating simple intermediate results within Python scripts :
 
 ```python
 # script.py
@@ -289,7 +289,7 @@ Hello, my name is John Doe !
 
 ## _class_ autojinja.**CogTemplate**:
 
-The `CogTemplate` object allows loading and generating a file that contains several Jinja templates delimited by [cog markers](#markers), and deals with hand-made modifications enclosed within [edit markers](#markers). Each Jinja template is individually generated with a [`RawTemplate`](#class-autojinjarawtemplate) and then re-evaluated using a `CogTemplate`, allowing recursive generation. The same applies when reinserting hand-made sections, which can recursively contain cog markers and edit markers :
+The `CogTemplate` object allows rendering a file that contains several Jinja templates delimited by [cog markers](#markers), and deals with hand-made modifications enclosed within [edit markers](#markers). Each Jinja template is individually generated with a [`RawTemplate`](#class-autojinjarawtemplate) and then re-evaluated using a `CogTemplate`, allowing recursive generation. The same applies when reinserting hand-made sections, which can recursively contain cog markers and edit markers :
 
 ```python
 # script.py
@@ -414,7 +414,7 @@ void main() {
 
 ## _class_ autojinja.**JinjaTemplate**:
 
-The `JinjaTemplate` object is similar to [`RawTemplate`](#class-autojinjarawtemplate) with the added functionalities of [`CogTemplate`](#class-autojinjacogtemplate). Basically, it allows loading and generating a Jinja template that deals with hand-made modifications enclosed within [edit markers](#markers). It works the same as `CogTemplate`, except everything outside special markers is considered a Jinja template, which is generated with a `RawTemplate` and then re-evaluated using a `CogTemplate` :
+The `JinjaTemplate` object is similar to [`RawTemplate`](#class-autojinjarawtemplate) with the added functionalities of [`CogTemplate`](#class-autojinjacogtemplate). Basically, it allows rendering a Jinja template that deals with hand-made modifications enclosed within [edit markers](#markers). It works the same as `CogTemplate`, except everything outside special markers is considered a Jinja template, which is generated with a `RawTemplate` and then re-evaluated using a `CogTemplate` :
 
 ```python
 # script.py
