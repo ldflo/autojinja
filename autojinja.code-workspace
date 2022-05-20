@@ -1,8 +1,0 @@
-{
-  "folders": [
-      { "name": "autojinja",                 "path": "." },
-      { "name": "cmake-cpp-client-server",   "path": "examples/cmake-cpp-client-server" },
-      { "name": "python-http-client-server", "path": "examples/python-http-client-server" },
-      { "name": "vscode-snippets",           "path": "examples/vscode-snippets" },
-  ]
-}
