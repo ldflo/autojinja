@@ -36,12 +36,12 @@ def add(arg1, *args): # type: (str, *str) -> str
     """
     return no_antislash("".join([arg1, *args]))
 
-def files(path, pattern = "*"): # type: (str, str) -> list(str)
+def files(path = "", pattern = "*"): # type: (str, str) -> list(str)
     """ /dir1/dir2/  *.txt -> [/dir1/dir2/file.txt]
     """
     return [no_antislash(x) for x in glob.glob(dirpath(path) + pattern, recursive=True) if os.path.isfile(x)]
 
-def dirs(path, pattern = "*"): # type: (str, str) -> list(str)
+def dirs(path = "", pattern = "*"): # type: (str, str) -> list(str)
     """ /dir1/*/ -> [/dir1/dir2/]
     """
     return [slash(x) for x in glob.glob(dirpath(path) + pattern, recursive=True) if os.path.isdir(x)]
@@ -176,12 +176,22 @@ def no_antislash(path): # type: (str) -> str
     return path.replace('\\', '/')
 
 def realpath(path): # type: (str) -> str
-    return os.path.realpath(path)
+    if not path:
+        return ""
+    result = os.path.realpath(path)
+    if path[-1] in ['/', '\\']:
+        return slash(result)
+    return no_antislash(result)
 
 def relpath(path, start = "."): # type: (str, str) -> str
-    return os.path.relpath(path, start)
+    if not path:
+        return start
+    result = os.path.relpath(path, start)
+    if path[-1] in ['/', '\\']:
+        return slash(result)
+    return no_antislash(result)
 
-def samefile(path1, path2): # type: (str, str) -> str
+def samefile(path1, path2): # type: (str, str) -> bool
     return os.path.samefile(path1, path2)
 
 class Path(str):
