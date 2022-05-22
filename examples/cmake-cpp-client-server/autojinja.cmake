@@ -112,6 +112,13 @@ function(autojinja)
     if(NOT DEFINED ARG_TARGET)
         set(ARG_TARGET "autojinja")
     endif()
+    # Create dummy files
+    foreach(argument ${ARG_GENERATES})
+        make_absolute(${argument} abs_path)
+        if(NOT EXISTS ${abs_path})
+            file(TOUCH ${abs_path})
+        endif()
+    endforeach()
     # Create autojinja command
     add_custom_command(
       OUTPUT ${ARG_TARGET}
