@@ -80,14 +80,14 @@ class RawTemplate:
             try:
                 output = output or self.output
                 assert output != None, "output filepath parameter can't be None"
-                result = self.jinja2_template.render(*self.args, **self.kwargs)
+                result = self.jinja2_template.render(*self.args, **self.kwargs).rstrip('\n')
                 utils.generate_file(output, result, None, encoding or self.encoding, newline or self.newline)
                 return result
             except BaseException as e:
                 raise exceptions.clean_traceback(e) from None
         def render(self):
             try:
-                return self.jinja2_template.render(*self.args, **self.kwargs)
+                return self.jinja2_template.render(*self.args, **self.kwargs).rstrip('\n')
             except BaseException as e:
                 raise exceptions.clean_traceback(e) from None
 

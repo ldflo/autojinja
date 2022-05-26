@@ -1224,8 +1224,7 @@ class Test_BothMarkers:
                        "// <<[ end ]>>\n" \
                        "// [[[ end ]]]"
             expected = "def\n" \
-                       "123\n" \
-                       "\n"
+                       "123\n"
             header0  = "def\n" \
                        "// <<[ abc ]>>\n" \
                        "// <<[ end ]>>\n" \

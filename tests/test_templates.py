@@ -123,7 +123,7 @@ class Test_RawTemplate:
                    "    result : {{ var }}\n" \
                    "  {% endfor %}"
         expected = "    result : var1\n" \
-                   "    result : var2\n"
+                   "    result : var2"
         Generator_RawTemplate.check(input, expected, list = ["var1", "var2"])
 
     def test_3(self):
@@ -565,14 +565,14 @@ class Test_JinjaTemplate:
                    "    result : {{ var }}\n" \
                    "  {% endfor %}"
         expected = "    result : var1\n" \
-                   "    result : var2\n"
+                   "    result : var2"
         Generator.check(autojinja.JinjaTemplate, input, None, expected, None, list = ["var1", "var2"])
     def test_2_output(self):
         input    = "  {% for var in list %}\n" \
                    "    result : {{ var }}\n" \
                    "  {% endfor %}"
         expected = "    result : var1\n" \
-                   "    result : var2\n"
+                   "    result : var2"
         output   = "Test"
         Generator.check(autojinja.JinjaTemplate, input, output, expected, None, list = ["var1", "var2"])
     def test_2_remove_markers(self):
@@ -580,7 +580,7 @@ class Test_JinjaTemplate:
                    "    result : {{ var }}\n" \
                    "  {% endfor %}"
         expected = "    result : var1\n" \
-                   "    result : var2\n"
+                   "    result : var2"
         Generator.check(autojinja.JinjaTemplate, input, None, expected, True, list = ["var1", "var2"])
 
     def test_3(self):
@@ -947,7 +947,7 @@ class Test_JinjaTemplate:
                    "{% endfor %}"
         expected = "<<[ abc ]>> a <<[ end ]>>\n" \
                    "<<[ def ]>> a <<[ end ]>>\n" \
-                   "<<[ ghi ]>> a <<[ end ]>>\n"
+                   "<<[ ghi ]>> a <<[ end ]>>"
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(values = ["abc", "def", "ghi"]).render()
         if result != expected:
@@ -959,7 +959,7 @@ class Test_JinjaTemplate:
                    "{% endfor %}"
         expected = "<<[ abc ]>> abc <<[ end ]>>\n" \
                    "<<[ def ]>> def <<[ end ]>>\n" \
-                   "<<[ ghi ]>> ghi <<[ end ]>>\n"
+                   "<<[ ghi ]>> ghi <<[ end ]>>"
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(values = ["abc", "def", "ghi"]).render()
         if result != expected:
@@ -973,7 +973,7 @@ class Test_JinjaTemplate:
         expected = "<<[ hhh ]>> hhh <<[ end ]>>\n" \
                    "<<[ abc ]>> abc <<[ end ]>>\n" \
                    "<<[ def ]>> def <<[ end ]>>\n" \
-                   "<<[ ghi ]>> ghi <<[ end ]>>\n"
+                   "<<[ ghi ]>> ghi <<[ end ]>>"
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(values = ["abc", "def", "ghi"], value1 = "hhh").render()
         if result != expected:
@@ -1003,7 +1003,7 @@ class Test_JinjaTemplate:
         expected = "<<[ hhh ]>> zzz <<[ end ]>>\n" \
                    "<<[ abc ]>> abc <<[ end ]>>\n" \
                    "<<[ def ]>> def <<[ end ]>>\n" \
-                   "<<[ ghi ]>> ghi <<[ end ]>>\n"
+                   "<<[ ghi ]>> ghi <<[ end ]>>"
         output   = "<<[ hhh ]>> zzz <<[ end ]>>"
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(values = ["abc", "def", "ghi"], value1 = "hhh").render(output)
@@ -1018,7 +1018,7 @@ class Test_JinjaTemplate:
         expected = "<<[ hhh ]>> hhh <<[ end ]>>\n" \
                    "<<[ abc ]>> abc <<[ end ]>>\n" \
                    "<<[ def ]>> def <<[ end ]>>\n" \
-                   "<<[ ghi ]>> zzz <<[ end ]>>\n"
+                   "<<[ ghi ]>> zzz <<[ end ]>>"
         output   = "<<[ ghi ]>> zzz <<[ end ]>>"
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(values = ["abc", "def", "ghi"], value1 = "hhh").render(output)
@@ -1103,7 +1103,7 @@ class Test_JinjaTemplate:
                    "{% endfor %}"
         expected = "[[[ {{ value }} ]]] zzz [[[ end ]]]\n" \
                    "[[[ {{ value }} ]]] zzz [[[ end ]]]\n" \
-                   "[[[ {{ value }} ]]] zzz [[[ end ]]]\n"
+                   "[[[ {{ value }} ]]] zzz [[[ end ]]]"
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(values = ["abc", "def", "ghi"], value = "zzz").render()
         if result != expected:
