@@ -55,12 +55,12 @@ class RawTemplate:
 
     def render_file(self, output = None, encoding = None, newline = None):
         try:
-            return RawTemplate.Context(self).render_file(output, encoding, newline)
+            return self.context().render_file(output, encoding, newline)
         except BaseException as e:
             raise exceptions.clean_traceback(e) from None
     def render(self):
         try:
-            return RawTemplate.Context(self).render()
+            return self.context().render()
         except BaseException as e:
             raise exceptions.clean_traceback(e) from None
 
@@ -92,8 +92,7 @@ class RawTemplate:
                 raise exceptions.clean_traceback(e) from None
 
 class BaseTemplate:
-    def __new__(cls, string, input = None, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
-        self = super().__new__(cls)
+    def __init__(self, string, input = None, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
         self.string = string
         self.input = input
         self.output = output
@@ -102,7 +101,7 @@ class BaseTemplate:
         self.encoding = encoding
         self.newline = newline
         self.globals = globals
-        return self
+        self.parser = None
 
     @property
     def remove_markers(self):
@@ -141,12 +140,12 @@ class BaseTemplate:
 
     def render_file(self, output = None, remove_markers = None, encoding = None, newline = None):
         try:
-            return BaseTemplate.Context(self).render_file(output, remove_markers, encoding, newline)
+            return self.context().render_file(output, remove_markers, encoding, newline)
         except BaseException as e:
             raise exceptions.clean_traceback(e) from None
     def render(self, output = None, remove_markers = None):
         try:
-            return BaseTemplate.Context(self).render(output, remove_markers)
+            return self.context().render(output, remove_markers)
         except BaseException as e:
             raise exceptions.clean_traceback(e) from None
 
@@ -196,11 +195,10 @@ class BaseTemplate:
                 raise exceptions.clean_traceback(e) from None
 
 class CogTemplate(BaseTemplate):
-    def __new__(cls, string, input = None, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
-        self = super().__new__(cls, string, input, output or input, settings, remove_markers, encoding, newline, globals)
+    def __init__(self, string, input = None, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
+        super().__init__(string, input, output or input, settings, remove_markers, encoding, newline, globals)
         self.parser = CogGenerator(string, self.settings)
         self.parser.parse()
-        return self
 
     @staticmethod
     def from_file(input, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
@@ -217,11 +215,10 @@ class CogTemplate(BaseTemplate):
             raise exceptions.clean_traceback(e) from None
 
 class JinjaTemplate(BaseTemplate):
-    def __new__(cls, string, input = None, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
-        self = super().__new__(cls, string, input, output, settings, remove_markers, encoding, newline, globals)
+    def __init__(self, string, input = None, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
+        super().__init__(string, input, output, settings, remove_markers, encoding, newline, globals)
         self.parser = JinjaGenerator(string, self.settings)
         self.parser.parse()
-        return self
 
     @staticmethod
     def from_file(input, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
