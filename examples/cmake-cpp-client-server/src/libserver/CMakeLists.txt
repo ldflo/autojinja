@@ -1,4 +1,4 @@
-autojinja(__jinja__.py 
+autojinja(__jinja__.py
     GENERATES
         ServerApi.cpp
         Server.cpp

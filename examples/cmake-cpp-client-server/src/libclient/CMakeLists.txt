@@ -1,7 +1,7 @@
-autojinja(__jinja__.py 
-    GENERATES 
-        ClientApi.cpp 
-    DEPENDS 
+autojinja(__jinja__.py
+    GENERATES
+        ClientApi.cpp
+    DEPENDS
         ${SERVER_XML}
 )
 
