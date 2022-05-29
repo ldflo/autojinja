@@ -47,9 +47,9 @@ class RawTemplate:
         except BaseException as e:
             raise exceptions.clean_traceback(e) from None
     @staticmethod
-    def from_string(input, output = None, encoding = None, newline = None, globals = None):
+    def from_string(string, output = None, encoding = None, newline = None, globals = None):
         try:
-            return RawTemplate(input, None, output, encoding, newline, globals)
+            return RawTemplate(string, None, output, encoding, newline, globals)
         except BaseException as e:
             raise exceptions.clean_traceback(e) from None
 
@@ -210,9 +210,9 @@ class CogTemplate(BaseTemplate):
         except BaseException as e:
             raise exceptions.clean_traceback(e) from None
     @staticmethod
-    def from_string(input, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
+    def from_string(string, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
         try:
-            return CogTemplate(input, None, output, settings, remove_markers, encoding, newline, globals)
+            return CogTemplate(string, None, output, settings, remove_markers, encoding, newline, globals)
         except BaseException as e:
             raise exceptions.clean_traceback(e) from None
 
