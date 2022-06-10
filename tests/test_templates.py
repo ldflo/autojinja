@@ -1108,3 +1108,36 @@ class Test_JinjaTemplate:
         result = template.context(values = ["abc", "def", "ghi"], value = "zzz").render()
         if result != expected:
             raise CustomException(result, expected)
+
+### Miscellaneous
+
+class Test_Miscellaneous:
+    def test_1(self):
+        class test:
+            def generate(self):
+                expected = str(self)
+                template = autojinja.RawTemplate.from_string("{{ this }}")
+                result = template.context(**locals()).render()
+                if result != expected:
+                    raise CustomException(result, expected)
+        test().generate()
+
+    def test_2(self):
+        class test:
+            def generate(self):
+                expected = "[[[ {{ this }} ]]] " + str(self) + " [[[ end]]]"
+                template = autojinja.CogTemplate.from_string("[[[ {{ this }} ]]][[[ end]]]")
+                result = template.context(**locals()).render()
+                if result != expected:
+                    raise CustomException(result, expected)
+        test().generate()
+
+    def test_3(self):
+        class test:
+            def generate(self):
+                expected = str(self)
+                template = autojinja.JinjaTemplate.from_string("{{ this }}")
+                result = template.context(**locals()).render()
+                if result != expected:
+                    raise CustomException(result, expected)
+        test().generate()

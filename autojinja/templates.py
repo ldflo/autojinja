@@ -64,8 +64,11 @@ class RawTemplate:
         except BaseException as e:
             raise exceptions.clean_traceback(e) from None
 
-    def context(self, *args, **kwargs):
-        return RawTemplate.Context(self, args, kwargs)
+    def context(__autojinja_self__, *args, **kwargs):
+        if "self" in kwargs:
+            kwargs["this"] = kwargs["self"] # Avoid conflict with Jinja2
+            del kwargs["self"]
+        return RawTemplate.Context(__autojinja_self__, args, kwargs)
 
     class Context:
         """ Forwards Jinja2 data model """
@@ -149,8 +152,11 @@ class BaseTemplate:
         except BaseException as e:
             raise exceptions.clean_traceback(e) from None
 
-    def context(self, *args, **kwargs):
-        return BaseTemplate.Context(self, args, kwargs)
+    def context(__autojinja_self__, *args, **kwargs):
+        if "self" in kwargs:
+            kwargs["this"] = kwargs["self"] # Avoid conflict with Jinja2
+            del kwargs["self"]
+        return BaseTemplate.Context(__autojinja_self__, args, kwargs)
 
     class Context:
         """ Forwards Jinja2 data model """
