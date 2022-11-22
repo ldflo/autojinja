@@ -1218,16 +1218,20 @@ class Test_BothMarkers:
                        "// // <<[ end ]>>\n" \
                        "// \n" \
                        "// \n" \
+                       "// \n" \
                        "// ]]]\n" \
                        "// <<[ abc ]>>\n" \
                        "123\n" \
                        "// <<[ end ]>>\n" \
                        "// [[[ end ]]]"
             expected = "def\n" \
-                       "123\n"
+                       "123\n" \
+                       "\n" \
+                       "\n"
             header0  = "def\n" \
                        "// <<[ abc ]>>\n" \
                        "// <<[ end ]>>\n" \
+                       "\n" \
                        "\n"
             body0    = "// <<[ abc ]>>\n" \
                        "123\n" \
