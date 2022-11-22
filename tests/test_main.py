@@ -119,6 +119,13 @@ with open(file13, 'w') as f:
             f"sys.stderr.write(\"error2\\n\")\n" \
             f"sys.stdout.write(\"print2\\n\")\n" \
             f"raise Exception(\"Error\")\n")
+# TestSummary
+file14 = root.join("script_summary.py")
+with open(file14, 'w') as f:
+    f.write(f"import os\n" \
+            f"with open('{output}', 'a') as f:\n" \
+            f"    if '{autojinja.defaults.AUTOJINJA_SUMMARY}' in os.environ:\n" \
+            f"        f.write(os.environ['{autojinja.defaults.AUTOJINJA_SUMMARY}'] + '\\n')\n")
 
 class TestSearch:
     def test_1(self):
@@ -423,3 +430,107 @@ class TestSilent:
         assert str(exception).startswith(message_start) == True
         assert str(exception).endswith(message_end) == True
         del os.environ[autojinja.defaults.AUTOJINJA_SILENT]
+
+
+class TestSummary:
+    def test_1(self):
+        clear_output()
+        autojinja.main(file14)
+        assert read_output() == f"2\n"
+
+    def test_2(self):
+        clear_output()
+        autojinja.main("--summary", "0", file14)
+        assert read_output() == f"0\n"
+
+    def test_3(self):
+        clear_output()
+        autojinja.main("--summary", "1", file14)
+        assert read_output() == f"1\n"
+
+    def test_4(self):
+        clear_output()
+        autojinja.main("--summary", "2", file14)
+        assert read_output() == f"2\n"
+
+    def test_5(self):
+        clear_output()
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "0"
+        autojinja.main(file14)
+        assert read_output() == f"0\n"
+        del os.environ[autojinja.defaults.AUTOJINJA_SUMMARY]
+
+    def test_6(self):
+        clear_output()
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "0"
+        autojinja.main("--summary", "0", file14)
+        assert read_output() == f"0\n"
+        del os.environ[autojinja.defaults.AUTOJINJA_SUMMARY]
+
+    def test_7(self):
+        clear_output()
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "1"
+        autojinja.main("--summary", "1", file14)
+        assert read_output() == f"1\n"
+        del os.environ[autojinja.defaults.AUTOJINJA_SUMMARY]
+
+    def test_8(self):
+        clear_output()
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "2"
+        autojinja.main(file14)
+        assert read_output() == f"2\n"
+        del os.environ[autojinja.defaults.AUTOJINJA_SUMMARY]
+
+    def test_9(self):
+        clear_output()
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "1"
+        autojinja.main("--summary", "0", file14)
+        assert read_output() == f"0\n"
+        del os.environ[autojinja.defaults.AUTOJINJA_SUMMARY]
+
+    def test_10(self):
+        clear_output()
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "1"
+        autojinja.main("--summary", "1", file14)
+        assert read_output() == f"1\n"
+        del os.environ[autojinja.defaults.AUTOJINJA_SUMMARY]
+
+    def test_11(self):
+        clear_output()
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "1"
+        autojinja.main("--summary", "2", file14)
+        assert read_output() == f"2\n"
+        del os.environ[autojinja.defaults.AUTOJINJA_SUMMARY]
+
+    def test_12(self):
+        clear_output()
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "0"
+        autojinja.main("--env", f"{autojinja.defaults.AUTOJINJA_SUMMARY}=1", file14)
+        assert read_output() == f"1\n"
+        del os.environ[autojinja.defaults.AUTOJINJA_SUMMARY]
+
+    def test_13(self):
+        clear_output()
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "0"
+        autojinja.main("--summary", "1", "--env", f"{autojinja.defaults.AUTOJINJA_SUMMARY}=0", file14)
+        assert read_output() == f"1\n"
+        del os.environ[autojinja.defaults.AUTOJINJA_SUMMARY]
+
+    def test_14(self):
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "abc"
+        message = f"Expected 0, 1 or 2 for environment variable '{autojinja.defaults.AUTOJINJA_SUMMARY}'"
+        invalid_autojinja(Exception, message, file14)
+        del os.environ[autojinja.defaults.AUTOJINJA_SUMMARY]
+
+    def test_15(self):
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "abc"
+        message = f"Expected 0, 1 or 2 for environment variable '{autojinja.defaults.AUTOJINJA_SUMMARY}'"
+        try:
+            autojinja.utils.generate_file(output, "")
+        except BaseException as e:
+            exception = e
+        else:
+            exception = None
+        if str(exception) != str(message):
+            raise CustomException(exception, message)
+        del os.environ[autojinja.defaults.AUTOJINJA_SUMMARY]

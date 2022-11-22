@@ -1138,7 +1138,7 @@ class Test_JinjaTemplate:
         result = template.context().render(output)
         if result != expected:
             raise CustomException(result, expected)
-        
+
     def test_27(self):
         input    = "    <<[ abc ]>>\n" \
                    "    dummy\n" \
@@ -1168,7 +1168,7 @@ class Test_JinjaTemplate:
         result = template.context().render(output)
         if result != expected:
             raise CustomException(result, expected)
-        
+
     def test_28(self):
         input    = "    <<[ abc ]>>\n" \
                    "    dummy\n" \
@@ -1195,7 +1195,7 @@ class Test_JinjaTemplate:
         result = template.context().render(output)
         if result != expected:
             raise CustomException(result, expected)
-        
+
     def test_29(self):
         input    = "    <<[ abc ]>>\n" \
                    "    dummy\n" \
@@ -1225,7 +1225,7 @@ class Test_JinjaTemplate:
         result = template.context().render(output)
         if result != expected:
             raise CustomException(result, expected)
-        
+
     def test_30(self):
         input    = "    <<[ abc ]>>\n" \
                    "    dummy <<[ end ]>>\n" \

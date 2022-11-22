@@ -31,7 +31,21 @@ def generate_file(filepath, new_content, old_content = None, encoding = None, ne
     if created or changed:
         with open(filepath, 'w', encoding = encoding or "utf-8", newline = newline) as file:
             file.write(new_content)
-    print(f"[autojinja]  {'  new  ' if created else 'changed' if changed else '-------'}  {filepath}  (from {path.no_antislash(sys.argv[0])})")
+    ### Print summary
+    summary = os.environ.get(defaults.AUTOJINJA_SUMMARY)
+    if defaults.AUTOJINJA_SUMMARY not in os.environ:
+        summary = 2
+    else:
+        value = os.environ[defaults.AUTOJINJA_SUMMARY]
+        if not value.isdigit() or int(value) < 0 or int(value) > 2:
+            raise Exception(f"Expected 0, 1 or 2 for environment variable '{defaults.AUTOJINJA_SUMMARY}'")
+        summary = int(value)
+    if summary == 0:
+        pass
+    elif summary == 1:
+        print(f"[autojinja]  {'  new  ' if created else 'changed' if changed else '-------'}  {filepath}")
+    else:
+        print(f"[autojinja]  {'  new  ' if created else 'changed' if changed else '-------'}  {filepath}  (from {path.no_antislash(sys.argv[0])})")
 
 def parse_file(filepath, settings = None, encoding = None):
     """ Parses the given file and return the parsing result.

@@ -986,12 +986,18 @@ OPTIONS:
     -i, --includes=DIRECTORIES    Additional import directories for executed python scripts
                                   Directory list separated by ':' (Unix only) or ';' (Windows and Unix)
                                   Appended to environment variable 'PYTHONPATH'
-   --remove-markers=ENABLE        Removes markers from generated outputs
+    --remove-markers=ENABLE       Removes markers from generated outputs
                                   Default value is '0' or environment variable 'AUTOJINJA_REMOVE_MARKERS'
                                   Overrides environment variable 'AUTOJINJA_REMOVE_MARKERS'
-   --silent                       Prevents executed python scripts from writing to stdout/stderr
+    --silent                      Prevents executed python scripts from writing to stdout/stderr
                                   Enabled if environment variable 'AUTOJINJA_SILENT' == 1
                                   Overrides environment variable 'AUTOJINJA_SILENT'
+    --summary=VALUE               Enables notifications for generated files to stdout
+                                  Overrides environment variable 'AUTOJINJA_SUMMARY'
+                                  Default value is 2:
+                                      0: nothing
+                                      1: [autojinja]  -------  <file>
+                                      2: [autojinja]  -------  <file>  (from <script>)
 ```
 
 The first step of **autojinja** _CLI_ is to resolve an exhaustive list of all the Python scripts to execute, based on scripts, directories and options provided as arguments. These scripts are then successively executed by launching Python processes, as you would manually do with the command :

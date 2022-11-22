@@ -32,12 +32,18 @@ OPTIONS:
     -i, --includes=DIRECTORIES    Additional import directories for executed python scripts
                                   Directory list separated by ':' (Unix only) or ';' (Windows and Unix)
                                   Appended to environment variable 'PYTHONPATH'
-   --remove-markers=ENABLE        Removes markers from generated outputs
+    --remove-markers=ENABLE       Removes markers from generated outputs
                                   Default value is '0' or environment variable 'AUTOJINJA_REMOVE_MARKERS'
                                   Overrides environment variable 'AUTOJINJA_REMOVE_MARKERS'
-   --silent                       Prevents executed python scripts from writing to stdout/stderr
+    --silent                      Prevents executed python scripts from writing to stdout/stderr
                                   Enabled if environment variable 'AUTOJINJA_SILENT' == 1
                                   Overrides environment variable 'AUTOJINJA_SILENT'
+    ---summary=VALUE              Enables notifications for generated files to stdout
+                                  Overrides environment variable 'AUTOJINJA_SUMMARY'
+                                  Default value is 2:
+                                      0: nothing
+                                      1: [autojinja]  -------  <file>
+                                      2: [autojinja]  -------  <file>  (from <script>)
 """
 
 from .defaults import *
@@ -105,6 +111,13 @@ def main(*arguments):
                         help=f"prevents executed python scripts from writing to stdout/stderr\n"
                              f"Enabled if environment variable '{AUTOJINJA_SILENT}' == 1\n"
                              f"Overrides environment variable '{AUTOJINJA_SILENT}'")
+    parser.add_argument("--summary",
+                        help=f"enables notifications for generated files to stdout\n"
+                             f"Overrides environment variable '{AUTOJINJA_SUMMARY}'\n"
+                             f"Default value is 2:\n"
+                             f"    0: nothing\n"
+                             f"    1: [autojinja]  -------  <file>\n"
+                             f"    2: [autojinja]  -------  <file>  (from <script>)")
 
     args = parser.parse_args(arguments)
 
@@ -117,9 +130,6 @@ def main(*arguments):
     if args.remove_markers != None:
         if not args.remove_markers.isdigit() or int(args.remove_markers) < 0 or int(args.remove_markers) > 1:
             raise Exception("Expected 0 or 1 for '--remove-markers'")
-    # Silent
-    if args.silent:
-        args.silent = 1
 
     ### Parse arguments
     def file_tagged(script):
@@ -182,25 +192,41 @@ def main(*arguments):
         else:
             env["PYTHONPATH"] = os.pathsep.join(includes)
 
-    # Additional options
+    ## Additional options
+    # remove_markers
     if args.remove_markers == None:
         if not AUTOJINJA_REMOVE_MARKERS in env:
             args.remove_markers = "0"
         else:
             args.remove_markers = env[AUTOJINJA_REMOVE_MARKERS]
-            if not args.remove_markers.isdigit() or int(args.remove_markers) < 0 or int(args.remove_markers) > 1:
-                raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_REMOVE_MARKERS}'")
-    env[AUTOJINJA_REMOVE_MARKERS] = args.remove_markers
+    if not args.remove_markers.isdigit() or int(args.remove_markers) < 0 or int(args.remove_markers) > 1:
+        raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_REMOVE_MARKERS}'")
+    args.remove_markers = int(args.remove_markers)
+    env[AUTOJINJA_REMOVE_MARKERS] = str(args.remove_markers)
 
-    if not args.silent:
+    # silent
+    if args.silent == None or args.silent == False:
         if not AUTOJINJA_SILENT in env:
-            args.silent = 0
+            args.silent = "0"
         else:
             args.silent = env[AUTOJINJA_SILENT]
-            if not args.silent.isdigit() or int(args.silent) < 0 or int(args.silent) > 1:
-                raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_SILENT}'")
-            args.silent = int(args.silent)
-    env[AUTOJINJA_SILENT] = "1" if args.silent else "0"
+    else:
+        args.silent = "1"
+    if not args.silent.isdigit() or int(args.silent) < 0 or int(args.silent) > 1:
+        raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_SILENT}'")
+    args.silent = int(args.silent)
+    env[AUTOJINJA_SILENT] = str(args.silent)
+    
+    # summary
+    if args.summary == None:
+        if not AUTOJINJA_SUMMARY in env:
+            args.summary = "2"
+        else:
+            args.summary = env[AUTOJINJA_SUMMARY]
+    if not args.summary.isdigit() or int(args.summary) < 0 or int(args.summary) > 2:
+        raise Exception(f"Expected 0, 1 or 2 for environment variable '{AUTOJINJA_SUMMARY}'")
+    args.summary = int(args.summary)
+    env[AUTOJINJA_SUMMARY] = str(args.summary)
 
     ### Execute python scripts
     for script in files:
