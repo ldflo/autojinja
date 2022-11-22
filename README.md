@@ -140,5 +140,6 @@ $ autojinja -a . -e FILE1=/tmp/file1.xml -e file.env
 ## Links
 - [Documentation](https://github.com/ldflo/autojinja/blob/main/docs/doc_autojinja.md)
 - [Examples](https://github.com/ldflo/autojinja/blob/main/examples)
+- [PyPI](https://pypi.org/project/autojinja)
 - [Jinja2](https://github.com/pallets/jinja)
 - [Cog](https://github.com/nedbat/cog)
