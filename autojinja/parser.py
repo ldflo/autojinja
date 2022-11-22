@@ -353,16 +353,18 @@ class Marker:
     def dedent(self, output):
         result = io.StringIO()
         start = 0
-        while start < len(output):
+        while True:
             idx = output.find('\n', start, len(output))
-            if idx < 0:
-                idx = len(output)
-            mid = start + self.body_column
-            end = idx + 1
+            mid = min(start + self.body_column, len(output) if idx < 0 else idx)
             for i in range(start, mid):
                 if output[i] != ' ' and output[i] != '\t':
                     result.write(output[i:mid])
                     break
-            result.write(output[mid:end])
-            start = end
+            if idx < 0:
+                result.write(output[mid:])
+                break
+            else:
+                end = idx+1
+                result.write(output[mid:end])
+                start = end
         return result.getvalue()

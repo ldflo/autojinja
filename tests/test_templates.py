@@ -1109,6 +1109,152 @@ class Test_JinjaTemplate:
         if result != expected:
             raise CustomException(result, expected)
 
+    def test_26(self):
+        input    = "    <<[ abc ]>>\n" \
+                   "    dummy\n" \
+                   "    <<[ end ]>>\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test2\n" \
+                   "  <<[ end ]>>"
+        expected = "    <<[ abc ]>>\n" \
+                   "    A\n" \
+                   "    \n" \
+                   "    B\n" \
+                   "    \n" \
+                   "    C\n" \
+                   "    <<[ end ]>>\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test2\n" \
+                   "  <<[ end ]>>"
+        output   = "    <<[ abc ]>>\n" \
+                   "    A\n" \
+                   "    \n" \
+                   "    B\n" \
+                   "    \n" \
+                   "    C\n" \
+                   "    <<[ end ]>>"
+        template = autojinja.JinjaTemplate.from_string(input)
+        dummy = template.edits
+        result = template.context().render(output)
+        if result != expected:
+            raise CustomException(result, expected)
+        
+    def test_27(self):
+        input    = "    <<[ abc ]>>\n" \
+                   "    dummy\n" \
+                   "    <<[ end ]>>\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test2\n" \
+                   "  <<[ end ]>>"
+        expected = "    <<[ abc ]>>\n" \
+                   "    A\n" \
+                   "    \n" \
+                   "    B\n" \
+                   "    \n" \
+                   "    C\n" \
+                   "    <<[ end ]>>\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test2\n" \
+                   "  <<[ end ]>>"
+        output   = "    <<[ abc ]>>\n" \
+                   "    A\n" \
+                   "\n" \
+                   "    B\n" \
+                   "\n" \
+                   "    C\n" \
+                   "    <<[ end ]>>"
+        template = autojinja.JinjaTemplate.from_string(input)
+        dummy = template.edits
+        result = template.context().render(output)
+        if result != expected:
+            raise CustomException(result, expected)
+        
+    def test_28(self):
+        input    = "    <<[ abc ]>>\n" \
+                   "    dummy\n" \
+                   "    <<[ end ]>>\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test2\n" \
+                   "  <<[ end ]>>"
+        expected = "    <<[ abc ]>>\n" \
+                   "    A\n" \
+                   "    \n" \
+                   "    B\n" \
+                   "    <<[ end ]>>\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test2\n" \
+                   "  <<[ end ]>>"
+        output   = "    <<[ abc ]>>\n" \
+                   "    A\n" \
+                   "  \n" \
+                   "    B\n" \
+                   "\n" \
+                   "    <<[ end ]>>"
+        template = autojinja.JinjaTemplate.from_string(input)
+        dummy = template.edits
+        result = template.context().render(output)
+        if result != expected:
+            raise CustomException(result, expected)
+        
+    def test_29(self):
+        input    = "    <<[ abc ]>>\n" \
+                   "    dummy\n" \
+                   "    <<[ end ]>>\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test2\n" \
+                   "  <<[ end ]>>"
+        expected = "    <<[ abc ]>>\n" \
+                   "    A\n" \
+                   "    d\n" \
+                   "    B\n" \
+                   "    f\n" \
+                   "    C\n" \
+                   "    <<[ end ]>>\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test2\n" \
+                   "  <<[ end ]>>"
+        output   = "    <<[ abc ]>>\n" \
+                   "    A\n" \
+                   "  d\n" \
+                   "    B\n" \
+                   "  f\n" \
+                   "    C\n" \
+                   "    <<[ end ]>>"
+        template = autojinja.JinjaTemplate.from_string(input)
+        dummy = template.edits
+        result = template.context().render(output)
+        if result != expected:
+            raise CustomException(result, expected)
+        
+    def test_30(self):
+        input    = "    <<[ abc ]>>\n" \
+                   "    dummy <<[ end ]>>\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test2\n" \
+                   "  <<[ end ]>>"
+        expected = "    <<[ abc ]>>\n" \
+                   "    A\n" \
+                   "    \n" \
+                   "    B\n" \
+                   "    \n" \
+                   "    C\n" \
+                   "    dummy <<[ end ]>>\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test2\n" \
+                   "  <<[ end ]>>"
+        output   = "    <<[ abc ]>>\n" \
+                   "    A\n" \
+                   "    \n" \
+                   "    B\n" \
+                   "    \n" \
+                   "    C\n" \
+                   "    <<[ end ]>>"
+        template = autojinja.JinjaTemplate.from_string(input)
+        dummy = template.edits
+        result = template.context().render(output)
+        if result != expected:
+            raise CustomException(result, expected)
+
 ### Miscellaneous
 
 class Test_Miscellaneous:
