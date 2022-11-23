@@ -18,7 +18,7 @@
             "type": "shell",
             "linux": {
                 "command": "python3 -m pytest -x",
-                //"command": "python -m pytest -x tests/test_templates.py::Test_JinjaTemplate::test_1",
+                //"command": "python3 -m pytest -x tests/test_templates.py::Test_JinjaTemplate::test_1",
             },
             "windows": {
                 "command": "python -m pytest -x",
