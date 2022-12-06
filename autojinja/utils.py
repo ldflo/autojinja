@@ -37,14 +37,15 @@ def generate_file(filepath, new_content, old_content = None, encoding = None, ne
         summary = "1"
     else:
         value = os.environ[defaults.AUTOJINJA_SUMMARY]
-        error = False
-        if len(value) == 1 or len(value) == 3:
+        is_valid = True
+        if len(value) != 1 and len(value) != 3:
+            is_valid = False
+        else:
             for c in value:
                 if c != "0" and c != "1":
-                    error = True
-        else:
-            error = True
-        if error:
+                    is_valid = False
+                    break
+        if not is_valid:
             raise Exception(f"Expected 0, 1 or flags for environment variable '{defaults.AUTOJINJA_SUMMARY}'")
         summary = value
     ### Print summary
