@@ -31,21 +31,38 @@ def generate_file(filepath, new_content, old_content = None, encoding = None, ne
     if created or changed:
         with open(filepath, 'w', encoding = encoding or "utf-8", newline = newline) as file:
             file.write(new_content)
-    ### Print summary
+    ### Verify summary
     summary = os.environ.get(defaults.AUTOJINJA_SUMMARY)
     if defaults.AUTOJINJA_SUMMARY not in os.environ:
-        summary = 2
+        summary = "1"
     else:
         value = os.environ[defaults.AUTOJINJA_SUMMARY]
-        if not value.isdigit() or int(value) < 0 or int(value) > 2:
-            raise Exception(f"Expected 0, 1 or 2 for environment variable '{defaults.AUTOJINJA_SUMMARY}'")
-        summary = int(value)
-    if summary == 0:
+        error = False
+        if len(value) == 1 or len(value) == 3:
+            for c in value:
+                if c != "0" and c != "1":
+                    error = True
+        else:
+            error = True
+        if error:
+            raise Exception(f"Expected 0, 1 or flags for environment variable '{defaults.AUTOJINJA_SUMMARY}'")
+        summary = value
+    ### Print summary
+    message = None
+    if summary == "0":
         pass
-    elif summary == 1:
-        print(f"[autojinja]  {'  new  ' if created else 'changed' if changed else '-------'}  {filepath}")
+    elif summary == "1":
+        message = f"[autojinja]  {'  new  ' if created else 'changed' if changed else '-------'}  {filepath}  (from {path.no_antislash(sys.argv[0])})"
+    elif summary[2] == "1" and (not created and not changed):
+        pass
     else:
-        print(f"[autojinja]  {'  new  ' if created else 'changed' if changed else '-------'}  {filepath}  (from {path.no_antislash(sys.argv[0])})")
+        executing_script = path(sys.argv[0])
+        message = f"[autojinja]  {'  new  ' if created else 'changed' if changed else '-------'}  "
+        message += filepath if summary[1] == "1" else filepath.relpath(executing_script.dirpath)
+        if summary[0] == "1":
+            message += f"  (from {executing_script})"
+    if message != None:
+        print(message)
 
 def parse_file(filepath, settings = None, encoding = None):
     """ Parses the given file and return the parsing result.

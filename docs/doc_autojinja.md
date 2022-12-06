@@ -992,12 +992,24 @@ OPTIONS:
     --silent                      Prevents executed python scripts from writing to stdout/stderr
                                   Enabled if environment variable 'AUTOJINJA_SILENT' == 1
                                   Overrides environment variable 'AUTOJINJA_SILENT'
-    --summary=VALUE               Enables notifications for generated files to stdout
+    --summary=VALUE/FLAGS         Enables notifications for generated files to stdout
                                   Overrides environment variable 'AUTOJINJA_SUMMARY'
-                                  Default value is 2:
+                                  Default value is '1':
                                       0: nothing
-                                      1: [autojinja]  -------  <file>
-                                      2: [autojinja]  -------  <file>  (from <script>)
+                                      1: [autojinja]  -------  <abs_path>  (from <abs_path>)
+                                  Also accepts 3 flags instead:
+                                      100
+                                      ^------ show (1) / hide (0) executing script path
+                                              0: [autojinja]  -------  <path>
+                                              1: [autojinja]  -------  <path>  (from <path>)
+                                      010
+                                       ^------ use absolute (1) / relative (0) paths
+                                              0: [autojinja]  -------  <rel_path>  (from <rel_path>)
+                                              1: [autojinja]  -------  <abs_path>  (from <abs_path>)
+                                      001
+                                        ^------ notification when changed only (1)
+                                              0: [autojinja]  -------  <path>  (from <path>)
+                                              1: [autojinja]  changed  <path>  (from <path>)
 ```
 
 The first step of **autojinja** _CLI_ is to resolve an exhaustive list of all the Python scripts to execute, based on scripts, directories and options provided as arguments. These scripts are then successively executed by launching Python processes, as you would manually do with the command :

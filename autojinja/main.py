@@ -38,12 +38,24 @@ OPTIONS:
     --silent                      Prevents executed python scripts from writing to stdout/stderr
                                   Enabled if environment variable 'AUTOJINJA_SILENT' == 1
                                   Overrides environment variable 'AUTOJINJA_SILENT'
-    ---summary=VALUE              Enables notifications for generated files to stdout
+    ---summary=VALUE/FLAGS        Enables notifications for generated files to stdout
                                   Overrides environment variable 'AUTOJINJA_SUMMARY'
-                                  Default value is 2:
+                                  Default value is '1':
                                       0: nothing
-                                      1: [autojinja]  -------  <file>
-                                      2: [autojinja]  -------  <file>  (from <script>)
+                                      1: [autojinja]  -------  <abs_path>  (from <abs_path>)
+                                  Also accepts 3 flags instead:
+                                      100
+                                      ^------ show (1) / hide (0) executing script path
+                                              0: [autojinja]  -------  <path>
+                                              1: [autojinja]  -------  <path>  (from <path>)
+                                      010
+                                       ^------ use absolute (1) / relative (0) paths
+                                              0: [autojinja]  -------  <rel_path>  (from <rel_path>)
+                                              1: [autojinja]  -------  <abs_path>  (from <abs_path>)
+                                      001
+                                        ^------ notification when changed only (1)
+                                              0: [autojinja]  -------  <path>  (from <path>)
+                                              1: [autojinja]  changed  <path>  (from <path>)
 """
 
 from .defaults import *
@@ -114,10 +126,22 @@ def main(*arguments):
     parser.add_argument("--summary",
                         help=f"enables notifications for generated files to stdout\n"
                              f"Overrides environment variable '{AUTOJINJA_SUMMARY}'\n"
-                             f"Default value is 2:\n"
+                             f"Default value is '1':\n"
                              f"    0: nothing\n"
-                             f"    1: [autojinja]  -------  <file>\n"
-                             f"    2: [autojinja]  -------  <file>  (from <script>)")
+                             f"    1: [autojinja]  -------  <abs_path>  (from <abs_path>)\n"
+                             f"Also accepts 3 flags instead:\n"
+                             f"    100\n"
+                             f"    ^------ show (1) / hide (0) executing script path\n"
+                             f"            0: [autojinja]  -------  <path>\n"
+                             f"            1: [autojinja]  -------  <path>  (from <path>)\n"
+                             f"    010\n"
+                             f"     ^------ use absolute (1) / relative (0) paths\n"
+                             f"            0: [autojinja]  -------  <rel_path>  (from <rel_path>)\n"
+                             f"            1: [autojinja]  -------  <abs_path>  (from <abs_path>)\n"
+                             f"    001\n"
+                             f"      ^------ notification when changed only (1)\n"
+                             f"            0: [autojinja]  -------  <path>  (from <path>)\n"
+                             f"            1: [autojinja]  changed  <path>  (from <path>)")
 
     args = parser.parse_args(arguments)
 
@@ -220,12 +244,18 @@ def main(*arguments):
     # summary
     if args.summary == None:
         if not AUTOJINJA_SUMMARY in env:
-            args.summary = "2"
+            args.summary = "1"
         else:
             args.summary = env[AUTOJINJA_SUMMARY]
-    if not args.summary.isdigit() or int(args.summary) < 0 or int(args.summary) > 2:
-        raise Exception(f"Expected 0, 1 or 2 for environment variable '{AUTOJINJA_SUMMARY}'")
-    args.summary = int(args.summary)
+    error = False
+    if len(args.summary) == 1 or len(args.summary) == 3:
+        for c in args.summary:
+            if c != "0" and c != "1":
+                error = True
+    else:
+        error = True
+    if error:
+        raise Exception(f"Expected 0, 1 or flags for environment variable '{AUTOJINJA_SUMMARY}'")
     env[AUTOJINJA_SUMMARY] = str(args.summary)
 
     ### Execute python scripts
