@@ -397,6 +397,14 @@ class TestPath:
         assert  "/dir1/" + autojinja.path("file.txt")      == "/dir1/file.txt"
         assert  "/dir1\\dir2" + autojinja.path("file.txt") == "/dir1/dir2file.txt"
 
+    def test_truediv(self):
+        assert autojinja.path("") / "file.txt"            == "file.txt"
+        assert autojinja.path("/") / "file.txt"           == "/file.txt"
+        assert autojinja.path("C:/") / "file.txt"         == "C:/file.txt"
+        assert autojinja.path("\\dir1") / "file.txt"      == "/dir1/file.txt"
+        assert autojinja.path("/dir1/") / "file.txt"      == "/dir1/file.txt"
+        assert autojinja.path("/dir1\\dir2") / "file.txt" == "/dir1/dir2/file.txt"
+
     def test_files(self):
         # dir
         values = root.files("**")

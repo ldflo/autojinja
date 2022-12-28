@@ -24,7 +24,7 @@ class _join_class:
         """ /dir1/dir2   file.txt -> /dir1/dir2/file.txt/
             /dir1/dir2/  dir3/    -> /dir1/dir2/dir3/
         """
-        if type(args) == tuple:
+        if isinstance(args, tuple):
             return slash(join.__call__(*args))
         return slash(join.__call__(args))
 
@@ -209,7 +209,7 @@ class Path(str):
             return PathWrapper(attribute) if callable(attribute) else attribute
         except:
             result = os.path.__getattribute__(attr)(self)
-            return Path(result) if type(result) == str else result
+            return Path(result) if isinstance(result, str) else result
 
     class _join_class:
         def __init__(self, path):
@@ -218,7 +218,7 @@ class Path(str):
             path = join.__call__(self.path, *args)
             return Path(path)
         def __getitem__(self, args):
-            if type(args) == tuple:
+            if isinstance(args, tuple):
                 path = slash(join.__call__(self.path, *args))
             else:
                 path = slash(join.__call__(self.path, args))
@@ -234,6 +234,8 @@ class Path(str):
         return self.add(other)
     def __radd__(self, other):
         return Path(other.__add__(self))
+    def __truediv__(self, other):
+        return self.join(other)
     def files(self, pattern = "*"):
         list = files(self, pattern)
         return [Path(path) for path in list]
@@ -315,10 +317,10 @@ class PathWrapper:
         self.attribute = attribute
     def __call__(self, *args, **kwargs):
         result = self.attribute.__call__(*args, **kwargs)
-        return Path(result) if type(result) == str else result
+        return Path(result) if isinstance(result, str) else result
     def __getitem__(self, args):
         result = self.attribute.__getitem__(args)
-        return Path(result) if type(result) == str else result
+        return Path(result) if isinstance(result, str) else result
     def __getattr__(self, attr):
         return getattr(self.attribute, attr)
 
