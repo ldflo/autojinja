@@ -61,7 +61,38 @@ class Test:
             f.write("import autojinja\n")
         assert autojinja.utils.file_tagged(file1, encoding="ascii") == False
 
-    def test_generate_file(self):
+    def test_generate_file_0(self):
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "0"
+        if file2.exists:
+            os.remove(file2)
+        try:
+            sys.stdout = io.StringIO()
+            autojinja.utils.generate_file(file2, "Test1", encoding="ascii")
+            with open(file2, 'r', encoding="ascii") as f:
+                old_content = f.read()
+                assert old_content == "Test1"
+            assert sys.stdout.getvalue() == ""
+            sys.stdout.truncate(0)
+            sys.stdout.seek(0)
+            autojinja.utils.generate_file(file2, "Test1", old_content, encoding="ascii")
+            with open(file2, 'r', encoding="ascii") as f:
+                old_content = f.read()
+                assert old_content == "Test1"
+            assert sys.stdout.getvalue() == ""
+            sys.stdout.truncate(0)
+            sys.stdout.seek(0)
+            autojinja.utils.generate_file(file2, "Test2\nTest2", None, encoding="ascii", newline="\r\n")
+            with open(file2, 'r', encoding="ascii", newline="\r\n") as f:
+                old_content = f.read()
+                assert old_content == "Test2\r\nTest2"
+            assert sys.stdout.getvalue() == ""
+        finally:
+            sys.stdout = sys.__stdout__
+
+    def test_generate_file_1(self):
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "1"
+        if file2.exists:
+            os.remove(file2)
         try:
             sys.stdout = io.StringIO()
             autojinja.utils.generate_file(file2, "Test1", encoding="ascii")
@@ -83,6 +114,118 @@ class Test:
                 old_content = f.read()
                 assert old_content == "Test2\r\nTest2"
             assert sys.stdout.getvalue() == f"[autojinja]  changed  {file2}  (from {autojinja.path.no_antislash(sys.argv[0])})\n"
+        finally:
+            sys.stdout = sys.__stdout__
+
+    def test_generate_file_2(self):
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "110"
+        if file2.exists:
+            os.remove(file2)
+        try:
+            sys.stdout = io.StringIO()
+            autojinja.utils.generate_file(file2, "Test1", encoding="ascii")
+            with open(file2, 'r', encoding="ascii") as f:
+                old_content = f.read()
+                assert old_content == "Test1"
+            assert sys.stdout.getvalue() == f"[autojinja]    new    {file2}  (from {autojinja.path.no_antislash(sys.argv[0])})\n"
+            sys.stdout.truncate(0)
+            sys.stdout.seek(0)
+            autojinja.utils.generate_file(file2, "Test1", old_content, encoding="ascii")
+            with open(file2, 'r', encoding="ascii") as f:
+                old_content = f.read()
+                assert old_content == "Test1"
+            assert sys.stdout.getvalue() == f"[autojinja]  -------  {file2}  (from {autojinja.path.no_antislash(sys.argv[0])})\n"
+            sys.stdout.truncate(0)
+            sys.stdout.seek(0)
+            autojinja.utils.generate_file(file2, "Test2\nTest2", None, encoding="ascii", newline="\r\n")
+            with open(file2, 'r', encoding="ascii", newline="\r\n") as f:
+                old_content = f.read()
+                assert old_content == "Test2\r\nTest2"
+            assert sys.stdout.getvalue() == f"[autojinja]  changed  {file2}  (from {autojinja.path.no_antislash(sys.argv[0])})\n"
+        finally:
+            sys.stdout = sys.__stdout__
+
+    def test_generate_file_3(self):
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "010"
+        if file2.exists:
+            os.remove(file2)
+        try:
+            sys.stdout = io.StringIO()
+            autojinja.utils.generate_file(file2, "Test1", encoding="ascii")
+            with open(file2, 'r', encoding="ascii") as f:
+                old_content = f.read()
+                assert old_content == "Test1"
+            assert sys.stdout.getvalue() == f"[autojinja]    new    {file2}\n"
+            sys.stdout.truncate(0)
+            sys.stdout.seek(0)
+            autojinja.utils.generate_file(file2, "Test1", old_content, encoding="ascii")
+            with open(file2, 'r', encoding="ascii") as f:
+                old_content = f.read()
+                assert old_content == "Test1"
+            assert sys.stdout.getvalue() == f"[autojinja]  -------  {file2}\n"
+            sys.stdout.truncate(0)
+            sys.stdout.seek(0)
+            autojinja.utils.generate_file(file2, "Test2\nTest2", None, encoding="ascii", newline="\r\n")
+            with open(file2, 'r', encoding="ascii", newline="\r\n") as f:
+                old_content = f.read()
+                assert old_content == "Test2\r\nTest2"
+            assert sys.stdout.getvalue() == f"[autojinja]  changed  {file2}\n"
+        finally:
+            sys.stdout = sys.__stdout__
+
+    def test_generate_file_4(self):
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "000"
+        if file2.exists:
+            os.remove(file2)
+        try:
+            sys.stdout = io.StringIO()
+            autojinja.utils.generate_file(file2, "Test1", encoding="ascii")
+            with open(file2, 'r', encoding="ascii") as f:
+                old_content = f.read()
+                assert old_content == "Test1"
+            assert sys.stdout.getvalue() == f"[autojinja]    new    {file2.relpath(autojinja.path(sys.argv[0]).dirpath)}\n"
+            sys.stdout.truncate(0)
+            sys.stdout.seek(0)
+            autojinja.utils.generate_file(file2, "Test1", old_content, encoding="ascii")
+            with open(file2, 'r', encoding="ascii") as f:
+                old_content = f.read()
+                assert old_content == "Test1"
+            assert sys.stdout.getvalue() == f"[autojinja]  -------  {file2.relpath(autojinja.path(sys.argv[0]).dirpath)}\n"
+            sys.stdout.truncate(0)
+            sys.stdout.seek(0)
+            autojinja.utils.generate_file(file2, "Test2\nTest2", None, encoding="ascii", newline="\r\n")
+            with open(file2, 'r', encoding="ascii", newline="\r\n") as f:
+                old_content = f.read()
+                assert old_content == "Test2\r\nTest2"
+            assert sys.stdout.getvalue() == f"[autojinja]  changed  {file2.relpath(autojinja.path(sys.argv[0]).dirpath)}\n"
+        finally:
+            sys.stdout = sys.__stdout__
+
+    def test_generate_file_5(self):
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "011"
+        if file2.exists:
+            os.remove(file2)
+        try:
+            sys.stdout = io.StringIO()
+            autojinja.utils.generate_file(file2, "Test1", encoding="ascii")
+            with open(file2, 'r', encoding="ascii") as f:
+                old_content = f.read()
+                assert old_content == "Test1"
+            assert sys.stdout.getvalue() == f"[autojinja]    new    {file2}\n"
+            sys.stdout.truncate(0)
+            sys.stdout.seek(0)
+            autojinja.utils.generate_file(file2, "Test1", old_content, encoding="ascii")
+            with open(file2, 'r', encoding="ascii") as f:
+                old_content = f.read()
+                assert old_content == "Test1"
+            assert sys.stdout.getvalue() == ""
+            sys.stdout.truncate(0)
+            sys.stdout.seek(0)
+            autojinja.utils.generate_file(file2, "Test2\nTest2", None, encoding="ascii", newline="\r\n")
+            with open(file2, 'r', encoding="ascii", newline="\r\n") as f:
+                old_content = f.read()
+                assert old_content == "Test2\r\nTest2"
+            assert sys.stdout.getvalue() == f"[autojinja]  changed  {file2}\n"
         finally:
             sys.stdout = sys.__stdout__
 
