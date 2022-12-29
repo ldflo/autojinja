@@ -817,6 +817,20 @@ class Test_NonGeneratedEditException:
                 "  <<[ edit1 ]>>\\n\n" \
                 "  ^^^ line 5, column 3"
         invalid_marker(input, None, autojinja.exceptions.NonGeneratedEditException, msg)
+    
+    def test_1_allow_code_loss(self):
+        input = "[[[\n" \
+                "  <<[ edit2 ]>>\n" \
+                "  <<[ end ]>>\n" \
+                "]]]\n" \
+                "  <<[ edit1 ]>>\n" \
+                "  a\n" \
+                "  <<[ end ]>>\n" \
+                "[[[ end ]]]\n"
+        template = autojinja.CogTemplate.from_string(input)
+        for edit_block in template.edit_blocks.values():
+            edit_block.allow_code_loss = True
+        template.context().render()
 
     def test_2(self):
         input = "[[[\n" \
@@ -834,6 +848,23 @@ class Test_NonGeneratedEditException:
                 "      <<[ edit2 ]>>\\n\n" \
                 "      ^^^ line 7, column 7"
         invalid_marker(input, None, autojinja.exceptions.NonGeneratedEditException, msg)
+    
+    def test_2_allow_code_loss(self):
+        input = "[[[\n" \
+                "  <<[ edit1 ]>>\n" \
+                "  <<[ end ]>>\n" \
+                "]]]\n" \
+                "  <<[ edit1 ]>>\n" \
+                "    [[[ ]]]\n" \
+                "      <<[ edit2 ]>>\n" \
+                "      <<[ end ]>>\n" \
+                "    [[[ end ]]]\n" \
+                "  <<[ end ]>>\n" \
+                "[[[ end ]]]\n"
+        template = autojinja.CogTemplate.from_string(input)
+        for edit_block in template.edit_blocks.values():
+            edit_block.allow_code_loss = True
+        template.context().render()
 
     def test_3(self):
         input = "[[[\n" \
@@ -852,6 +883,24 @@ class Test_NonGeneratedEditException:
                 "  <<[ edit1 ]>>\\n\n" \
                 "  ^^^ line 5, column 3"
         invalid_marker(input, None, autojinja.exceptions.NonGeneratedEditException, msg)
+        
+    def test_3_allow_code_loss(self):
+        input = "[[[\n" \
+                "  <<[ edit2 ]>>\n" \
+                "  <<[ end ]>>\n" \
+                "]]]\n" \
+                "  <<[ edit1 ]>>\n" \
+                "    [[[ ]]]\n" \
+                "      <<[ edit2 ]>>\n" \
+                "      abc\n" \
+                "      <<[ end ]>>\n" \
+                "    [[[ end ]]]\n" \
+                "  <<[ end ]>>\n" \
+                "[[[ end ]]]\n"
+        template = autojinja.CogTemplate.from_string(input)
+        for edit_block in template.edit_blocks.values():
+            edit_block.allow_code_loss = True
+        template.context().render()
 
     def test_4(self):
         input = "// [[[ ]]]\n" \
@@ -861,6 +910,15 @@ class Test_NonGeneratedEditException:
                 "<<[ abc ]>><<[ end ]>>\\n\n" \
                 "^^^ line 2, column 1"
         invalid_marker(input, None, autojinja.exceptions.NonGeneratedEditException, msg)
+    
+    def test_4_allow_code_loss(self):
+        input = "// [[[ ]]]\n" \
+                "<<[ abc ]>><<[ end ]>>\n" \
+                "// [[[ end ]]]"
+        template = autojinja.CogTemplate.from_string(input)
+        for edit_block in template.edit_blocks.values():
+            edit_block.allow_code_loss = True
+        template.context().render()
 
     def test_5(self):
         input = "[[[\n" \
@@ -878,6 +936,23 @@ class Test_NonGeneratedEditException:
                 "      <<[ b ]>>\\n\n" \
                 "      ^^^ line 7, column 7"
         invalid_marker(input, None, autojinja.exceptions.NonGeneratedEditException, msg)
+    
+    def test_5_allow_code_loss(self):
+        input = "[[[\n" \
+                "  <<[ a ]>>\n" \
+                "  <<[ end ]>>\n" \
+                "]]]\n" \
+                "  <<[ a ]>>\n" \
+                "    [[[  ]]]\n" \
+                "      <<[ b ]>>\n" \
+                "      <<[ end ]>>\n" \
+                "    [[[ end ]]]\n" \
+                "  <<[ end ]>>\n" \
+                "[[[ end ]]]"
+        template = autojinja.CogTemplate.from_string(input)
+        for edit_block in template.edit_blocks.values():
+            edit_block.allow_code_loss = True
+        template.context().render()
 
     def test_6(self):
         input  = "[[[\n" \
@@ -897,6 +972,29 @@ class Test_NonGeneratedEditException:
                  "  <<[ a ]>>\\n\n" \
                  "  ^^^ line 2, column 3"
         invalid_marker(input, output, autojinja.exceptions.NonGeneratedEditException, msg)
+    
+    def test_6_disallow_code_loss(self):
+        input  = "[[[\n" \
+                 "  <<[ b ]>>\n" \
+                 "  <<[ end ]>>\n" \
+                 "]]]\n" \
+                 "[[[ end ]]]"
+        output = "[[[  ]]]\n" \
+                 "  <<[ a ]>>\n" \
+                 "    [[[  ]]]\n" \
+                 "      <<[ b ]>>\n" \
+                 "      <<[ end ]>>\n" \
+                 "    [[[ end ]]]\n" \
+                 "  <<[ end ]>>\n" \
+                 "[[[ end ]]]"
+        template = autojinja.CogTemplate.from_string(input)
+        for edit_block in template.edit_blocks.values():
+            edit_block.allow_code_loss = True
+        try:
+            template.context().render(output)
+            assert False # Shouldn't be reached 
+        except:
+            pass
 
     def test_7(self):
         input  = "[[[  ]]]\n" \
@@ -908,6 +1006,21 @@ class Test_NonGeneratedEditException:
                  "  <<[ a ]>> <<[ end ]>>\\n\n" \
                  "  ^^^ line 2, column 3"
         invalid_marker(input, output, autojinja.exceptions.NonGeneratedEditException, msg)
+    
+    def test_7_disallow_code_loss(self):
+        input  = "[[[  ]]]\n" \
+                 "[[[ end ]]]"
+        output = "[[[  ]]]\n" \
+                 "  <<[ a ]>> <<[ end ]>>\n" \
+                 "[[[ end ]]]"
+        template = autojinja.CogTemplate.from_string(input)
+        for edit_block in template.edit_blocks.values():
+            edit_block.allow_code_loss = True
+        try:
+            template.context().render(output)
+            assert False # Shouldn't be reached 
+        except:
+            pass
 
     def test_8(self):
         input  = "[[[  ]]]\n" \
@@ -919,6 +1032,21 @@ class Test_NonGeneratedEditException:
                  "  <<[ a ]>> <<[ end ]>>\\0\n" \
                  "  ^^^ line 3, column 3"
         invalid_marker(input, output, autojinja.exceptions.NonGeneratedEditException, msg)
+    
+    def test_8_disallow_code_loss(self):
+        input  = "[[[  ]]]\n" \
+                 "[[[ end ]]]"
+        output = "[[[  ]]]\n" \
+                 "[[[ end ]]]\n" \
+                 "  <<[ a ]>> <<[ end ]>>"
+        template = autojinja.CogTemplate.from_string(input)
+        for edit_block in template.edit_blocks.values():
+            edit_block.allow_code_loss = True
+        try:
+            template.context().render(output)
+            assert False # Shouldn't be reached 
+        except:
+            pass
 
 class Test_AlreadyGeneratedEditException:
     def test_1(self):

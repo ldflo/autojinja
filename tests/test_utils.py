@@ -275,7 +275,27 @@ class Test:
         assert len(object.edits) == 1
         assert object.edits["abc"] == "hello"
 
-    def test_edit_markers_from_file(self):
+    def test_blocks_from_file(self):
+        blocks = autojinja.utils.blocks_from_file(file3, settings1, encoding="ascii")
+        assert len(blocks) == 2
+
+    def test_blocks_from_string(self):
+        with open(file3, 'r', encoding="ascii") as f:
+            content = f.read()
+        blocks = autojinja.utils.blocks_from_string(content, None)
+        assert len(blocks) == 2
+
+    def test_cog_blocks_from_file(self):
+        cog_blocks = autojinja.utils.cog_blocks_from_file(file3, settings1, encoding="ascii")
+        assert len(cog_blocks) == 1
+
+    def test_cog_blocks_from_string(self):
+        with open(file3, 'r', encoding="ascii") as f:
+            content = f.read()
+        cog_blocks = autojinja.utils.cog_blocks_from_string(content, None)
+        assert len(cog_blocks) == 1
+
+    def test_edit_blocks_from_file(self):
         edit_blocks = autojinja.utils.edit_blocks_from_file(file3, settings1, encoding="ascii")
         assert len(edit_blocks) == 1
         assert edit_blocks["abc"].raw_header == "abc"
@@ -283,7 +303,7 @@ class Test:
         assert edit_blocks["abc"].raw_body == "    hello"
         assert edit_blocks["abc"].body == "hello"
 
-    def test_edit_markers_from_string(self):
+    def test_edit_blocks_from_string(self):
         with open(file3, 'r', encoding="ascii") as f:
             content = f.read()
         edit_blocks = autojinja.utils.edit_blocks_from_string(content, None)
@@ -292,6 +312,110 @@ class Test:
         assert edit_blocks["abc"].header == "abc"
         assert edit_blocks["abc"].raw_body == "    hello"
         assert edit_blocks["abc"].body == "hello"
+
+    def test_edit_blocks_get_code_1(self):
+        input    = "  a\n" \
+                   "  b\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test\n" \
+                   "  <<[ end ]>>\n" \
+                   "  c\n" \
+                   "  d"
+        edit_blocks = autojinja.utils.edit_blocks_from_string(input)
+        edit_block = edit_blocks["def"]
+        expected = "  <<[ def ]>>\n" \
+                   "  test\n" \
+                   "  <<[ end ]>>"
+        assert edit_block.get_code() == expected
+        expected = "  <<[ def ]>>\n" \
+                   "  test\n" \
+                   "  <<[ end ]>>"
+        assert edit_block.get_code((-1, 0)) == expected
+        expected = "  b\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test\n" \
+                   "  <<[ end ]>>"
+        assert edit_block.get_code((1, 0)) == expected
+        expected = "  a\n" \
+                   "  b\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test\n" \
+                   "  <<[ end ]>>"
+        assert edit_block.get_code((2, 0)) == expected
+        expected = "  a\n" \
+                   "  b\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test\n" \
+                   "  <<[ end ]>>"
+        assert edit_block.get_code((3, 0)) == expected
+        expected = "  <<[ def ]>>\n" \
+                   "  test\n" \
+                   "  <<[ end ]>>"
+        assert edit_block.get_code((0, -1)) == expected
+        expected = "  <<[ def ]>>\n" \
+                   "  test\n" \
+                   "  <<[ end ]>>\n" \
+                   "  c"
+        assert edit_block.get_code((0, 1)) == expected
+        expected = "  <<[ def ]>>\n" \
+                   "  test\n" \
+                   "  <<[ end ]>>\n" \
+                   "  c\n" \
+                   "  d"
+        assert edit_block.get_code((0, 2)) == expected
+        expected = "  <<[ def ]>>\n" \
+                   "  test\n" \
+                   "  <<[ end ]>>\n" \
+                   "  c\n" \
+                   "  d"
+        assert edit_block.get_code((0, 3)) == expected
+        expected = "  b\n" \
+                   "  <<[ def ]>>\n" \
+                   "  test\n" \
+                   "  <<[ end ]>>\n" \
+                   "  c"
+        assert edit_block.get_code((1, 1)) == expected
+
+    def test_edit_blocks_get_code_2(self):
+        input    = "  a\n" \
+                   "  b\n" \
+                   "  <<[ def ]>> test <<[ end ]>>\n" \
+                   "  c\n" \
+                   "  d"
+        edit_blocks = autojinja.utils.edit_blocks_from_string(input)
+        edit_block = edit_blocks["def"]
+        expected = "  <<[ def ]>> test <<[ end ]>>"
+        assert edit_block.get_code() == expected
+        expected = "  <<[ def ]>> test <<[ end ]>>"
+        assert edit_block.get_code((-1, 0)) == expected
+        expected = "  b\n" \
+                   "  <<[ def ]>> test <<[ end ]>>"
+        assert edit_block.get_code((1, 0)) == expected
+        expected = "  a\n" \
+                   "  b\n" \
+                   "  <<[ def ]>> test <<[ end ]>>"
+        assert edit_block.get_code((2, 0)) == expected
+        expected = "  a\n" \
+                   "  b\n" \
+                   "  <<[ def ]>> test <<[ end ]>>"
+        assert edit_block.get_code((3, 0)) == expected
+        expected = "  <<[ def ]>> test <<[ end ]>>"
+        assert edit_block.get_code((0, -1)) == expected
+        expected = "  <<[ def ]>> test <<[ end ]>>\n" \
+                   "  c"
+        assert edit_block.get_code((0, 1)) == expected
+        expected = "  <<[ def ]>> test <<[ end ]>>\n" \
+                   "  c\n" \
+                   "  d"
+        assert edit_block.get_code((0, 2)) == expected
+        expected = "  <<[ def ]>> test <<[ end ]>>\n" \
+                   "  c\n" \
+                   "  d"
+        assert edit_block.get_code((0, 3)) == expected
+        expected = "  b\n" \
+                   "  <<[ def ]>> test <<[ end ]>>\n" \
+                   "  c"
+        assert edit_block.get_code((1, 1)) == expected
 
     def test_edits_from_file(self):
         edits = autojinja.utils.edits_from_file(file3, settings2, encoding="ascii")

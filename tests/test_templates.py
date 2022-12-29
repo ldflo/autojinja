@@ -475,6 +475,9 @@ class Test_CogTemplate:
         result = template.context(var = "\"Hello world\"", tmp = "test").render()
         if result != expected:
             raise CustomException(result, expected)
+        assert len(template.blocks) == 1
+        assert len(template.cog_blocks) == 1
+        assert len(template.edit_blocks) == 0
 
     def test_10(self):
         input    = "  [[[\n" \
@@ -498,6 +501,9 @@ class Test_CogTemplate:
         result = template.context(var = "\"Hello world\"", tmp = "test").render(output)
         if result != expected:
             raise CustomException(result, expected)
+        assert len(template.blocks) == 1
+        assert len(template.cog_blocks) == 1
+        assert len(template.edit_blocks) == 0
 
     def test_11(self):
         input    = "  // [[[ {{ var }} ]]]\n" \
@@ -535,6 +541,9 @@ class Test_CogTemplate:
         result = template.context().render(output)
         if result != expected:
             raise CustomException(result, expected)
+        assert len(template.blocks) == 2
+        assert len(template.cog_blocks) == 0
+        assert len(template.edit_blocks) == 2
 
 class Test_JinjaTemplate:
     def test_newfile(self):
@@ -835,6 +844,9 @@ class Test_JinjaTemplate:
         result = template.context(var = "\"Hello world\"", tmp = "test").render()
         if result != expected:
             raise CustomException(result, expected)
+        assert len(template.blocks) == 1
+        assert len(template.cog_blocks) == 1
+        assert len(template.edit_blocks) == 0
 
     def test_10(self):
         input    = "  [[[\n" \
@@ -858,6 +870,9 @@ class Test_JinjaTemplate:
         result = template.context(var = "\"Hello world\"", tmp = "test").render(output)
         if result != expected:
             raise CustomException(result, expected)
+        assert len(template.blocks) == 1
+        assert len(template.cog_blocks) == 1
+        assert len(template.edit_blocks) == 0
 
     def test_11(self):
         input    = "  // [[[ {{ var }} ]]]\n" \
@@ -940,6 +955,9 @@ class Test_JinjaTemplate:
         result = template.context().render(output)
         if result != expected:
             raise CustomException(result, expected)
+        assert len(template.blocks) == 2
+        assert len(template.cog_blocks) == 0
+        assert len(template.edit_blocks) == 2
 
     def test_15(self):
         input    = "{% for value in values %}\n" \
@@ -1138,6 +1156,9 @@ class Test_JinjaTemplate:
         result = template.context().render(output)
         if result != expected:
             raise CustomException(result, expected)
+        assert len(template.blocks) == 2
+        assert len(template.cog_blocks) == 0
+        assert len(template.edit_blocks) == 2
 
     def test_27(self):
         input    = "    <<[ abc ]>>\n" \
@@ -1195,6 +1216,9 @@ class Test_JinjaTemplate:
         result = template.context().render(output)
         if result != expected:
             raise CustomException(result, expected)
+        assert len(template.blocks) == 2
+        assert len(template.cog_blocks) == 0
+        assert len(template.edit_blocks) == 2
 
     def test_29(self):
         input    = "    <<[ abc ]>>\n" \
@@ -1254,6 +1278,9 @@ class Test_JinjaTemplate:
         result = template.context().render(output)
         if result != expected:
             raise CustomException(result, expected)
+        assert len(template.blocks) == 2
+        assert len(template.cog_blocks) == 0
+        assert len(template.edit_blocks) == 2
 
 ### Miscellaneous
 

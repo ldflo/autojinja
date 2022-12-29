@@ -408,6 +408,36 @@ class Block:
     def body(self):
         return self.marker.body_dedented
 
+    def get_code(self, additional_lines = (0, 0)):
+        if self.marker.body_inline:
+            start = self.marker.header_start
+            end = self.marker.dual.header_end
+            # Complete line
+            start = self.marker.string.rfind('\n', 0, start)+1
+            i = self.marker.string.find('\n', end)
+            if i >= 0:
+                end = i+1
+            else:
+                end = len(self.marker.string)
+        else:
+            start = self.marker.header_start
+            end = self.marker.dual.header_end
+        for i in range(additional_lines[0]):
+            if start == 0:
+                break
+            start = self.marker.string.rfind('\n', 0, start-1)+1
+        for i in range(additional_lines[1]):
+            if end > len(self.marker.string):
+                break
+            i = self.marker.string.find('\n', end+1)
+            if i >= 0:
+                end = i
+            else:
+                end = len(self.marker.string)
+        if end > 0 and self.marker.string[end-1] == '\n':
+            end -= 1
+        return self.marker.string[start:end]
+
 class CogBlock(Block):
     def __init__(self, marker):
         super().__init__(marker)
