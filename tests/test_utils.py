@@ -244,8 +244,9 @@ class Test:
         assert object.markers[2].body == ""
         assert object.markers[3].header == "end"
         assert object.markers[3].body == ""
-        assert len(object.edit_markers) == 1
-        assert object.edit_markers["abc"].body == "    hello"
+        assert len(object.edit_blocks) == 1
+        assert object.edit_blocks["abc"].raw_body == "    hello"
+        assert object.edit_blocks["abc"].body == "hello"
         assert len(object.edits) == 1
         assert object.edits["abc"] == "hello"
 
@@ -266,25 +267,31 @@ class Test:
         assert object.markers[2].body == ""
         assert object.markers[3].header == "end"
         assert object.markers[3].body == ""
-        assert len(object.edit_markers) == 1
-        assert object.edit_markers["abc"].header == "abc"
-        assert object.edit_markers["abc"].body == "    hello"
+        assert len(object.edit_blocks) == 1
+        assert object.edit_blocks["abc"].raw_header == "abc"
+        assert object.edit_blocks["abc"].header == "abc"
+        assert object.edit_blocks["abc"].raw_body == "    hello"
+        assert object.edit_blocks["abc"].body == "hello"
         assert len(object.edits) == 1
         assert object.edits["abc"] == "hello"
 
     def test_edit_markers_from_file(self):
-        edit_markers = autojinja.utils.edit_markers_from_file(file3, settings1, encoding="ascii")
-        assert len(edit_markers) == 1
-        assert edit_markers["abc"].header == "abc"
-        assert edit_markers["abc"].body == "    hello"
+        edit_blocks = autojinja.utils.edit_blocks_from_file(file3, settings1, encoding="ascii")
+        assert len(edit_blocks) == 1
+        assert edit_blocks["abc"].raw_header == "abc"
+        assert edit_blocks["abc"].header == "abc"
+        assert edit_blocks["abc"].raw_body == "    hello"
+        assert edit_blocks["abc"].body == "hello"
 
     def test_edit_markers_from_string(self):
         with open(file3, 'r', encoding="ascii") as f:
             content = f.read()
-        edit_markers = autojinja.utils.edit_markers_from_string(content, None)
-        assert len(edit_markers) == 1
-        assert edit_markers["abc"].header == "abc"
-        assert edit_markers["abc"].body == "    hello"
+        edit_blocks = autojinja.utils.edit_blocks_from_string(content, None)
+        assert len(edit_blocks) == 1
+        assert edit_blocks["abc"].raw_header == "abc"
+        assert edit_blocks["abc"].header == "abc"
+        assert edit_blocks["abc"].raw_body == "    hello"
+        assert edit_blocks["abc"].body == "hello"
 
     def test_edits_from_file(self):
         edits = autojinja.utils.edits_from_file(file3, settings2, encoding="ascii")

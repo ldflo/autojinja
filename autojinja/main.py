@@ -250,7 +250,7 @@ def main(*arguments):
         args.silent = "1"
     args.silent = int(args.silent)
     env[AUTOJINJA_SILENT] = str(args.silent)
-    
+
     # summary
     def is_valid_summary():
         if len(args.summary) != 1 and len(args.summary) != 3:

@@ -85,34 +85,6 @@ def parse_string(string, settings = None):
     except BaseException as e:
         raise e.with_traceback(None)
 
-def edit_markers_from_file(filepath, settings = None, encoding = None):
-    """ Returns a dictionary with all edit markers in the given file.
-        Returns an empty dictionary if the file doesn't exist.
-        Raises an error if the file can't be read.
-    """
-    object = parse_file(filepath, settings, encoding)
-    return object.edit_markers
-
-def edit_markers_from_string(string, settings = None):
-    """ Returns a dictionary with all edit markers in the given string.
-    """
-    object = parse_string(string, settings)
-    return object.edit_markers
-
-def edits_from_file(filepath, settings = None, encoding = None):
-    """ Returns a dictionary with all manual edits in the given file.
-        Returns an empty dictionary if the file doesn't exist.
-        Raises an error if the file can't be read.
-    """
-    object = parse_file(filepath, settings, encoding)
-    return object.edits
-
-def edits_from_string(string, settings = None):
-    """ Returns a dictionary with all manual edits in the given string.
-    """
-    object = parse_string(string, settings)
-    return object.edits
-
 def parse_envvars(env, values):
     """ Loads the given environment variables to the given environment dictionary.
         Variable format must be 'name=value', otherwise considered as an environment file.
@@ -163,3 +135,59 @@ def os_pathsep(value):
         return ':' if ':' in value else ';'
     else: # Windows
         return ';'
+
+def blocks_from_file(filepath, settings = None, encoding = None):
+    """ Returns a list with all pairs of markers in the given file.
+        Returns an empty list if the file doesn't exist.
+        Raises an error if the file can't be read.
+    """
+    object = parse_file(filepath, settings, encoding)
+    return object.blocks
+
+def blocks_from_string(string, settings = None):
+    """ Returns a list with all pairs of markers in the given string.
+    """
+    object = parse_string(string, settings)
+    return object.blocks
+
+def cog_blocks_from_file(filepath, settings = None, encoding = None):
+    """ Returns a list with all pairs of cog markers in the given file.
+        Returns an empty list if the file doesn't exist.
+        Raises an error if the file can't be read.
+    """
+    object = parse_file(filepath, settings, encoding)
+    return object.cog_blocks
+
+def cog_blocks_from_string(string, settings = None):
+    """ Returns a list with all paris of cog markers in the given string.
+    """
+    object = parse_string(string, settings)
+    return object.cog_blocks
+
+def edit_blocks_from_file(filepath, settings = None, encoding = None):
+    """ Returns a dictionary with all pairs of edit markers in the given file.
+        Returns an empty dictionary if the file doesn't exist.
+        Raises an error if the file can't be read.
+    """
+    object = parse_file(filepath, settings, encoding)
+    return object.edit_blocks
+
+def edit_blocks_from_string(string, settings = None):
+    """ Returns a dictionary with all pairs of edit markers in the given string.
+    """
+    object = parse_string(string, settings)
+    return object.edit_blocks
+
+def edits_from_file(filepath, settings = None, encoding = None):
+    """ Returns a dictionary with all manual edits in the given file.
+        Returns an empty dictionary if the file doesn't exist.
+        Raises an error if the file can't be read.
+    """
+    object = parse_file(filepath, settings, encoding)
+    return object.edits
+
+def edits_from_string(string, settings = None):
+    """ Returns a dictionary with all manual edits in the given string.
+    """
+    object = parse_string(string, settings)
+    return object.edits

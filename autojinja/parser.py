@@ -48,18 +48,14 @@ class Parser:
     def __init__(self, string, settings):
         self.string = string
         self.settings = settings
-        self.markers = None # List[marker]
-        self.edit_markers = None # Dict[str, marker]
-        self.edit_bodies = None # Dict[str, str]
+        self.markers = None # List[Marker]
+        self.blocks = None # List[Block]
+        self.cog_blocks = None # List[CogBlock]
+        self.edit_blocks = None # List[EditBlock]
 
     @property
     def edits(self):
-        if self.edit_bodies == None:
-            return {header:edit_marker.dedent_body() for header, edit_marker in self.edit_markers.items()}
-        return self.edit_bodies
-    @edits.setter
-    def edits(self, edits):
-        self.edit_bodies = edits
+        return { key: edit_block.body for key, edit_block in self.edit_blocks.items() }
 
     def parse(self):
         idx = 0
@@ -90,14 +86,21 @@ class Parser:
         self.markers = cog_markers + edit_markers
         self.markers.sort(key=lambda x: x.header_open)
         self.check_markers()
-        ### Collect edit markers
-        self.edit_markers = {}
-        for edit_marker in edit_markers:
-            if not edit_marker.is_end:
-                header = edit_marker.header.strip()
-                if header in self.edit_markers:
-                    raise DuplicateEditException.from_marker(edit_marker)
-                self.edit_markers[header] = edit_marker
+        ### Collect blocks
+        self.blocks = []
+        self.cog_blocks = []
+        self.edit_blocks = {}
+        for marker in self.markers:
+            if not marker.is_end:
+                if marker.is_edit:
+                    block = EditBlock(marker)
+                    if block.name in self.edit_blocks:
+                        raise DuplicateEditException.from_marker(marker)
+                    self.edit_blocks[block.name] = block
+                else:
+                    block = CogBlock(marker)
+                    self.cog_blocks.append(block)
+                self.blocks.append(block)
 
     def find_marker(self, marker, idx, end):
         ### Find open
@@ -177,6 +180,9 @@ class Parser:
                 openMarker = stack.pop()
                 same_line = prev_inline.pop()
                 prev_marker = marker
+                ### Set duals
+                openMarker.dual = marker
+                marker.dual = openMarker
                 ### Extract body
                 openMarker.extract_body(marker, same_line)
                 if same_line:
@@ -210,6 +216,7 @@ class Marker:
         self.header_empty = True
         self.header_column = 0
         self.header = ""
+        self._header_stripped = None
         self.header_start = 0 # Index, multiline / inline dependant
         self.header_end = 0 # Index, multiline / inline dependant
         self.header_open = 0 # Index, l-prolonged
@@ -221,8 +228,22 @@ class Marker:
         self.body_empty = True
         self.body_column = 0
         self.body = ""
+        self._body_dedented = None
         self.body_start = 0 # Index, with indentation
         self.body_end = 0 # Index
+        # Dual
+        self.dual = None # Open or end marker
+
+    @property
+    def header_stripped(self):
+        if self._header_stripped == None:
+            self._header_stripped = self.header.strip()
+        return self._header_stripped
+    @property
+    def body_dedented(self):
+        if self._body_dedented == None:
+            self._body_dedented = self.dedent_body()
+        return self._body_dedented
 
     def same_line(self, startidx, idx):
         i = self.string.rfind('\n', startidx, idx)
@@ -368,3 +389,44 @@ class Marker:
                 result.write(output[mid:end])
                 start = end
         return result.getvalue()
+
+class Block:
+    def __init__(self, marker):
+        self.marker = marker
+
+    @property
+    def raw_header(self):
+        return self.marker.header
+    @property
+    def header(self):
+        return self.marker.header_stripped
+
+    @property
+    def raw_body(self):
+        return self.marker.body
+    @property
+    def body(self):
+        return self.marker.body_dedented
+
+class CogBlock(Block):
+    def __init__(self, marker):
+        super().__init__(marker)
+
+class EditBlock(Block):
+    def __init__(self, marker):
+        super().__init__(marker)
+        self._body = None
+        self.allow_code_loss = False # Use at your own risk
+    def __str__(self):
+        return f"{self.__repr__()} named {self.name}"
+
+    @property
+    def name(self):
+        return self.header
+
+    @property
+    def body(self):
+        return self._body or super().body
+    @body.setter
+    def body(self, body):
+        self._body = body
