@@ -5,7 +5,7 @@ from . import path
 import os
 import sys
 
-def file_tagged(filepath, tag = defaults.AUTOJINJA_DEFAULT_TAG, encoding = None):
+def is_file_tagged(filepath, tag = defaults.AUTOJINJA_DEFAULT_TAG, encoding = None):
     """ Returns True if the file at the given filepath is tagged with the given tag.
         The file's first line must contain this tag (ex: '### autojinja ###').
         Raises an error if the file can't be read.

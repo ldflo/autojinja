@@ -156,9 +156,9 @@ def main(*arguments):
             raise Exception("Expected 0 or 1 for '--remove-markers'")
 
     ### Parse arguments
-    def file_tagged(script):
+    def is_file_tagged(script):
         try:
-            return utils.file_tagged(script, args.tag)
+            return utils.is_file_tagged(script, args.tag)
         except:
             sys.stderr.write(f"[autojinja]  Couldn't read file at path  {script.abspath}\n")
 
@@ -183,7 +183,7 @@ def main(*arguments):
                         ## PYTHON
                         if args.search_tag:
                             if script.ext == ".py":
-                                if file_tagged(script):
+                                if is_file_tagged(script):
                                     files.append(script)
             else:
                 ## JINJA
@@ -194,7 +194,7 @@ def main(*arguments):
                 ## PYTHON
                 if args.search_tag:
                     for script in x.files("*.py"):
-                        if file_tagged(script):
+                        if is_file_tagged(script):
                             files.append(script)
 
     # Make absolute and remove duplicates

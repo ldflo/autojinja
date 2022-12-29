@@ -39,27 +39,27 @@ with open(file4, 'w') as f:
             "   VAR5 =${THIS_DIRPATH}/")
 
 class Test:
-    def test_file_tagged(self):
+    def test_is_file_tagged(self):
         with open(file1, 'w') as f:
             f.write("import autojinja\n")
             f.write("\n")
-        assert autojinja.utils.file_tagged(file1) == True
+        assert autojinja.utils.is_file_tagged(file1) == True
         with open(file1, 'w', encoding=None) as f:
             f.write("from autojinja import *\n")
             f.write("\n")
-        assert autojinja.utils.file_tagged(file1, encoding=None) == True
+        assert autojinja.utils.is_file_tagged(file1, encoding=None) == True
         with open(file1, 'w', encoding="ascii") as f:
             f.write("autojinja\n")
             f.write("\n")
-        assert autojinja.utils.file_tagged(file1, encoding="ascii") == True
+        assert autojinja.utils.is_file_tagged(file1, encoding="ascii") == True
         with open(file1, 'w', encoding="ascii") as f:
             f.write("import os.path\n")
             f.write("\n")
-        assert autojinja.utils.file_tagged(file1, encoding="ascii") == False
+        assert autojinja.utils.is_file_tagged(file1, encoding="ascii") == False
         with open(file1, 'w', encoding="ascii") as f:
             f.write("\n")
             f.write("import autojinja\n")
-        assert autojinja.utils.file_tagged(file1, encoding="ascii") == False
+        assert autojinja.utils.is_file_tagged(file1, encoding="ascii") == False
 
     def test_generate_file_0(self):
         os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "0"
