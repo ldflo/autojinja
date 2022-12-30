@@ -1081,6 +1081,7 @@ template = RawTemplate.from_string("{% extends 'template.html' %}...")
 - ### _RawTemplate_.**create_environment**(_&ast;args, &ast;&ast;kwargs_):
 
     Constructs a `jinja2.Environment` object with the provided arguments. If not specified, these arguments are also used :
+    - `loader = autojinja.AutoLoader`
     - `keep_trailing_newline = True`
     - `lstrip_blocks = True`
     - `trim_blocks = True`

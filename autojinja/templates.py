@@ -1,4 +1,5 @@
 from . import exceptions
+from . import path
 from . import parser
 from . import utils
 
@@ -6,12 +7,37 @@ import io
 import jinja2
 import os.path
 
+class AutoLoader(jinja2.BaseLoader):
+    """ Jinja2 loader to find templates near already loaded templates """
+    all_dirpaths_used = set()
+
+    def __init__(self, additional_dirpaths):
+        if additional_dirpaths != None:
+            for dirpath in additional_dirpaths:
+                AutoLoader.all_dirpaths_used.add(dirpath)
+
+    def get_source(self, environment, template):
+        for dirpath in AutoLoader.all_dirpaths_used:
+            filepath = dirpath.join(template)
+            if filepath.exists:
+                with open(filepath) as f:
+                    source = f.read()
+                mtime = os.path.getmtime(filepath)
+                return source, filepath, lambda: mtime == os.path.getmtime(filepath)
+        raise jinja2.TemplateNotFound(template)
+
 class RawTemplate:
     """ Shared Jinja2 environment """
     environment = None
 
     @staticmethod
+    def create_loader(additional_dirpaths = None):
+        return AutoLoader(additional_dirpaths)
+
+    @staticmethod
     def create_environment(*args, **kwargs):
+        if "loader" not in kwargs:
+            kwargs["loader"] = RawTemplate.create_loader()
         if "keep_trailing_newline" not in kwargs:
             kwargs["keep_trailing_newline"] = True
         if "lstrip_blocks" not in kwargs:
@@ -28,6 +54,7 @@ class RawTemplate:
         template = RawTemplate.environment.from_string(source = string, globals = globals)
         if input != None:
             template.filename = input
+            AutoLoader.all_dirpaths_used.add(path(input).dirpath)
         else:
             template.filename = exceptions.format_text(string)
         self.jinja2_template = template
@@ -98,6 +125,8 @@ class RawTemplate:
 
 class BaseTemplate:
     def __init__(self, string, input = None, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
+        if input != None:
+            AutoLoader.all_dirpaths_used.add(path(input).dirpath)
         self.string = string
         self.input = input
         self.output = output
