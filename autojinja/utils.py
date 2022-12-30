@@ -1,4 +1,5 @@
 from . import defaults
+from . import exceptions
 from . import parser
 from . import path
 
@@ -31,25 +32,9 @@ def generate_file(filepath, new_content, old_content = None, encoding = None, ne
     if created or changed:
         with open(filepath, 'w', encoding = encoding or "utf-8", newline = newline) as file:
             file.write(new_content)
-    ### Verify summary
-    summary = os.environ.get(defaults.AUTOJINJA_SUMMARY)
-    if defaults.AUTOJINJA_SUMMARY not in os.environ:
-        summary = "1"
-    else:
-        value = os.environ[defaults.AUTOJINJA_SUMMARY]
-        is_valid = True
-        if len(value) != 1 and len(value) != 3:
-            is_valid = False
-        else:
-            for c in value:
-                if c != "0" and c != "1":
-                    is_valid = False
-                    break
-        if not is_valid:
-            raise Exception(f"Expected 0, 1 or flags for environment variable '{defaults.AUTOJINJA_SUMMARY}'")
-        summary = value
     ### Print summary
     message = None
+    summary = defaults.osenviron_summary()
     if summary == "0":
         pass
     elif summary == "1":
@@ -191,3 +176,18 @@ def edits_from_string(string, settings = None):
     """
     object = parse_string(string, settings)
     return object.edits
+
+def wrap_objects(args, kwargs):
+    """ Wraps the given object when --debug option is enabled
+    """
+    if defaults.osenviron_debug():
+        if len(args) > 0:
+            args = list(args)
+            for i in range(len(args)):
+                if args[i] != None:
+                    args[i] = exceptions.wrap_object(args[i])
+            args = tuple(args)
+        for key, value in kwargs.items():
+            if value != None:
+                kwargs[key] = exceptions.wrap_object(value)
+    return (args, kwargs)

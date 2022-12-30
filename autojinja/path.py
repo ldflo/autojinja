@@ -202,6 +202,8 @@ class Path(str):
             os.path.exists(os.path.join("/dir", "file.txt"))
     """
     def __new__(cls, *args, **kwargs):
+        if len(args) == 0:
+            return str.__new__(cls, **kwargs)
         return str.__new__(cls, no_antislash(args[0]), *args[1:], **kwargs)
     def __getattribute__(self, attr):
         try:

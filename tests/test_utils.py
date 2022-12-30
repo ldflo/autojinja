@@ -474,3 +474,28 @@ class Test:
             assert autojinja.utils.os_pathsep("a:b;c") == ";"
             assert autojinja.utils.os_pathsep("a;b:c") == ";"
             assert autojinja.utils.os_pathsep("a:b:c") == ";"
+
+    def test_wrap_objects_1(self):
+        os.environ[autojinja.defaults.AUTOJINJA_DEBUG] = "1"
+        class Ctx: pass
+        args, kwargs = autojinja.utils.wrap_objects((), {"ctx": Ctx()})
+        assert hasattr(kwargs["ctx"], "__wrapped_object") == True
+        del os.environ[autojinja.defaults.AUTOJINJA_DEBUG]
+
+    def test_wrap_objects_2(self):
+        os.environ[autojinja.defaults.AUTOJINJA_DEBUG] = "1"
+        class Ctx:
+            def __init__(self, arg1, arg2, arg3):
+                pass
+        args, kwargs = autojinja.utils.wrap_objects((), {"ctx": Ctx(1, 2, 3)})
+        assert hasattr(kwargs["ctx"], "__wrapped_object") == True
+        del os.environ[autojinja.defaults.AUTOJINJA_DEBUG]
+
+    def test_wrap_objects_3(self):
+        os.environ[autojinja.defaults.AUTOJINJA_DEBUG] = "1"
+        class Ctx:
+            def __new__(cls, arg1, arg2, arg3):
+                return object.__new__(cls)
+        args, kwargs = autojinja.utils.wrap_objects((), {"ctx": Ctx(1, 2, 3)})
+        assert hasattr(kwargs["ctx"], "__wrapped_object") == True
+        del os.environ[autojinja.defaults.AUTOJINJA_DEBUG]

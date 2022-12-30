@@ -253,21 +253,30 @@ def wrap_exception(exception, message):
     if hasattr(exception, "__exception") and hasattr(exception, "__message"):
         exception.__message = message
         return exception
-    def __init__(self):
-        pass
-    def __repr__(self):
-        return self.__message
-    def __str__(self):
-        return self.__message
-    dicts = { "__init__" : __init__,
-              "__repr__" : __repr__,
-              "__str__" : __str__,
-              "__module__" : exception.__class__.__module__ }
-    wrapped_exception = type(exception.__class__.__qualname__, (exception.__class__,), dicts)()
-    wrapped_exception.__dict__.update(exception.__dict__)
-    wrapped_exception.__exception = exception
-    wrapped_exception.__message = message
-    return wrapped_exception
+    try:
+        def __new__(cls, *args, **kwargs):
+            try:
+                return exception.__class__.__new__(cls, *args, **kwargs)
+            except:
+                return object.__new__(cls, *args, **kwargs)
+        def __init__(self, *args, **kwargs):
+            pass
+        def __repr__(self):
+            return self.__message
+        def __str__(self):
+            return self.__message
+        dicts = { d: getattr(exception, d) for d in dir(exception)
+                if d.startswith("__") and d.endswith("__") and d != "__getattribute__" and d != "__setattr__" }
+        dicts["__new__"] = __new__
+        dicts["__init__"] = __init__
+        dicts["__repr__"] = __repr__
+        dicts["__str__"] = __str__
+        dicts["__module__"] = exception.__class__.__module__
+        dicts["__exception"] = exception
+        dicts["__message"] = message
+        return type(exception.__class__.__qualname__, (exception.__class__,), dicts)()
+    except:
+        return exception
 
 def prepend_jinja2_traceback(exception, tb = None):
     """ Prepends the Jinja2 traceback to the given exception.
@@ -317,3 +326,35 @@ def clean_traceback(exception):
     """ Removes the traceback of the given exception.
     """
     return prepend_jinja2_traceback(exception).with_traceback(None)
+
+### --debug option enabled
+
+class DebugException(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+def wrap_object(obj):
+    """ Wraps the given exception with a custom message.
+        Creates an object that derives the exception class.
+    """
+    try:
+        def __new__(cls, *args, **kwargs):
+            return object.__new__(cls, *args, **kwargs)
+        def __init__(self, *args, **kwargs):
+            pass
+        def __getattr__(self, attr):
+            try:
+                return getattr(self.__wrapped_object, attr)
+            except:
+                message = f"  {traceback.format_exc()[:-1]}"
+                raise DebugException(message) from None
+        dicts = { d: getattr(obj, d) for d in dir(obj)
+                if d.startswith("__") and d.endswith("__") and d != "__getattribute__" and d != "__setattr__" }
+        dicts["__new__"] = __new__
+        dicts["__init__"] = __init__
+        dicts["__module__"] = obj.__class__.__module__
+        dicts["__getattr__"] = __getattr__
+        dicts["__wrapped_object"] = obj
+        return type(obj.__class__.__qualname__, (obj.__class__,), dicts)()
+    except:
+        return obj

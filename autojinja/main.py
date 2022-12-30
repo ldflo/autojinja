@@ -38,6 +38,9 @@ OPTIONS:
     --silent                      Prevents executed python scripts from writing to stdout/stderr
                                   Enabled if environment variable 'AUTOJINJA_SILENT' == 1
                                   Overrides environment variable 'AUTOJINJA_SILENT'
+    --debug                       Enables stacktrace for exceptions raised from Jinja variables
+                                  Enabled if environment variable 'AUTOJINJA_DEBUG' == 1
+                                  Overrides environment variable 'AUTOJINJA_DEBUG'
     ---summary=VALUE/FLAGS        Enables notifications for generated files to stdout
                                   Overrides environment variable 'AUTOJINJA_SUMMARY'
                                   Default value is '1':
@@ -123,6 +126,11 @@ def main(*arguments):
                         help=f"prevents executed python scripts from writing to stdout/stderr\n"
                              f"Enabled if environment variable '{AUTOJINJA_SILENT}' == 1\n"
                              f"Overrides environment variable '{AUTOJINJA_SILENT}'")
+    parser.add_argument("--debug",
+                        action="store_true",
+                        help=f"enables stacktrace for exceptions raised from Jinja variables\n"
+                             f"Enabled if environment variable '{AUTOJINJA_DEBUG}' == 1\n"
+                             f"Overrides environment variable '{AUTOJINJA_DEBUG}'")
     parser.add_argument("--summary",
                         help=f"enables notifications for generated files to stdout\n"
                              f"Overrides environment variable '{AUTOJINJA_SUMMARY}'\n"
@@ -145,15 +153,56 @@ def main(*arguments):
 
     args = parser.parse_args(arguments)
 
+    ### Prepare environment
+    env = os.environ.copy()
+
+    # Additional environment variables
+    if args.env:
+        utils.parse_envvars(env, args.env)
+
+    # Additional import directories
+    if args.includes:
+        includes = [path[include].abspath for includes in args.includes for include in includes.split(utils.os_pathsep(includes))]
+        if "PYTHONPATH" in env:
+            env["PYTHONPATH"] = f"{env['PYTHONPATH']}{os.pathsep}{os.pathsep.join(includes)}"
+        else:
+            env["PYTHONPATH"] = os.pathsep.join(includes)
+
     ### Verify options
     if args.all:
         args.search_filename = True
         args.search_tag = True
         args.recursive = True
-    # Remove markers
+
+    # remove_markers
     if args.remove_markers != None:
-        if not args.remove_markers.isdigit() or int(args.remove_markers) < 0 or int(args.remove_markers) > 1:
-            raise Exception("Expected 0 or 1 for '--remove-markers'")
+        if args.remove_markers == True:
+            args.remove_markers = 1
+        elif args.remove_markers == False:
+            args.remove_markers = 0
+        env[AUTOJINJA_REMOVE_MARKERS] = str(args.remove_markers)
+    args.remove_markers = osenviron_remove_markers(env)
+    env[AUTOJINJA_REMOVE_MARKERS] = str(args.remove_markers)
+
+    # silent
+    if args.silent == None or args.silent == False:
+        args.silent = osenviron_silent(env)
+    else:
+        args.silent = 1
+    env[AUTOJINJA_SILENT] = str(args.silent)
+
+    # debug
+    if args.debug == None or args.debug == False:
+        args.debug = osenviron_debug(env)
+    else:
+        args.debug = 1
+    env[AUTOJINJA_DEBUG] = str(args.debug)
+
+    # summary
+    if args.summary != None:
+        env[AUTOJINJA_SUMMARY] = str(args.summary)
+    args.summary = osenviron_summary(env)
+    env[AUTOJINJA_SUMMARY] = str(args.summary)
 
     ### Parse arguments
     def is_file_tagged(script):
@@ -200,75 +249,6 @@ def main(*arguments):
     # Make absolute and remove duplicates
     files = [x.abspath for x in files]
     files = list(dict.fromkeys(files))
-
-    ### Prepare environment
-    env = os.environ.copy()
-
-    # Additional environment variables
-    if args.env:
-        utils.parse_envvars(env, args.env)
-
-    # Additional import directories
-    if args.includes:
-        includes = [path[include].abspath for includes in args.includes for include in includes.split(utils.os_pathsep(includes))]
-        if "PYTHONPATH" in env:
-            env["PYTHONPATH"] = f"{env['PYTHONPATH']}{os.pathsep}{os.pathsep.join(includes)}"
-        else:
-            env["PYTHONPATH"] = os.pathsep.join(includes)
-
-    ## Additional options
-    # remove_markers
-    def is_valid_remove_markers():
-        if not args.remove_markers.isdigit() or int(args.remove_markers) < 0 or int(args.remove_markers) > 1:
-            return False
-        return True
-    if args.remove_markers == None:
-        if not AUTOJINJA_REMOVE_MARKERS in env:
-            args.remove_markers = "0"
-        else:
-            args.remove_markers = env[AUTOJINJA_REMOVE_MARKERS]
-            if not is_valid_remove_markers():
-                raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_REMOVE_MARKERS}'")
-    elif not is_valid_remove_markers():
-        raise Exception(f"Expected 0 or 1 for --remove-markers option")
-    args.remove_markers = int(args.remove_markers)
-    env[AUTOJINJA_REMOVE_MARKERS] = str(args.remove_markers)
-
-    # silent
-    def is_valid_silent():
-        if not args.silent.isdigit() or int(args.silent) < 0 or int(args.silent) > 1:
-            return False
-        return True
-    if args.silent == None or args.silent == False:
-        if not AUTOJINJA_SILENT in env:
-            args.silent = "0"
-        else:
-            args.silent = env[AUTOJINJA_SILENT]
-            if not is_valid_silent():
-                raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_SILENT}'")
-    else:
-        args.silent = "1"
-    args.silent = int(args.silent)
-    env[AUTOJINJA_SILENT] = str(args.silent)
-
-    # summary
-    def is_valid_summary():
-        if len(args.summary) != 1 and len(args.summary) != 3:
-            return False
-        for c in args.summary:
-            if c != "0" and c != "1":
-                return False
-        return True
-    if args.summary == None:
-        if not AUTOJINJA_SUMMARY in env:
-            args.summary = "1"
-        else:
-            args.summary = env[AUTOJINJA_SUMMARY]
-            if not is_valid_summary():
-                raise Exception(f"Expected 0, 1 or flags for environment variable '{AUTOJINJA_SUMMARY}'")
-    elif not is_valid_summary():
-        raise Exception(f"Expected 0, 1 or flags for --summary option")
-    env[AUTOJINJA_SUMMARY] = str(args.summary)
 
     ### Execute python scripts
     for script in files:

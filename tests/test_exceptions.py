@@ -817,7 +817,7 @@ class Test_NonGeneratedEditException:
                 "  <<[ edit1 ]>>\\n\n" \
                 "  ^^^ line 5, column 3"
         invalid_marker(input, None, autojinja.exceptions.NonGeneratedEditException, msg)
-    
+
     def test_1_allow_code_loss(self):
         input = "[[[\n" \
                 "  <<[ edit2 ]>>\n" \
@@ -848,7 +848,7 @@ class Test_NonGeneratedEditException:
                 "      <<[ edit2 ]>>\\n\n" \
                 "      ^^^ line 7, column 7"
         invalid_marker(input, None, autojinja.exceptions.NonGeneratedEditException, msg)
-    
+
     def test_2_allow_code_loss(self):
         input = "[[[\n" \
                 "  <<[ edit1 ]>>\n" \
@@ -883,7 +883,7 @@ class Test_NonGeneratedEditException:
                 "  <<[ edit1 ]>>\\n\n" \
                 "  ^^^ line 5, column 3"
         invalid_marker(input, None, autojinja.exceptions.NonGeneratedEditException, msg)
-        
+
     def test_3_allow_code_loss(self):
         input = "[[[\n" \
                 "  <<[ edit2 ]>>\n" \
@@ -910,7 +910,7 @@ class Test_NonGeneratedEditException:
                 "<<[ abc ]>><<[ end ]>>\\n\n" \
                 "^^^ line 2, column 1"
         invalid_marker(input, None, autojinja.exceptions.NonGeneratedEditException, msg)
-    
+
     def test_4_allow_code_loss(self):
         input = "// [[[ ]]]\n" \
                 "<<[ abc ]>><<[ end ]>>\n" \
@@ -936,7 +936,7 @@ class Test_NonGeneratedEditException:
                 "      <<[ b ]>>\\n\n" \
                 "      ^^^ line 7, column 7"
         invalid_marker(input, None, autojinja.exceptions.NonGeneratedEditException, msg)
-    
+
     def test_5_allow_code_loss(self):
         input = "[[[\n" \
                 "  <<[ a ]>>\n" \
@@ -972,7 +972,7 @@ class Test_NonGeneratedEditException:
                  "  <<[ a ]>>\\n\n" \
                  "  ^^^ line 2, column 3"
         invalid_marker(input, output, autojinja.exceptions.NonGeneratedEditException, msg)
-    
+
     def test_6_disallow_code_loss(self):
         input  = "[[[\n" \
                  "  <<[ b ]>>\n" \
@@ -992,7 +992,7 @@ class Test_NonGeneratedEditException:
             edit_block.allow_code_loss = True
         try:
             template.context().render(output)
-            assert False # Shouldn't be reached 
+            assert False # Shouldn't be reached
         except:
             pass
 
@@ -1006,7 +1006,7 @@ class Test_NonGeneratedEditException:
                  "  <<[ a ]>> <<[ end ]>>\\n\n" \
                  "  ^^^ line 2, column 3"
         invalid_marker(input, output, autojinja.exceptions.NonGeneratedEditException, msg)
-    
+
     def test_7_disallow_code_loss(self):
         input  = "[[[  ]]]\n" \
                  "[[[ end ]]]"
@@ -1018,7 +1018,7 @@ class Test_NonGeneratedEditException:
             edit_block.allow_code_loss = True
         try:
             template.context().render(output)
-            assert False # Shouldn't be reached 
+            assert False # Shouldn't be reached
         except:
             pass
 
@@ -1032,7 +1032,7 @@ class Test_NonGeneratedEditException:
                  "  <<[ a ]>> <<[ end ]>>\\0\n" \
                  "  ^^^ line 3, column 3"
         invalid_marker(input, output, autojinja.exceptions.NonGeneratedEditException, msg)
-    
+
     def test_8_disallow_code_loss(self):
         input  = "[[[  ]]]\n" \
                  "[[[ end ]]]"
@@ -1044,7 +1044,7 @@ class Test_NonGeneratedEditException:
             edit_block.allow_code_loss = True
         try:
             template.context().render(output)
-            assert False # Shouldn't be reached 
+            assert False # Shouldn't be reached
         except:
             pass
 
