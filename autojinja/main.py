@@ -38,7 +38,7 @@ OPTIONS:
     --silent                      Prevents executed python scripts from writing to stdout/stderr
                                   Enabled if environment variable 'AUTOJINJA_SILENT' == 1
                                   Overrides environment variable 'AUTOJINJA_SILENT'
-    --debug                       Enables stacktrace for exceptions raised from Jinja variables
+    --debug                       enhances stacktraces for exceptions raised from Jinja context variables
                                   Enabled if environment variable 'AUTOJINJA_DEBUG' == 1
                                   Overrides environment variable 'AUTOJINJA_DEBUG'
     ---summary=VALUE/FLAGS        Enables notifications for generated files to stdout
@@ -128,7 +128,7 @@ def main(*arguments):
                              f"Overrides environment variable '{AUTOJINJA_SILENT}'")
     parser.add_argument("--debug",
                         action="store_true",
-                        help=f"enables stacktrace for exceptions raised from Jinja variables\n"
+                        help=f"enhances stacktraces for exceptions raised from Jinja context variables\n"
                              f"Enabled if environment variable '{AUTOJINJA_DEBUG}' == 1\n"
                              f"Overrides environment variable '{AUTOJINJA_DEBUG}'")
     parser.add_argument("--summary",

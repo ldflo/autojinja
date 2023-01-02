@@ -1,25 +1,13 @@
+from . import assert_exception
+
 import autojinja
 import os
 import tempfile
 
-class CustomException(Exception):
-    def __init__(self, result, expected):
-        result = str(result).replace('\t', "\\t").replace('\n', "\\n\n")
-        expected = str(expected).replace('\t', "\\t").replace('\n', "\\n\n")
-        message = f"--- Expected ---\n{expected}\\0\n--- Got ---\n{result}\\0"
-        super().__init__(message)
-
 def invalid_autojinja(exception_type, message, *args, **kwargs):
-    try:
+    def function(*args, **kwargs):
         autojinja.main(*args, **kwargs)
-    except BaseException as e:
-        exception = e
-    else:
-        exception = None
-    if message != None and str(exception) != str(message):
-        raise CustomException(exception, message)
-    if exception == None or not isinstance(exception, exception_type):
-        raise CustomException(type(exception), exception_type)
+    assert_exception(function, exception_type, message, *args, **kwargs)
 
 tmp = tempfile.TemporaryDirectory()
 root = autojinja.path[tmp.name]
@@ -371,14 +359,7 @@ class TestRemoveMarkers:
     def test_13(self):
         os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS] = "abc"
         message = f"Expected 0 or 1 for environment variable '{autojinja.defaults.AUTOJINJA_REMOVE_MARKERS}'"
-        try:
-            autojinja.ParserSettings()
-        except BaseException as e:
-            exception = e
-        else:
-            exception = None
-        if str(exception) != str(message):
-            raise CustomException(exception, message)
+        assert_exception(lambda: autojinja.ParserSettings(), Exception, message)
         del os.environ[autojinja.defaults.AUTOJINJA_REMOVE_MARKERS]
 
 class TestSilent:
@@ -499,19 +480,6 @@ class TestDebug:
         invalid_autojinja(Exception, message, file14)
         del os.environ[autojinja.defaults.AUTOJINJA_DEBUG]
 
-    def test_10(self):
-        os.environ[autojinja.defaults.AUTOJINJA_DEBUG] = "abc"
-        message = f"Expected 0 or 1 for environment variable '{autojinja.defaults.AUTOJINJA_DEBUG}'"
-        try:
-            autojinja.utils.wrap_objects((), {})
-        except BaseException as e:
-            exception = e
-        else:
-            exception = None
-        if str(exception) != str(message):
-            raise CustomException(exception, message)
-        del os.environ[autojinja.defaults.AUTOJINJA_DEBUG]
-
 class TestSummary:
     def test_1(self):
         clear_output()
@@ -597,12 +565,5 @@ class TestSummary:
     def test_15(self):
         os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "222"
         message = f"Expected 0, 1 or flags for environment variable '{autojinja.defaults.AUTOJINJA_SUMMARY}'"
-        try:
-            autojinja.utils.generate_file(output, "")
-        except BaseException as e:
-            exception = e
-        else:
-            exception = None
-        if str(exception) != str(message):
-            raise CustomException(exception, message)
+        assert_exception(lambda: autojinja.utils.generate_file(output, ""), Exception, message)
         del os.environ[autojinja.defaults.AUTOJINJA_SUMMARY]

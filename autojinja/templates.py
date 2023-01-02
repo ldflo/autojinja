@@ -1,3 +1,4 @@
+from . import defaults
 from . import exceptions
 from . import path
 from . import parser
@@ -110,7 +111,10 @@ class RawTemplate:
             try:
                 output = output or self.output
                 assert output != None, "output filepath parameter can't be None"
-                args, kwargs = utils.wrap_objects(self.args, self.kwargs)
+                if defaults.osenviron_debug():
+                    args, kwargs = utils.wrap_objects(*self.args, **self.kwargs)
+                else:
+                    args, kwargs = self.args, self.kwargs
                 result = self.jinja2_template.render(*args, **kwargs)
                 utils.generate_file(output, result, None, encoding or self.encoding, newline or self.newline)
                 return result
@@ -118,7 +122,10 @@ class RawTemplate:
                 raise exceptions.clean_traceback(e) from None
         def render(self):
             try:
-                args, kwargs = utils.wrap_objects(self.args, self.kwargs)
+                if defaults.osenviron_debug():
+                    args, kwargs = utils.wrap_objects(*self.args, **self.kwargs)
+                else:
+                    args, kwargs = self.args, self.kwargs
                 return self.jinja2_template.render(*args, **kwargs)
             except BaseException as e:
                 raise exceptions.clean_traceback(e) from None

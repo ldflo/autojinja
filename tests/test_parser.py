@@ -1,11 +1,6 @@
-import autojinja
+from . import DiffException
 
-class CustomException(Exception):
-    def __init__(self, result, expected):
-        result = str(result).replace('\t', "\\t").replace('\n', "\\n\n")
-        expected = str(expected).replace('\t', "\\t").replace('\n', "\\n\n")
-        message = f"--- Expected ---\n{expected}\\0\n--- Got ---\n{result}\\0"
-        super().__init__(message)
+import autojinja
 
 settingsCogComment = autojinja.ParserSettings(cog_open = "/**", cog_close = "**/", cog_as_comment = True)
 settingsEditComment = autojinja.ParserSettings(edit_open = "/**", edit_close = "**/", edit_as_comment = True)
@@ -19,24 +14,24 @@ def valid_marker(input, expected,
                  *args, **kwargs):
     template = autojinja.CogTemplate.from_string(input, *args, **kwargs)
     if header0 != None and template.markers[0].header != header0:
-        raise CustomException(template.markers[0].header, header0)
+        raise DiffException(template.markers[0].header, header0)
     if body0 != None and template.markers[0].body != body0:
-        raise CustomException(template.markers[0].body, body0)
+        raise DiffException(template.markers[0].body, body0)
     if header1 != None and template.markers[1].header != header1:
-        raise CustomException(template.markers[1].header, header1)
+        raise DiffException(template.markers[1].header, header1)
     if body1 != None and template.markers[1].body != body1:
-        raise CustomException(template.markers[1].body, body1)
+        raise DiffException(template.markers[1].body, body1)
     if header2 != None and template.markers[2].header != header2:
-        raise CustomException(template.markers[2].header, header2)
+        raise DiffException(template.markers[2].header, header2)
     if body2 != None and template.markers[2].body != body2:
-        raise CustomException(template.markers[2].body, body2)
+        raise DiffException(template.markers[2].body, body2)
     if header3 != None and template.markers[3].header != header3:
-        raise CustomException(template.markers[3].header, header3)
+        raise DiffException(template.markers[3].header, header3)
     if body3 != None and template.markers[3].body != body3:
-        raise CustomException(template.markers[3].body, body3)
+        raise DiffException(template.markers[3].body, body3)
     result = template.render(remove_markers = remove_markers)
     if expected != None and result != expected:
-        raise CustomException(result, expected)
+        raise DiffException(result, expected)
 
 class Test_CogMarkers:
     class Test_OneLineMarker:

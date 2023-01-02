@@ -1,27 +1,15 @@
+from . import assert_exception
+
 import autojinja
 import jinja2
 import os
 import sys
 
-class CustomException(Exception):
-    def __init__(self, result, expected):
-        result = str(result).replace('\t', "\\t").replace('\n', "\\n\n")
-        expected = str(expected).replace('\t', "\\t").replace('\n', "\\n\n")
-        message = f"--- Expected ---\n{expected}\\0\n--- Got ---\n{result}\\0"
-        super().__init__(message)
-
 def invalid_marker(input, output, exception_type, message, *args, **kwargs):
-    try:
+    def function(*args, **kwargs):
         template = autojinja.CogTemplate.from_string(input)
         template.context(*args, **kwargs).render(output)
-    except BaseException as e:
-        exception = e
-    else:
-        exception = None
-    if message != None and str(exception) != str(message):
-        raise CustomException(exception, message)
-    if exception == None or not isinstance(exception, exception_type):
-        raise CustomException(type(exception), exception_type)
+    assert_exception(function, exception_type, message, *args, **kwargs)
 
 class Test_OpenMarkerNotFoundException:
     def test_1(self):

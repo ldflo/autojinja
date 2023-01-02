@@ -16,7 +16,7 @@
         {
             "label": "python-http-client-server: generate",
             "type": "shell",
-            "command": "autojinja -e autojinja.env -a .",
+            "command": "autojinja --debug -e autojinja.env -a .",
         },
         {
             "label": "python-http-client-server: run server",

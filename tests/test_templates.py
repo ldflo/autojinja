@@ -1,13 +1,9 @@
+from . import assert_exception, assert_clean_exception, Class1, Class2, Class3, DiffException
+
 import autojinja
+import jinja2
 import os
 import tempfile
-
-class CustomException(Exception):
-    def __init__(self, result, expected):
-        result = str(result).replace('\t', "\\t").replace('\n', "\\n\n")
-        expected = str(expected).replace('\t', "\\t").replace('\n', "\\n\n")
-        message = f"--- Expected ---\n{expected}\\0\n--- Got ---\n{result}\\0"
-        super().__init__(message)
 
 settingsRemoveMarkers = autojinja.ParserSettings(remove_markers = True)
 settingsPreserveMarkers = autojinja.ParserSettings(remove_markers = False)
@@ -17,18 +13,24 @@ root = autojinja.path[tmp.name]
 input_file = root.join("input.txt")
 output_file = root.join("output.txt")
 
+def invalid_autojinja(input, exception_type, message, *args, **kwargs):
+    def function(*args, **kwargs):
+        template = autojinja.JinjaTemplate.from_string(input)
+        template.context(*args, **kwargs).render()
+    assert_clean_exception(function, exception_type, message, *args, **kwargs)
+
 ### RawTemplate
 
 class Generator_RawTemplate:
     def render(template, expected, args, kwargs):
         result = template.context(*args, **kwargs).render()
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def render_file(template, expected, output, encoding, newline, args, kwargs):
         result = template.context(*args, **kwargs).render_file(output, encoding, newline)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
         encoding = encoding or template.encoding
         newline = newline or template.newline
         with open(output_file, 'r', encoding = encoding, newline = newline) as f:
@@ -36,7 +38,7 @@ class Generator_RawTemplate:
             if os.name == "nt": # Windows
                 result = result.replace('\n', newline or '\n')
             if content != result:
-                raise CustomException(content, result)
+                raise DiffException(content, result)
 
     def check(input, expected, *args, **kwargs):
         with open(input_file, 'w') as f:
@@ -63,19 +65,19 @@ class Generator:
     def render(template, output, expected, remove_markers, args, kwargs):
         result = template.context(*args, **kwargs).render(output, remove_markers)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def render_file(template, output, expected, remove_markers, encoding, newline, args, kwargs):
         result = template.context(*args, **kwargs).render_file(output, remove_markers, encoding, newline)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
         encoding = encoding or template.encoding
         newline = newline or template.newline
         with open(output_file, 'r', encoding = encoding, newline = newline) as f:
             content = f.read()
             result = result.replace('\n', newline or '\n')
             if content != result:
-                raise CustomException(content, result)
+                raise DiffException(content, result)
 
     def check(class_type, input, output, expected, remove_markers, *args, **kwargs):
         def prepare():
@@ -474,7 +476,7 @@ class Test_CogTemplate:
         template.edits = { "\"Hello world\"":"azerty" }
         result = template.context(var = "\"Hello world\"", tmp = "test").render()
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
         assert len(template.blocks) == 1
         assert len(template.cog_blocks) == 1
         assert len(template.edit_blocks) == 0
@@ -500,7 +502,7 @@ class Test_CogTemplate:
         template.edits = { "\"Hello world\"":"azerty" }
         result = template.context(var = "\"Hello world\"", tmp = "test").render(output)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
         assert len(template.blocks) == 1
         assert len(template.cog_blocks) == 1
         assert len(template.edit_blocks) == 0
@@ -516,11 +518,11 @@ class Test_CogTemplate:
         template = autojinja.CogTemplate.from_file(input_file)
         result = template.context(var = "\"Hello world\"").render_file()
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
         with open(input_file, 'r') as f:
             content = f.read()
             if content != result:
-                raise CustomException(content, result)
+                raise DiffException(content, result)
 
     def test_12(self):
         input    = "<<[ abc ]>>\n" \
@@ -540,7 +542,7 @@ class Test_CogTemplate:
         dummy = template.edits
         result = template.context().render(output)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
         assert len(template.blocks) == 2
         assert len(template.cog_blocks) == 0
         assert len(template.edit_blocks) == 2
@@ -843,7 +845,7 @@ class Test_JinjaTemplate:
         template.edits = { "\"Hello world\"":"azerty" }
         result = template.context(var = "\"Hello world\"", tmp = "test").render()
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
         assert len(template.blocks) == 1
         assert len(template.cog_blocks) == 1
         assert len(template.edit_blocks) == 0
@@ -869,7 +871,7 @@ class Test_JinjaTemplate:
         template.edits = { "\"Hello world\"":"azerty" }
         result = template.context(var = "\"Hello world\"", tmp = "test").render(output)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
         assert len(template.blocks) == 1
         assert len(template.cog_blocks) == 1
         assert len(template.edit_blocks) == 0
@@ -926,15 +928,11 @@ class Test_JinjaTemplate:
                 "  // [[[ end ]]]"
         with open(input_file, 'w') as f:
             f.write(input)
-        try:
+        def callable():
             template = autojinja.JinjaTemplate.from_file(input_file)
             template.context(var = "\"Hello world\"").render_file()
-        except BaseException as e:
-            exception = e
-        else:
-            exception = None
-        if exception == None:
-            raise CustomException(None, AssertionError)
+        msg = "output filepath parameter can't be None"
+        assert_exception(callable, AssertionError, msg)
 
     def test_14(self):
         input    = "<<[ abc ]>>\n" \
@@ -954,7 +952,7 @@ class Test_JinjaTemplate:
         dummy = template.edits
         result = template.context().render(output)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
         assert len(template.blocks) == 2
         assert len(template.cog_blocks) == 0
         assert len(template.edit_blocks) == 2
@@ -969,7 +967,7 @@ class Test_JinjaTemplate:
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(values = ["abc", "def", "ghi"]).render()
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def test_16(self):
         input    = "{% for value in values %}\n" \
@@ -981,7 +979,7 @@ class Test_JinjaTemplate:
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(values = ["abc", "def", "ghi"]).render()
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def test_17(self):
         input    = "<<[ {{ value1 }} ]>> {{ value1 }} <<[ end ]>>\n" \
@@ -995,7 +993,7 @@ class Test_JinjaTemplate:
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(values = ["abc", "def", "ghi"], value1 = "hhh").render()
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def test_18(self):
         input    = "<<[ {{ value1 }} ]>>\n" \
@@ -1011,7 +1009,7 @@ class Test_JinjaTemplate:
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(value1 = "hhh", value2 = "abc").render()
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def test_19(self):
         input    = "<<[ {{ value1 }} ]>> {{ value1 }} <<[ end ]>>\n" \
@@ -1026,7 +1024,7 @@ class Test_JinjaTemplate:
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(values = ["abc", "def", "ghi"], value1 = "hhh").render(output)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def test_20(self):
         input    = "<<[ {{ value1 }} ]>> {{ value1 }} <<[ end ]>>\n" \
@@ -1041,7 +1039,7 @@ class Test_JinjaTemplate:
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(values = ["abc", "def", "ghi"], value1 = "hhh").render(output)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def test_21(self):
         input    = "  <<[ {{ value1 }} ]>>\n" \
@@ -1056,7 +1054,7 @@ class Test_JinjaTemplate:
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(value1 = "hhh", value2 = "abc").render(output)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def test_22(self):
         input    = "  <<[ {{ value1 }} ]>>\n" \
@@ -1075,7 +1073,7 @@ class Test_JinjaTemplate:
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(value1 = "hhh", value2 = "abc").render()
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def test_23(self):
         input    = "  <<[ {{ value }} ]>>\n" \
@@ -1094,7 +1092,7 @@ class Test_JinjaTemplate:
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(value = "hhh").render()
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def test_24(self):
         input    = "  <<[ {{ value1 }} ]>>\n" \
@@ -1113,7 +1111,7 @@ class Test_JinjaTemplate:
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(value1 = "hhh", value2 = "zzz").render()
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def test_25(self):
         input    = "{% for value in values %}\n" \
@@ -1125,7 +1123,7 @@ class Test_JinjaTemplate:
         template = autojinja.JinjaTemplate.from_string(input)
         result = template.context(values = ["abc", "def", "ghi"], value = "zzz").render()
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def test_26(self):
         input    = "    <<[ abc ]>>\n" \
@@ -1155,7 +1153,7 @@ class Test_JinjaTemplate:
         dummy = template.edits
         result = template.context().render(output)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
         assert len(template.blocks) == 2
         assert len(template.cog_blocks) == 0
         assert len(template.edit_blocks) == 2
@@ -1188,7 +1186,7 @@ class Test_JinjaTemplate:
         dummy = template.edits
         result = template.context().render(output)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def test_28(self):
         input    = "    <<[ abc ]>>\n" \
@@ -1215,7 +1213,7 @@ class Test_JinjaTemplate:
         dummy = template.edits
         result = template.context().render(output)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
         assert len(template.blocks) == 2
         assert len(template.cog_blocks) == 0
         assert len(template.edit_blocks) == 2
@@ -1248,7 +1246,7 @@ class Test_JinjaTemplate:
         dummy = template.edits
         result = template.context().render(output)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
 
     def test_30(self):
         input    = "    <<[ abc ]>>\n" \
@@ -1277,7 +1275,7 @@ class Test_JinjaTemplate:
         dummy = template.edits
         result = template.context().render(output)
         if result != expected:
-            raise CustomException(result, expected)
+            raise DiffException(result, expected)
         assert len(template.blocks) == 2
         assert len(template.cog_blocks) == 0
         assert len(template.edit_blocks) == 2
@@ -1292,7 +1290,7 @@ class Test_Miscellaneous:
                 template = autojinja.RawTemplate.from_string("{{ this }}")
                 result = template.context(**locals()).render()
                 if result != expected:
-                    raise CustomException(result, expected)
+                    raise DiffException(result, expected)
         test().generate()
 
     def test_2(self):
@@ -1302,7 +1300,7 @@ class Test_Miscellaneous:
                 template = autojinja.CogTemplate.from_string("[[[ {{ this }} ]]][[[ end]]]")
                 result = template.context(**locals()).render()
                 if result != expected:
-                    raise CustomException(result, expected)
+                    raise DiffException(result, expected)
         test().generate()
 
     def test_3(self):
@@ -1312,5 +1310,193 @@ class Test_Miscellaneous:
                 template = autojinja.JinjaTemplate.from_string("{{ this }}")
                 result = template.context(**locals()).render()
                 if result != expected:
-                    raise CustomException(result, expected)
+                    raise DiffException(result, expected)
         test().generate()
+
+    def test_wrap_objects_debug(self):
+        os.environ[autojinja.defaults.AUTOJINJA_DEBUG] = "1"
+        class1 = Class1()
+        class2 = Class2()
+        class3 = Class3()
+
+        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                "    raise DebugAttributeError(message) from None\n" \
+                "  File \"\", line ?, in x\n" \
+                "    return self.missing_x\n" \
+                "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        invalid_autojinja("{{ class1.x }}", autojinja.exceptions.DebugAttributeError, msg, **locals())
+        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                "    raise DebugAttributeError(message) from None\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return self.missing_f\n" \
+                "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        invalid_autojinja("{{ class1.f() }}", autojinja.exceptions.DebugAttributeError, msg, **locals())
+        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                "  File \"\", line ?, in ex\n" \
+                "    raise Exception(\"ex\")\n" \
+                "Exception: ex"
+        invalid_autojinja("{{ class1.ex }}", Exception, msg, **locals())
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    raise Exception(\"ef\")\n" \
+                "Exception: ef"
+        invalid_autojinja("{{ class1.ef() }}", Exception, msg, **locals())
+
+        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                "  File \"\", line ?, in x\n" \
+                "    return Class1().x\n" \
+                "  File \"\", line ?, in x\n" \
+                "    return self.missing_x\n" \
+                "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        invalid_autojinja("{{ class2.x }}", autojinja.exceptions.DebugAttributeError, msg, **locals())
+        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                "    raise DebugAttributeError(message) from None\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return Class1().f()\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return self.missing_f\n" \
+                "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        invalid_autojinja("{{ class2.f() }}", autojinja.exceptions.DebugAttributeError, msg, **locals())
+        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                "  File \"\", line ?, in ex\n" \
+                "    return Class1().ex\n" \
+                "  File \"\", line ?, in ex\n" \
+                "    raise Exception(\"ex\")\n" \
+                "Exception: ex"
+        invalid_autojinja("{{ class2.ex }}", Exception, msg, **locals())
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    return Class1().ef()\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    raise Exception(\"ef\")\n" \
+                "Exception: ef"
+        invalid_autojinja("{{ class2.ef() }}", Exception, msg, **locals())
+
+        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                "  File \"\", line ?, in x\n" \
+                "    return Class2().x\n" \
+                "  File \"\", line ?, in x\n" \
+                "    return Class1().x\n" \
+                "  File \"\", line ?, in x\n" \
+                "    return self.missing_x\n" \
+                "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        invalid_autojinja("{{ class3.x }}", autojinja.exceptions.DebugAttributeError, msg, **locals())
+        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                "    raise DebugAttributeError(message) from None\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return Class2().f()\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return Class1().f()\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return self.missing_f\n" \
+                "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        invalid_autojinja("{{ class3.f() }}", autojinja.exceptions.DebugAttributeError, msg, **locals())
+        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                "  File \"\", line ?, in ex\n" \
+                "    return Class2().ex\n" \
+                "  File \"\", line ?, in ex\n" \
+                "    return Class1().ex\n" \
+                "  File \"\", line ?, in ex\n" \
+                "    raise Exception(\"ex\")\n" \
+                "Exception: ex"
+        invalid_autojinja("{{ class3.ex }}", Exception, msg, **locals())
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    return Class2().ef()\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    return Class1().ef()\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    raise Exception(\"ef\")\n" \
+                "Exception: ef"
+        invalid_autojinja("{{ class3.ef() }}", Exception, msg, **locals())
+        del os.environ[autojinja.defaults.AUTOJINJA_DEBUG]
+
+    def test_wrap_objects_debug(self):
+        os.environ[autojinja.defaults.AUTOJINJA_DEBUG] = "0"
+        class1 = Class1()
+        class2 = Class2()
+        class3 = Class3()
+
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "'tests.Class1 object' has no attribute 'x'"
+        invalid_autojinja("{{ class1.x }}", jinja2.exceptions.UndefinedError, msg, **locals())
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return self.missing_f\n" \
+                "'Class1' object has no attribute 'missing_f'"
+        invalid_autojinja("{{ class1.f() }}", AttributeError, msg, **locals())
+        msg = "\n  File \"\", line ?, in ex\n" \
+                "    raise Exception(\"ex\")\n" \
+                "ex"
+        invalid_autojinja("{{ class1.ex }}", Exception, msg, **locals())
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    raise Exception(\"ef\")\n" \
+                "ef"
+        invalid_autojinja("{{ class1.ef() }}", Exception, msg, **locals())
+
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "'tests.Class2 object' has no attribute 'x'"
+        invalid_autojinja("{{ class2.x }}", jinja2.exceptions.UndefinedError, msg, **locals())
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return Class1().f()\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return self.missing_f\n" \
+                "'Class1' object has no attribute 'missing_f'"
+        invalid_autojinja("{{ class2.f() }}", AttributeError, msg, **locals())
+        msg = "\n  File \"\", line ?, in ex\n" \
+                "    return Class1().ex\n" \
+                "  File \"\", line ?, in ex\n" \
+                "    raise Exception(\"ex\")\n" \
+                "ex"
+        invalid_autojinja("{{ class2.ex }}", Exception, msg, **locals())
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    return Class1().ef()\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    raise Exception(\"ef\")\n" \
+                "ef"
+        invalid_autojinja("{{ class2.ef() }}", Exception, msg, **locals())
+
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "'tests.Class3 object' has no attribute 'x'"
+        invalid_autojinja("{{ class3.x }}", jinja2.exceptions.UndefinedError, msg, **locals())
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return Class2().f()\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return Class1().f()\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return self.missing_f\n" \
+                "'Class1' object has no attribute 'missing_f'"
+        invalid_autojinja("{{ class3.f() }}", AttributeError, msg, **locals())
+        msg = "\n  File \"\", line ?, in ex\n" \
+                "    return Class2().ex\n" \
+                "  File \"\", line ?, in ex\n" \
+                "    return Class1().ex\n" \
+                "  File \"\", line ?, in ex\n" \
+                "    raise Exception(\"ex\")\n" \
+                "ex"
+        invalid_autojinja("{{ class3.ex }}", Exception, msg, **locals())
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    return Class2().ef()\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    return Class1().ef()\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    raise Exception(\"ef\")\n" \
+                "ef"
+        invalid_autojinja("{{ class3.ef() }}", Exception, msg, **locals())
+        del os.environ[autojinja.defaults.AUTOJINJA_DEBUG]

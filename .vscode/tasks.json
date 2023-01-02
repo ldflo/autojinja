@@ -18,11 +18,24 @@
             "type": "shell",
             "linux": {
                 "command": "python3 -m pytest -x",
-                //"command": "python3 -m pytest -x tests/test_templates.py::Test_JinjaTemplate::test_1",
+                // "command": "python3 -m pytest -x tests/test_templates.py::Test_JinjaTemplate::test_1",
+
+                // "command": "python3 -m pytest -x tests/test_main.py",
+                // "command": "python3 -m pytest -x tests/test_parser.py",
+                // "command": "python3 -m pytest -x tests/test_path.py",
+                // "command": "python3 -m pytest -x tests/test_templates.py",
+                // "command": "python3 -m pytest -x tests/test_utils.py",
             },
             "windows": {
                 "command": "python -m pytest -x",
-                //"command": "python -m pytest -x tests/test_templates.py::Test_JinjaTemplate::test_1",
+                // "command": "python -m pytest -x tests/test_templates.py::Test_JinjaTemplate::test_1",
+
+                // "command": "python -m pytest -x tests/test_exceptions.py",
+                // "command": "python -m pytest -x tests/test_main.py",
+                // "command": "python -m pytest -x tests/test_parser.py",
+                // "command": "python -m pytest -x tests/test_path.py",
+                // "command": "python -m pytest -x tests/test_templates.py",
+                // "command": "python -m pytest -x tests/test_utils.py",
             },
         },
         {

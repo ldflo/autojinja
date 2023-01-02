@@ -1,3 +1,5 @@
+from . import assert_clean_exception, Class1, Class2, Class3
+
 import autojinja
 import io
 import os
@@ -37,6 +39,12 @@ with open(file4, 'w') as f:
             "VAR3 = ${VAR1}\n" \
             "VAR4 = Test string \n" \
             "   VAR5 =${THIS_DIRPATH}/")
+
+def invalid_autojinja(input, exception_type, message, *args, **kwargs):
+    def function(*args, **kwargs):
+        template = autojinja.CogTemplate.from_string(input)
+        template.context(*args, **kwargs).render()
+    assert_clean_exception(function, exception_type, message, *args, **kwargs)
 
 class Test:
     def test_is_file_tagged(self):
@@ -475,27 +483,89 @@ class Test:
             assert autojinja.utils.os_pathsep("a;b:c") == ";"
             assert autojinja.utils.os_pathsep("a:b:c") == ";"
 
-    def test_wrap_objects_1(self):
-        os.environ[autojinja.defaults.AUTOJINJA_DEBUG] = "1"
-        class Ctx: pass
-        args, kwargs = autojinja.utils.wrap_objects((), {"ctx": Ctx()})
-        assert hasattr(kwargs["ctx"], "__wrapped_object") == True
-        del os.environ[autojinja.defaults.AUTOJINJA_DEBUG]
+    def test_wrap_objects(self):
+        (args, kwargs) = autojinja.utils.wrap_objects(class1=Class1(), class2=Class2(), class3=Class3())
+        class1 = kwargs["class1"]
+        class2 = kwargs["class2"]
+        class3 = kwargs["class3"]
 
-    def test_wrap_objects_2(self):
-        os.environ[autojinja.defaults.AUTOJINJA_DEBUG] = "1"
-        class Ctx:
-            def __init__(self, arg1, arg2, arg3):
-                pass
-        args, kwargs = autojinja.utils.wrap_objects((), {"ctx": Ctx(1, 2, 3)})
-        assert hasattr(kwargs["ctx"], "__wrapped_object") == True
-        del os.environ[autojinja.defaults.AUTOJINJA_DEBUG]
+        assert class1.a() != None
+        assert class1.b != None
+        msg = "\n  File \"\", line ?, in x\n" \
+                "    return self.missing_x\n" \
+                "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        assert_clean_exception(lambda: class1.x, autojinja.exceptions.DebugAttributeError, msg)
+        msg = "\n  File \"\", line ?, in f\n" \
+                "    return self.missing_f\n" \
+                "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        assert_clean_exception(lambda: class1.f(), autojinja.exceptions.DebugAttributeError, msg)
+        msg = "\n  File \"\", line ?, in ex\n" \
+                "    raise Exception(\"ex\")\n" \
+                "Exception: ex"
+        assert_clean_exception(lambda: class1.ex, Exception, msg)
+        msg = "\n  File \"\", line ?, in ef\n" \
+                "    raise Exception(\"ef\")\n" \
+                "Exception: ef"
+        assert_clean_exception(lambda: class1.ef(), Exception, msg)
 
-    def test_wrap_objects_3(self):
-        os.environ[autojinja.defaults.AUTOJINJA_DEBUG] = "1"
-        class Ctx:
-            def __new__(cls, arg1, arg2, arg3):
-                return object.__new__(cls)
-        args, kwargs = autojinja.utils.wrap_objects((), {"ctx": Ctx(1, 2, 3)})
-        assert hasattr(kwargs["ctx"], "__wrapped_object") == True
-        del os.environ[autojinja.defaults.AUTOJINJA_DEBUG]
+        assert class2.a() != None
+        assert class2.b != None
+        msg = "\n  File \"\", line ?, in x\n" \
+                "    return Class1().x\n" \
+                "  File \"\", line ?, in x\n" \
+                "    return self.missing_x\n" \
+                "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        assert_clean_exception(lambda: class2.x, autojinja.exceptions.DebugAttributeError, msg)
+        msg = "\n  File \"\", line ?, in f\n" \
+                "    return Class1().f()\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return self.missing_f\n" \
+                "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        assert_clean_exception(lambda: class2.f(), autojinja.exceptions.DebugAttributeError, msg)
+        msg = "\n  File \"\", line ?, in ex\n" \
+                "    return Class1().ex\n" \
+                "  File \"\", line ?, in ex\n" \
+                "    raise Exception(\"ex\")\n" \
+                "Exception: ex"
+        assert_clean_exception(lambda: class2.ex, Exception, msg)
+        msg = "\n  File \"\", line ?, in ef\n" \
+                "    return Class1().ef()\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    raise Exception(\"ef\")\n" \
+                "Exception: ef"
+        assert_clean_exception(lambda: class2.ef(), Exception, msg)
+
+        assert class3.a() != None
+        assert class3.b != None
+        msg = "\n  File \"\", line ?, in x\n" \
+                "    return Class2().x\n" \
+                "  File \"\", line ?, in x\n" \
+                "    return Class1().x\n" \
+                "  File \"\", line ?, in x\n" \
+                "    return self.missing_x\n" \
+                "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        assert_clean_exception(lambda: class3.x, autojinja.exceptions.DebugAttributeError, msg)
+        msg = "\n  File \"\", line ?, in f\n" \
+                "    return Class2().f()\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return Class1().f()\n" \
+                "  File \"\", line ?, in f\n" \
+                "    return self.missing_f\n" \
+                "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        assert_clean_exception(lambda: class3.f(), autojinja.exceptions.DebugAttributeError, msg)
+        msg = "\n  File \"\", line ?, in ex\n" \
+                "    return Class2().ex\n" \
+                "  File \"\", line ?, in ex\n" \
+                "    return Class1().ex\n" \
+                "  File \"\", line ?, in ex\n" \
+                "    raise Exception(\"ex\")\n" \
+                "Exception: ex"
+        assert_clean_exception(lambda: class3.ex, Exception, msg)
+        msg = "\n  File \"\", line ?, in ef\n" \
+                "    return Class2().ef()\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    return Class1().ef()\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    raise Exception(\"ef\")\n" \
+                "Exception: ef"
+        assert_clean_exception(lambda: class3.ef(), Exception, msg)

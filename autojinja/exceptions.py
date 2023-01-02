@@ -1,5 +1,22 @@
+import io
 import os
 import traceback
+
+def wrap_callable(callable):
+    """ Wraps the given callable in order to bypass AttributeError
+        handling of Jinja and provide better exception stacktraces.
+    """
+    def autojinja_wrapped_fcall(*args, **kwargs):
+        try:
+            result = callable(*args, **kwargs)
+            return wrap_object_attributes(result)
+        except AttributeError as e:
+            message = clean_wrapped_stacktrace(e)
+            raise DebugAttributeError(message) from None
+        except BaseException as e:
+            message = clean_wrapped_stacktrace(e)
+            raise wrap_exception(e, message).with_traceback(None)
+    return autojinja_wrapped_fcall
 
 ### Base exception
 
@@ -246,35 +263,39 @@ def split_traceback(tb, remove_class_name = False):
             message = tb[idx:]
     return stacktrace, message
 
+_disallowed_attrs = [
+    "__delattr__",
+    "__getattr__",
+    "__getattribute__",
+    "__init__",
+    "__new__",
+    "__setattr__",
+    "__str__",
+]
+
 def wrap_exception(exception, message):
     """ Wraps the given exception with a custom message.
-        Creates an object that derives the exception class.
+        Creates an object that mocks the exception class.
     """
-    if hasattr(exception, "__exception") and hasattr(exception, "__message"):
-        exception.__message = message
+    if hasattr(exception, "_wrapped_exception") and hasattr(exception, "_wrapped_message"):
+        exception._wrapped_message = message
         return exception
     try:
-        def __new__(cls, *args, **kwargs):
-            try:
-                return exception.__class__.__new__(cls, *args, **kwargs)
-            except:
-                return object.__new__(cls, *args, **kwargs)
-        def __init__(self, *args, **kwargs):
+        def __init__(self):
             pass
-        def __repr__(self):
-            return self.__message
         def __str__(self):
-            return self.__message
-        dicts = { d: getattr(exception, d) for d in dir(exception)
-                if d.startswith("__") and d.endswith("__") and d != "__getattribute__" and d != "__setattr__" }
-        dicts["__new__"] = __new__
+            return self._wrapped_message
+        dicts = { name: getattr(exception, name) for name in dir(exception)
+                  if name.startswith("__") and name not in _disallowed_attrs }
         dicts["__init__"] = __init__
-        dicts["__repr__"] = __repr__
-        dicts["__str__"] = __str__
         dicts["__module__"] = exception.__class__.__module__
-        dicts["__exception"] = exception
-        dicts["__message"] = message
-        return type(exception.__class__.__qualname__, (exception.__class__,), dicts)()
+        dicts["__str__"] = __str__
+        mock = type(exception.__class__.__qualname__, (exception.__class__,), dicts)()
+        for key, value in mock.__dict__.items():
+            setattr(mock, key, value)
+        mock._wrapped_exception = exception
+        mock._wrapped_message = message
+        return mock
     except:
         return exception
 
@@ -286,17 +307,22 @@ def prepend_jinja2_traceback(exception, tb = None):
         tb = traceback.format_exc().rstrip('\n')
     (stacktrace, message) = split_traceback(tb, True)
     if stacktrace != None:
-        token = f"jinja2{os.sep}environment.py\", " # Jinja2 hack
+        token1 = f"jinja2{os.sep}environment.py\", " # Jinja2 hack
+        token2 = f"jinja2{os.sep}runtime.py\", " # Jinja2 hack
         startidx = -1
         while True:
-            idx = stacktrace.find(token, startidx+1)
+            idx = stacktrace.find(token1, startidx+1)
             if idx < 0:
-                break # Token not found
-            startidx = stacktrace.find('\n', idx+len(token))
+                idx = stacktrace.find(token2, startidx+1)
+                if idx < 0:
+                    break # Token not found
+                startidx = stacktrace.find('\n', idx+len(token2))
+            else:
+                startidx = stacktrace.find('\n', idx+len(token1))
             if startidx < 0:
                 startidx = len(stacktrace)
                 break # No eol after token
-            if not stacktrace.startswith('    ', startidx+1):
+            if not stacktrace.startswith("    ", startidx+1):
                 continue # No inner traceback
             startidx = stacktrace.find('\n', startidx+1)
             if startidx < 0:
@@ -329,32 +355,112 @@ def clean_traceback(exception):
 
 ### --debug option enabled
 
-class DebugException(Exception):
+class DebugAttributeError(BaseException):
     def __init__(self, message):
         super().__init__(message)
 
-def wrap_object(obj):
-    """ Wraps the given exception with a custom message.
-        Creates an object that derives the exception class.
+_disallowed_stacktraces = [
+    "autojinja_wrapped_fcall",
+    "autojinja_fcall",
+    "autojinja_fget",
+    "autojinja_fset",
+    "autojinja_fdel"
+]
+
+def clean_wrapped_stacktrace(exception):
+    """ Cleans the the given exception's stacktrace from useless wrapper calls.
     """
-    try:
-        def __new__(cls, *args, **kwargs):
-            return object.__new__(cls, *args, **kwargs)
-        def __init__(self, *args, **kwargs):
-            pass
-        def __getattr__(self, attr):
-            try:
-                return getattr(self.__wrapped_object, attr)
-            except:
-                message = f"  {traceback.format_exc()[:-1]}"
-                raise DebugException(message) from None
-        dicts = { d: getattr(obj, d) for d in dir(obj)
-                if d.startswith("__") and d.endswith("__") and d != "__getattribute__" and d != "__setattr__" }
-        dicts["__new__"] = __new__
-        dicts["__init__"] = __init__
-        dicts["__module__"] = obj.__class__.__module__
-        dicts["__getattr__"] = __getattr__
-        dicts["__wrapped_object"] = obj
-        return type(obj.__class__.__qualname__, (obj.__class__,), dicts)()
-    except:
+    if exception.__class__.__module__ != "builtins":
+        fullname = f"{exception.__class__.__module__}.{exception.__class__.__qualname__}: "
+    else:
+        fullname = f"{exception.__class__.__qualname__}: "
+    stacktrace = traceback.format_exc()
+    lines = stacktrace.splitlines()
+    start = -1
+    for i in range(0, len(lines), 1):
+        if lines[i].endswith("line 15, in autojinja_wrapped_fcall") \
+        or lines[i].endswith("line 18, in autojinja_wrapped_fcall"): # /!\ easily breakable
+            start = i
+            break
+    end = -1
+    if start > 0:
+        for i in range(len(lines)-1, start, -1):
+            if lines[i] == fullname:
+                end = i+1
+                break
+    message = io.StringIO()
+    state = 0 # 0, 1
+    for line in lines[:start]:
+        if state == 1 and line.startswith("    "):
+            state = 0 # Skip
+        elif line.startswith("Traceback (most recent call last)"):
+            pass # Skip
+        elif not any(x in line for x in _disallowed_stacktraces):
+            message.write(f"\n{line}")
+        else:
+            state = 1 # Skip
+    for line in lines[end:]:
+        message.write(f"\n{line}")
+    return message.getvalue()
+
+_wrapped_properties = set()
+
+def _autojinja_fcall(wrapped_callable):
+    def autojinja_fcall(*args, **kwargs):
+        return wrapped_callable(*args, **kwargs)
+    return wrap_callable(autojinja_fcall)
+
+def _autojinja_fget(wrapped_property):
+    def autojinja_fget(self):
+        return wrapped_property.fget(self)
+    return wrap_callable(autojinja_fget)
+
+def _autojinja_fset(wrapped_property):
+    def autojinja_fset(self, value):
+        return wrapped_property.fset(self, value)
+    return wrap_callable(autojinja_fset)
+
+def _autojinja_fdel(wrapped_property):
+    def autojinja_fdel(self):
+        return wrapped_property.fdel(self)
+    return wrap_callable(autojinja_fdel)
+
+_disallowed_modules = set([
+    "autojinja.defaults",
+    "autojinja.exceptions",
+    "autojinja.main",
+    "autojinja.parser",
+    "autojinja.path",
+    "autojinja.templates",
+    "autojinja.utils",
+    "builtins",
+])
+
+def wrap_object_attributes(obj):
+    """ Wraps all properties and methods of the given objects in order to bypass
+        AttributeError handling of Jinja and provide better exception stacktraces.
+    """
+    if str(obj.__class__.__module__) in _disallowed_modules:
         return obj
+    for name in dir(obj):
+        try:
+            if not hasattr(obj.__class__, name):
+                continue
+            attribute = getattr(obj.__class__, name)
+            if callable(attribute):
+                wrapped_callable = getattr(obj, name)
+                if str(wrapped_callable.__name__) == "autojinja_wrapped_fcall":
+                    continue # Already replaced
+                setattr(obj, name, _autojinja_fcall(wrapped_callable))
+            elif isinstance(attribute, property):
+                wrapped_property = attribute
+                key = f"{obj.__class__}.{name}"
+                if key in _wrapped_properties:
+                    continue # Already replaced
+                _wrapped_properties.add(key)
+                setattr(obj.__class__, name, property(fget=_autojinja_fget(wrapped_property),
+                                                      fset=_autojinja_fset(wrapped_property),
+                                                      fdel=_autojinja_fdel(wrapped_property)))
+        except:
+            pass # Skip attribute
+    return obj

@@ -6,6 +6,7 @@ from . import main
 from .parser import ParserSettings
 from . import path
 from . import templates
+from .templates import AutoLoader
 from .templates import CogTemplate
 from .templates import JinjaTemplate
 from .templates import RawTemplate

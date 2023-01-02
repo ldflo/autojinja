@@ -6,7 +6,7 @@
         {
             "label": "vscode-snippets: generate",
             "type": "shell",
-            "command": "autojinja -a ."
+            "command": "autojinja --debug -a ."
         },
     ]
 }

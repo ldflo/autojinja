@@ -177,17 +177,16 @@ def edits_from_string(string, settings = None):
     object = parse_string(string, settings)
     return object.edits
 
-def wrap_objects(args, kwargs):
-    """ Wraps the given object when --debug option is enabled
+def wrap_objects(*args, **kwargs):
+    """ Wraps the given objects when the --debug option is enabled.
     """
-    if defaults.osenviron_debug():
-        if len(args) > 0:
-            args = list(args)
-            for i in range(len(args)):
-                if args[i] != None:
-                    args[i] = exceptions.wrap_object(args[i])
-            args = tuple(args)
-        for key, value in kwargs.items():
-            if value != None:
-                kwargs[key] = exceptions.wrap_object(value)
+    if len(args) > 0:
+        args = list(args)
+        for i in range(len(args)):
+            if args[i] != None:
+                args[i] = exceptions.wrap_object_attributes(args[i])
+        args = tuple(args)
+    for key, value in kwargs.items():
+        if value != None:
+            kwargs[key] = exceptions.wrap_object_attributes(value)
     return (args, kwargs)
