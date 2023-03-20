@@ -1,17 +1,18 @@
 from . import DiffException
 
 import autojinja
+from typing import Optional
 
 settingsCogComment = autojinja.ParserSettings(cog_open = "/**", cog_close = "**/", cog_as_comment = True)
 settingsEditComment = autojinja.ParserSettings(edit_open = "/**", edit_close = "**/", edit_as_comment = True)
 
-def valid_marker(input, expected,
-                 header0 = None, body0 = None,
-                 header1 = None, body1 = None,
-                 header2 = None, body2 = None,
-                 header3 = None, body3 = None,
-                 remove_markers = False,
-                 *args, **kwargs):
+def valid_marker(input: str, expected: str,
+                 header0: Optional[str] = None, body0: Optional[str] = None,
+                 header1: Optional[str] = None, body1: Optional[str] = None,
+                 header2: Optional[str] = None, body2: Optional[str] = None,
+                 header3: Optional[str] = None, body3: Optional[str] = None,
+                 remove_markers: bool = False,
+                 *args: str, **kwargs: str):
     template = autojinja.CogTemplate.from_string(input, *args, **kwargs)
     if header0 != None and template.markers[0].header != header0:
         raise DiffException(template.markers[0].header, header0)

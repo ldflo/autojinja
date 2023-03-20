@@ -9,18 +9,16 @@ Converts antislashes to normal slashes.
 """
 
 import glob
-import os.path
-import sys
-
-this_module = sys.modules[__name__]
+import os
+from typing import List, Tuple, Union
 
 class _join_class:
-    def __call__(self, arg1, *args): # type: (str, *str) -> str
+    def __call__(self, arg1: str, *args: str) -> str:
         """ /dir1/dir2   file.txt -> /dir1/dir2/file.txt
             /dir1/dir2/  dir3/    -> /dir1/dir2/dir3/
         """
         return no_antislash(os.path.join(arg1, *args))
-    def __getitem__(self, args): # type: (*str) -> str
+    def __getitem__(self: str, args: Union[str, Tuple[str, ...]]) -> str:
         """ /dir1/dir2   file.txt -> /dir1/dir2/file.txt/
             /dir1/dir2/  dir3/    -> /dir1/dir2/dir3/
         """
@@ -30,29 +28,29 @@ class _join_class:
 
 join = _join_class()
 
-def add(arg1, *args): # type: (str, *str) -> str
+def add(arg1: str, *args: str) -> str:
     """ /dir1/dir2   file.txt -> /dir1/dir2file.txt
         /dir1/dir2/  dir3/    -> /dir1/dir2/dir3/
     """
     return no_antislash("".join([arg1, *args]))
 
-def files(path = "", pattern = "*"): # type: (str, str) -> list(str)
+def files(path: str = "", pattern: str = "*") -> List[str]:
     """ /dir1/dir2/  *.txt -> [/dir1/dir2/file.txt]
     """
-    return [no_antislash(x) for x in glob.glob(dirpath(path) + pattern, recursive=True) if os.path.isfile(x)]
+    return [no_antislash(x) for x in glob.glob(dirpath(path) + pattern, recursive=True) if isfile(x)]
 
-def dirs(path = "", pattern = "*"): # type: (str, str) -> list(str)
+def dirs(path: str = "", pattern: str = "*") -> List[str]:
     """ /dir1/*/ -> [/dir1/dir2/]
     """
-    return [slash(x) for x in glob.glob(dirpath(path) + pattern, recursive=True) if os.path.isdir(x)]
+    return [slash(x) for x in glob.glob(dirpath(path) + pattern, recursive=True) if isdir(x)]
 
-def filepath(path): # type: (str) -> str
+def filepath(path: str) -> str:
     """ /dir1/dir2/file.txt -> /dir1/dir2/file.txt
         /dir1/dir2/         -> /dir1/dir2/
     """
     return no_antislash(path)
 
-def filename(path): # type: (str) -> str
+def filename(path: str) -> str:
     """ /dir1/dir2/file.txt -> file.txt
         /dir1/dir2/         ->
     """
@@ -62,13 +60,13 @@ def filename(path): # type: (str) -> str
         return ""
     return no_antislash(os.path.basename(path))
 
-def set_filename(path, filename): # type: (str, str) -> str
+def set_filename(path: str, filename: str) -> str:
     """ /dir1/dir2/file.txt -> /dir1/dir2/newfile.xml
         /dir1/dir2/         -> /dir1/dir2/newfile.xml
     """
     return dirpath(path) + no_antislash(filename)
 
-def dirpath(path): # type: (str) -> str
+def dirpath(path: str) -> str:
     """ /dir1/dir2/file.txt -> /dir1/dir2/
         /dir1/dir2/         -> /dir1/dir2/
     """
@@ -84,7 +82,7 @@ def dirpath(path): # type: (str) -> str
         return result
     return result + '/'
 
-def dirname(path): # type: (str) -> str
+def dirname(path: str) -> str:
     """ /dir1/dir2/file.txt -> dir2
         /dir1/dir2/         -> dir2
     """
@@ -93,37 +91,37 @@ def dirname(path): # type: (str) -> str
         return ""
     return result.rsplit('/', 2)[-2]
 
-def parent_dirpath(path): # type: (str) -> str
+def parent_dirpath(path: str) -> str:
     """ /dir1/dir2/file.txt -> /dir1/
         /dir1/dir2/         -> /dir1/
     """
     return dirpath(os.path.dirname(no_antislash(path)))
 
-def parent_dirname(path): # type: (str) -> str
+def parent_dirname(path: str) -> str:
     """ /dir1/dir2/file.txt -> dir1
         /dir1/dir2/         -> dir1
     """
     return dirname(os.path.dirname(no_antislash(path)))
 
-def ext(path): # type: (str) -> str
+def ext(path: str) -> str:
     """ /dir1/dir2/file.ext.txt -> .txt
         /dir1/dir2/             ->
     """
-    return os.path.splitext(path)[1]
+    return splitext(path)[1]
 
-def set_ext(path, extension): # type: (str, str) -> str
+def set_ext(path: str, extension: str) -> str:
     """ /dir1/dir2/file.ext.txt -> /dir1/dir2/file.ext.new
         /dir1/dir2/             -> /dir1/dir2/.new
     """
     return no_ext(path) + extension
 
-def no_ext(path): # type: (str) -> str
+def no_ext(path: str) -> str:
     """ /dir1/dir2/file.ext.txt -> /dir1/dir2/file.ext
         /dir1/dir2/             -> /dir1/dir2/
     """
-    return no_antislash(os.path.splitext(path)[0])
+    return no_antislash(splitext(path)[0])
 
-def fullext(path): # type: (str) -> str
+def fullext(path: str) -> str:
     """ /dir1/dir2/file.ext.txt -> .ext.txt
         /dir1/dir2/             ->
     """
@@ -136,13 +134,13 @@ def fullext(path): # type: (str) -> str
         return ""
     return '.' + splits[1]
 
-def set_fullext(path, extension): # type: (str, str) -> str
+def set_fullext(path: str, extension: str) -> str:
     """ /dir1/dir2/file.ext.txt -> /dir1/dir2/file.new
         /dir1/dir2/             -> /dir1/dir2/.new
     """
     return no_fullext(path) + extension
 
-def no_fullext(path): # type: (str) -> str
+def no_fullext(path: str) -> str:
     """ /dir1/dir2/file.ext.txt -> /dir1/dir2/file
         /dir1/dir2/             -> /dir1/dir2/
     """
@@ -151,7 +149,7 @@ def no_fullext(path): # type: (str) -> str
         return no_antislash(path)
     return no_antislash(path[:-len(extension)])
 
-def slash(path): # type: (str) -> str
+def slash(path: str) -> str:
     """ /dir1/dir2/file.txt -> /dir1/dir2/file.txt/
         /dir1/dir2/         -> /dir1/dir2/
     """
@@ -162,64 +160,166 @@ def slash(path): # type: (str) -> str
         return path
     return path + '/'
 
-def no_slash(path): # type: (str) -> str
+def no_slash(path: str) -> str:
     if not path:
         return ""
     if path[-1] in ['/', '\\']:
         return no_antislash(path[:-1])
     return no_antislash(path)
 
-def no_antislash(path): # type: (str) -> str
+def no_antislash(path: str) -> str:
     """ \dir1\dir2\file.txt -> /dir1/dir2/file.txt/
         \dir1\dir2\         -> /dir1/dir2/
     """
     return path.replace('\\', '/')
 
-def realpath(path): # type: (str) -> str
+###
+### os.path wrapper functions
+###
+
+def abspath(path: str) -> str:
+    if not path:
+        path = "."
+    result = os.path.abspath(path)
+    if path[-1] in ['/', '\\']:
+        return slash(result)
+    return no_antislash(result)
+
+def commonpath(paths: List[str]) -> str:
+    result = os.path.commonpath(paths)
+    return slash(result)
+
+def commonprefix(paths: List[str]) -> str:
+    result = os.path.commonprefix(paths)
+    return no_antislash(result)
+
+def exists(path: str) -> bool:
+    return os.path.exists(path)
+
+def lexists(path: str) -> bool:
+    return os.path.lexists(path)
+
+def expanduser(path: str) -> str:
     if not path:
         return ""
+    result = os.path.expanduser(path)
+    if path[-1] in ['/', '\\']:
+        return slash(result)
+    return no_antislash(result)
+
+def expandvars(path: str) -> str:
+    if not path:
+        return ""
+    result = os.path.expandvars(path)
+    if path[-1] in ['/', '\\']:
+        return slash(result)
+    return no_antislash(result)
+
+def getatime(path: str) -> float:
+    return os.path.getatime(path)
+
+def getmtime(path: str) -> float:
+    return os.path.getmtime(path)
+
+def getctime(path: str) -> float:
+    return os.path.getctime(path)
+
+def isabs(path: str) -> bool:
+    return os.path.isabs(path)
+
+def isfile(path: str) -> bool:
+    return os.path.isfile(path)
+
+def isdir(path: str) -> bool:
+    return os.path.isdir(path)
+
+def islink(path: str) -> bool:
+    return os.path.islink(path)
+
+def ismount(path: str) -> bool:
+    return os.path.ismount(path)
+
+def normcase(path: str) -> str:
+    if not path:
+        return ""
+    result = os.path.normcase(path)
+    if path[-1] in ['/', '\\']:
+        return slash(result)
+    return no_antislash(result)
+
+def normpath(path: str) -> str:
+    if not path:
+        return ""
+    result = os.path.normpath(path)
+    if path[-1] in ['/', '\\']:
+        return slash(result)
+    return no_antislash(result)
+
+def realpath(path: str) -> str:
+    if not path:
+        path = "."
     result = os.path.realpath(path)
     if path[-1] in ['/', '\\']:
         return slash(result)
     return no_antislash(result)
 
-def relpath(path, start = "."): # type: (str, str) -> str
+def relpath(path: str, start: str = ".") -> str:
     if not path:
         return start
-    result = os.path.relpath(path, start)
+    try:
+        result = os.path.relpath(path, start)
+    except:
+        return no_antislash(path)
     if path[-1] in ['/', '\\']:
         return slash(result)
     return no_antislash(result)
 
-def samefile(path1, path2): # type: (str, str) -> bool
+def samefile(path1: str, path2: str) -> bool:
     return os.path.samefile(path1, path2)
+
+def sameopenfile(fp1: int, fp2: int) -> bool:
+    return os.path.sameopenfile(fp1, fp2)
+
+def samestat(stat1: os.stat_result, stat2: os.stat_result) -> bool:
+    return os.path.samestat(stat1, stat2)
+
+def splitpath(path: str) -> Tuple[str, str]:
+    result = os.path.split(path)
+    return (no_antislash(result[0]), no_antislash(result[1]))
+
+def splitdrive(path: str) -> Tuple[str, str]:
+    result = os.path.splitdrive(path)
+    return (no_antislash(result[0]), no_antislash(result[1]))
+
+def splitext(path: str) -> Tuple[str, str]:
+    result = os.path.splitext(path)
+    return (no_antislash(result[0]), no_antislash(result[1]))
 
 class Path(str):
     """ Allows a functional API of the above functions:
 
-            path("/dir").join("file.txt").exists
+            Path("/dir").join("file.txt").exists
                 instead of
             os.path.exists(os.path.join("/dir", "file.txt"))
     """
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args: str, **kwargs):
         if len(args) == 0:
             return str.__new__(cls, **kwargs)
         return str.__new__(cls, no_antislash(args[0]), *args[1:], **kwargs)
-    def __getattribute__(self, attr):
-        try:
-            attribute = object.__getattribute__(self, attr)
-            return PathWrapper(attribute) if callable(attribute) else attribute
-        except:
-            result = os.path.__getattribute__(attr)(self)
-            return Path(result) if isinstance(result, str) else result
 
-    class _join_class:
-        def __init__(self, path):
-            self.path = path
-        def __call__(self, *args):
+    class join_wrapper:
+        def __init__(self, path: str):
+            self.path: str = path
+        def __call__(self, *args: str) -> "Path":
+            """ /dir1/dir2   file.txt -> /dir1/dir2/file.txt
+                /dir1/dir2/  dir3/    -> /dir1/dir2/dir3/
+            """
             path = join.__call__(self.path, *args)
             return Path(path)
-        def __getitem__(self, args):
+        def __getitem__(self, args: Union[str, Tuple[str, ...]]) -> "Path":
+            """ /dir1/dir2   file.txt -> /dir1/dir2/file.txt/
+                /dir1/dir2/  dir3/    -> /dir1/dir2/dir3/
+            """
             if isinstance(args, tuple):
                 path = slash(join.__call__(self.path, *args))
             else:
@@ -227,122 +327,202 @@ class Path(str):
             return Path(path)
 
     @property
-    def join(self):
-        return Path._join_class(self)
-    def add(self, *args):
-        path = add(self, *args)
-        return Path(path)
-    def __add__(self, other):
+    def join(self) -> join_wrapper:
+        return Path.join_wrapper(self)
+
+    def add(self, *args: str) -> "Path":
+        result = add(self, *args)
+        return Path(result)
+    def __add__(self, other: str) -> "Path":
         return self.add(other)
-    def __radd__(self, other):
+    def __radd__(self, other: str) -> "Path":
         return Path(other.__add__(self))
-    def __truediv__(self, other):
-        return self.join(other)
-    def files(self, pattern = "*"):
-        list = files(self, pattern)
-        return [Path(path) for path in list]
-    def dirs(self, pattern = "*"):
-        list = dirs(self, pattern)
-        return [Path(path) for path in list]
-    @property
-    def filepath(self):
-        path = filepath(self)
-        return Path(path)
-    @property
-    def filename(self):
-        path = filename(self)
-        return Path(path)
-    def set_filename(self, filename):
-        path = set_filename(self, filename)
-        return Path(path)
-    @property
-    def dirpath(self):
-        path = dirpath(self)
-        return Path(path)
-    @property
-    def dirname(self):
-        path = dirname(self)
-        return Path(path)
-    @property
-    def parent_dirpath(self):
-        path = parent_dirpath(self)
-        return Path(path)
-    @property
-    def parent_dirname(self):
-        path = parent_dirname(self)
-        return Path(path)
-    @property
-    def ext(self):
-        path = ext(self)
-        return Path(path)
-    def set_ext(self, extension):
-        path = set_ext(self, extension)
-        return Path(path)
-    @property
-    def no_ext(self):
-        path = no_ext(self)
-        return Path(path)
-    @property
-    def fullext(self):
-        path = fullext(self)
-        return Path(path)
-    def set_fullext(self, extension):
-        path = set_fullext(self, extension)
-        return Path(path)
-    @property
-    def no_fullext(self):
-        path = no_fullext(self)
-        return Path(path)
-    @property
-    def slash(self):
-        path = slash(self)
-        return Path(path)
-    @property
-    def no_slash(self):
-        path = no_slash(self)
-        return Path(path)
-    @property
-    def realpath(self):
-        path = realpath(self)
-        return Path(path)
-    def relpath(self, start = "."):
-        path = relpath(self, start)
-        return Path(path)
-    def samefile(self, path2):
-        path = samefile(self, path2)
-        return Path(path)
+    def __truediv__(self, other: str) -> "Path":
+        return self.join.__call__(other)
 
-class PathWrapper:
-    """ Helps forwarding to callables of os.path
-    """
-    def __init__(self, attribute):
-        self.attribute = attribute
-    def __call__(self, *args, **kwargs):
-        result = self.attribute.__call__(*args, **kwargs)
-        return Path(result) if isinstance(result, str) else result
-    def __getitem__(self, args):
-        result = self.attribute.__getitem__(args)
-        return Path(result) if isinstance(result, str) else result
-    def __getattr__(self, attr):
-        return getattr(self.attribute, attr)
+    def files(self, pattern: str = "*") -> List["Path"]:
+        result = files(self, pattern)
+        return [Path(path) for path in result]
 
-class module_call:
-    """ Overrides path(), path[] and path.attr
-    """
-    def __call__(self, path):
-        """ path("/my/path") -> "/my/path"
-        """
-        return Path(path)
-    def __getitem__(self, path):
-        """ path["/my/path"] -> "/my/path/"
-        """
-        return Path(slash(path))
-    def __getattribute__(self, attr):
-        """ Forwards os.path if not defined in this module
-        """
-        try:
-            return this_module.__getattribute__(attr)
-        except:
-            return os.path.__getattribute__(attr)
+    def dirs(self, pattern: str = "*") -> List["Path"]:
+        result = dirs(self, pattern)
+        return [Path(path) for path in result]
 
-sys.modules[__name__] = module_call()
+    @property
+    def filepath(self) -> "Path":
+        result = filepath(self)
+        return Path(result)
+
+    @property
+    def filename(self) -> "Path":
+        result = filename(self)
+        return Path(result)
+
+    def set_filename(self, filename: str) -> "Path":
+        result = set_filename(self, filename)
+        return Path(result)
+
+    @property
+    def dirpath(self) -> "Path":
+        result = dirpath(self)
+        return Path(result)
+
+    @property
+    def dirname(self) -> "Path":
+        result = dirname(self)
+        return Path(result)
+
+    @property
+    def parent_dirpath(self) -> "Path":
+        result = parent_dirpath(self)
+        return Path(result)
+
+    @property
+    def parent_dirname(self) -> "Path":
+        result = parent_dirname(self)
+        return Path(result)
+
+    @property
+    def ext(self) -> "Path":
+        result = ext(self)
+        return Path(result)
+
+    def set_ext(self, extension: str) -> "Path":
+        result = set_ext(self, extension)
+        return Path(result)
+
+    @property
+    def no_ext(self) -> "Path":
+        result = no_ext(self)
+        return Path(result)
+
+    @property
+    def fullext(self) -> "Path":
+        result = fullext(self)
+        return Path(result)
+
+    def set_fullext(self, extension: str) -> "Path":
+        result = set_fullext(self, extension)
+        return Path(result)
+
+    @property
+    def no_fullext(self) -> "Path":
+        result = no_fullext(self)
+        return Path(result)
+
+    @property
+    def slash(self) -> "Path":
+        result = slash(self)
+        return Path(result)
+
+    @property
+    def no_slash(self) -> "Path":
+        result = no_slash(self)
+        return Path(result)
+
+    ###
+    ### os.path wrapper functions
+    ###
+
+    @property
+    def abspath(self) -> "Path":
+        result = abspath(self)
+        return Path(result)
+
+    def commonpath(self, paths: List[str]) -> "Path":
+        result = commonpath([self] + paths)
+        return Path(result)
+
+    def commonprefix(self, paths: List[str]) -> "Path":
+        result = commonprefix([self] + paths)
+        return Path(result)
+
+    @property
+    def exists(self) -> bool:
+        return exists(self)
+
+    @property
+    def lexists(self) -> bool:
+        return lexists(self)
+
+    @property
+    def expanduser(self) -> "Path":
+        result = expanduser(self)
+        return Path(result)
+
+    @property
+    def expandvars(self) -> "Path":
+        result = expandvars(self)
+        return Path(result)
+
+    @property
+    def getatime(self) -> float:
+        return getatime(self)
+
+    @property
+    def getmtime(self) -> float:
+        return getmtime(self)
+
+    @property
+    def getctime(self) -> float:
+        return getctime(self)
+
+    @property
+    def isabs(self) -> bool:
+        return isabs(self)
+
+    @property
+    def isfile(self) -> bool:
+        return isfile(self)
+
+    @property
+    def isdir(self) -> bool:
+        return isdir(self)
+
+    @property
+    def islink(self) -> bool:
+        return islink(self)
+
+    @property
+    def ismount(self) -> bool:
+        return ismount(self)
+
+    @property
+    def normcase(self) -> "Path":
+        result = normcase(self)
+        return Path(result)
+
+    @property
+    def normpath(self) -> "Path":
+        result = normpath(self)
+        return Path(result)
+
+    @property
+    def realpath(self) -> "Path":
+        result = realpath(self)
+        return Path(result)
+
+    def relpath(self, start: str = ".") -> "Path":
+        result = relpath(self, start)
+        return Path(result)
+
+    def samefile(self, path: str) -> bool:
+        return samefile(self, path)
+
+    def samestat(self, stat: os.stat_result) -> bool:
+        return samestat(os.stat(self), stat)
+
+    @property
+    def splitpath(self) -> Tuple["Path", "Path"]:
+        result = splitpath(self)
+        return (Path(result[0]), Path(result[1]))
+
+    @property
+    def splitdrive(self) -> Tuple["Path", "Path"]:
+        result = splitdrive(self)
+        return (Path(result[0]), Path(result[1]))
+
+    @property
+    def splitext(self) -> Tuple["Path", "Path"]:
+        result = splitext(self)
+        return (Path(result[0]), Path(result[1]))

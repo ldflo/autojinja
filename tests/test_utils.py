@@ -20,7 +20,7 @@ settings2 = autojinja.parser.ParserSettings(cog_open = autojinja.defaults.AUTOJI
                                             newline = None)
 
 tmp = tempfile.TemporaryDirectory()
-root = autojinja.path[tmp.name]
+root = autojinja.Path[tmp.name]
 file1 = root.join("file1.txt")
 file2 = root.join("file2.txt")
 file3 = root.join("file3.txt")
@@ -40,8 +40,8 @@ with open(file4, 'w') as f:
             "VAR4 = Test string \n" \
             "   VAR5 =${THIS_DIRPATH}/")
 
-def invalid_autojinja(input, exception_type, message, *args, **kwargs):
-    def function(*args, **kwargs):
+def invalid_autojinja(input: str, exception_type: type, message: str, *args: str, **kwargs: str):
+    def function(*args: str, **kwargs: str):
         template = autojinja.CogTemplate.from_string(input)
         template.context(*args, **kwargs).render()
     assert_clean_exception(function, exception_type, message, *args, **kwargs)
@@ -191,21 +191,21 @@ class Test:
             with open(file2, 'r', encoding="ascii") as f:
                 old_content = f.read()
                 assert old_content == "Test1"
-            assert sys.stdout.getvalue() == f"[autojinja]    new    {file2.relpath(autojinja.path(sys.argv[0]).dirpath)}\n"
+            assert sys.stdout.getvalue() == f"[autojinja]    new    {file2.relpath(autojinja.Path(sys.argv[0]).dirpath)}\n"
             sys.stdout.truncate(0)
             sys.stdout.seek(0)
             autojinja.utils.generate_file(file2, "Test1", old_content, encoding="ascii")
             with open(file2, 'r', encoding="ascii") as f:
                 old_content = f.read()
                 assert old_content == "Test1"
-            assert sys.stdout.getvalue() == f"[autojinja]  -------  {file2.relpath(autojinja.path(sys.argv[0]).dirpath)}\n"
+            assert sys.stdout.getvalue() == f"[autojinja]  -------  {file2.relpath(autojinja.Path(sys.argv[0]).dirpath)}\n"
             sys.stdout.truncate(0)
             sys.stdout.seek(0)
             autojinja.utils.generate_file(file2, "Test2\nTest2", None, encoding="ascii", newline="\r\n")
             with open(file2, 'r', encoding="ascii", newline="\r\n") as f:
                 old_content = f.read()
                 assert old_content == "Test2\r\nTest2"
-            assert sys.stdout.getvalue() == f"[autojinja]  changed  {file2.relpath(autojinja.path(sys.argv[0]).dirpath)}\n"
+            assert sys.stdout.getvalue() == f"[autojinja]  changed  {file2.relpath(autojinja.Path(sys.argv[0]).dirpath)}\n"
         finally:
             sys.stdout = sys.__stdout__
 
@@ -461,7 +461,7 @@ class Test:
         assert env["VAR2"] == "2"
         assert env["VAR3"] == "42"
         assert env["VAR4"] == "Test string"
-        assert env["VAR5"] == autojinja.path(file4).abspath.dirpath
+        assert env["VAR5"] == autojinja.Path(file4).abspath.dirpath
 
     def test_evaluate(self):
         env = {"VAR1" : "1",

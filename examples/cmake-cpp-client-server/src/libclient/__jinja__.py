@@ -3,7 +3,7 @@ from lxml import etree
 import utility
 
 ### Read XML
-xroot = etree.parse(os.environ["SERVER_XML"])
+xroot: etree._Element = etree.parse(os.environ["SERVER_XML"])
 xfunctions = xroot.xpath("Function")
 
 #######################################
@@ -34,7 +34,7 @@ return deserialize<{{ ReturnType }}>(ptr);
 
 # Prepare a function for generating above template
 idx = 0
-def implementation_func(xfunction):
+def implementation_func(xfunction: etree._Element) -> str:
     global idx
     idx += 1
     return implementation.context(Index = idx,

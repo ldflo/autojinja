@@ -1,8 +1,11 @@
+from . import parser
+
 import io
 import os
+from typing import Callable, Generic, Tuple, Type, TypeVar
 import traceback
 
-def wrap_callable(callable):
+def wrap_callable(callable: Callable):
     """ Wraps the given callable in order to bypass AttributeError
         handling of Jinja and provide better exception stacktraces.
     """
@@ -13,16 +16,18 @@ def wrap_callable(callable):
         except AttributeError as e:
             message = clean_wrapped_stacktrace(e)
             raise DebugAttributeError(message) from None
-        except BaseException as e:
+        except Exception as e:
             message = clean_wrapped_stacktrace(e)
             raise wrap_exception(e, message).with_traceback(None)
     return autojinja_wrapped_fcall
 
+_TException = TypeVar("_TException", bound=Exception)
+
 ### Base exception
 
-class CommonException(Exception):
+class CommonException(Exception, Generic[_TException]):
     @staticmethod
-    def from_marker(exceptionType, marker, pos, size, message):
+    def from_marker(exceptionType: Type[_TException], marker: parser.Marker, pos: int, size: int, message: str) -> _TException:
         line = line_at_index(marker.string, pos)
         (l, c) = index_to_coordinates(marker.string, pos)
         message = f"{message}\n{line}\n{' ' * (c-1)}{'^' * size} line {l}, column {c}"
@@ -30,7 +35,7 @@ class CommonException(Exception):
         exception.coordinates = (l, c)
         return exception
     @staticmethod
-    def from_exception(exception, marker):
+    def from_exception(exception: _TException, marker: parser.Marker) -> _TException:
         exception = prepend_jinja2_traceback(exception)
         text = format_text(marker.header)
         (l, c) = index_to_coordinates(marker.string, marker.header_open)
@@ -41,178 +46,178 @@ class CommonException(Exception):
         exception.coordinates = (l, c)
         return exception
 
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 ### Parsing exception
 
 class ParsingException(CommonException):
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 class OpenMarkerNotFoundException(ParsingException):
     @staticmethod
-    def from_marker(marker):
+    def from_marker(marker: parser.Marker) -> "OpenMarkerNotFoundException":
         return CommonException.from_marker(OpenMarkerNotFoundException,
                                            marker,
                                            marker.header_open,
                                            len(marker.open),
                                            f"Couldn't find corresponding open marker \"{marker.open} {marker.close}\":")
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 class CloseMarkerNotFoundException(ParsingException):
     @staticmethod
-    def from_marker(marker):
+    def from_marker(marker: parser.Marker) -> "CloseMarkerNotFoundException":
         return CommonException.from_marker(CloseMarkerNotFoundException,
                                            marker,
                                            marker.header_open,
                                            len(marker.open),
                                            f"Couldn't find corresponding close marker \"{marker.close}\":")
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 class EndMarkerNotFoundException(ParsingException):
     @staticmethod
-    def from_marker(marker):
+    def from_marker(marker: parser.Marker) -> "EndMarkerNotFoundException":
         return CommonException.from_marker(EndMarkerNotFoundException,
                                            marker,
                                            marker.header_close - len(marker.close),
                                            len(marker.close),
                                            f"Couldn't find corresponding end marker \"{marker.open} {marker.end} {marker.close}\":")
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 class RequireHeaderInlineException(ParsingException):
     @staticmethod
-    def from_marker(marker):
+    def from_marker(marker: parser.Marker) -> "RequireHeaderInlineException":
         return CommonException.from_marker(RequireHeaderInlineException,
                                            marker,
                                            marker.header_open,
                                            len(marker.open),
                                            f"Marker can't have a multiline header:")
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 class RequireHeaderMultilineException(ParsingException):
     @staticmethod
-    def from_marker(marker):
+    def from_marker(marker: parser.Marker) -> "RequireHeaderMultilineException":
         return CommonException.from_marker(RequireHeaderMultilineException,
                                            marker,
                                            marker.header_open,
                                            len(marker.open),
                                            f"Marker can't have a one line header:")
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 class WrongHeaderIndentationException(ParsingException):
     @staticmethod
-    def from_marker(marker, pos):
+    def from_marker(marker: parser.Marker, pos) -> "WrongHeaderIndentationException":
         return CommonException.from_marker(WrongHeaderIndentationException,
                                            marker,
                                            pos,
                                            len(marker.open),
                                            f"Wrong marker header indentation:")
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 class RequireNewlineException(ParsingException):
     @staticmethod
-    def from_marker(marker):
+    def from_marker(marker: parser.Marker) -> "RequireNewlineException":
         return CommonException.from_marker(RequireNewlineException,
                                            marker,
                                            marker.header_open,
                                            len(marker.open),
                                            f"Marker can't start on same line as previous end marker:")
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 class RequireInlineException(ParsingException):
     @staticmethod
-    def from_marker(marker):
+    def from_marker(marker: parser.Marker) -> "RequireInlineException":
         return CommonException.from_marker(RequireInlineException,
                                            marker,
                                            marker.header_open,
                                            len(marker.open),
                                            f"Marker must start on same line as previous marker:")
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 class WrongInclusionException(ParsingException):
     @staticmethod
-    def from_marker(marker):
+    def from_marker(marker: parser.Marker) -> "WrongInclusionException":
         return CommonException.from_marker(WrongInclusionException,
                                            marker,
                                            marker.header_open,
                                            len(marker.open),
                                            f"Marker has wrong inclusion regarding enclosing markers:")
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 class DuplicateEditException(ParsingException):
     @staticmethod
-    def from_marker(marker):
+    def from_marker(marker: parser.Marker) -> "DuplicateEditException":
         return CommonException.from_marker(DuplicateEditException,
                                            marker,
                                            marker.header_open,
                                            len(marker.open),
                                            f"Duplicate edit marker \"{marker.open} {marker.header} {marker.close}\", consider reusing/removing duplicates:")
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 class DirectlyEnclosedEditException(ParsingException):
     @staticmethod
-    def from_marker(marker):
+    def from_marker(marker: parser.Marker) -> "DirectlyEnclosedEditException":
         return CommonException.from_marker(DirectlyEnclosedEditException,
                                            marker,
                                            marker.header_open,
                                            len(marker.open),
                                            f"Directly enclosed edit marker \"{marker.open} {marker.header} {marker.close}\", consider reusing/removing it:")
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 ### Generation exception
 
 class GenerationException(CommonException):
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 class RequireBodyInlineException(GenerationException):
     @staticmethod
-    def from_marker(marker):
+    def from_marker(marker: parser.Marker) -> "RequireBodyInlineException":
         return CommonException.from_marker(RequireBodyInlineException,
                                            marker,
                                            marker.header_open,
                                            len(marker.open),
                                            f"Generated body must contain only one line to be inlined:")
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 class NonGeneratedEditException(GenerationException):
     @staticmethod
-    def from_marker(marker):
+    def from_marker(marker: parser.Marker) -> "NonGeneratedEditException":
         return CommonException.from_marker(NonGeneratedEditException,
                                            marker,
                                            marker.header_open,
                                            len(marker.open),
                                            f"Non-generated edit marker \"{marker.open} {marker.header} {marker.close}\", consider reusing/removing it:")
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 class AlreadyGeneratedEditException(GenerationException):
     @staticmethod
-    def from_marker(marker):
+    def from_marker(marker: parser.Marker) -> "AlreadyGeneratedEditException":
         return CommonException.from_marker(AlreadyGeneratedEditException,
                                            marker,
                                            marker.header_open,
                                            len(marker.open),
                                            f"Already generated edit marker \"{marker.open} {marker.header} {marker.close}\", consider fixing generation:")
-    def __init__(self, message):
+    def __init__(self, message: str):
         super().__init__(message)
 
 ### Utils
 
-def index_to_coordinates(string, index):
+def index_to_coordinates(string: str, index: int) -> Tuple[int, int]:
     """ Returns the corresponding tuple (line, column) of the character at the given index of the given string.
     """
     if index < 0:
@@ -220,7 +225,7 @@ def index_to_coordinates(string, index):
     sp = string[:index+1].splitlines(keepends=True)
     return len(sp), len(sp[-1])
 
-def line_at_index(string, index):
+def line_at_index(string: str, index: int) -> str:
     """ Returns the line at the given index of the given string.
     """
     if index < 0:
@@ -232,13 +237,13 @@ def line_at_index(string, index):
         end = len(string)
     return f"{string[start:end]}{suffix}"
 
-def format_text(text, max_length = 50, suffix = "..."):
+def format_text(text: str, max_length = 50, suffix = "...") -> str:
     """ Replaces tabulations and ends of line.
     """
     text = text if len(text) <= max_length else f"{text[:max_length]}{suffix}"
     return text.replace('\t', "\\t").replace('\n', "\\n")
 
-def split_traceback(tb, remove_class_name = False):
+def split_traceback(tb: str, remove_class_name = False) -> Tuple[str, str]:
     """ Splits the given traceback into (stacktrace, message).
     """
     startidx = -1
@@ -273,7 +278,7 @@ _disallowed_attrs = [
     "__str__",
 ]
 
-def wrap_exception(exception, message):
+def wrap_exception(exception: _TException, message) -> _TException:
     """ Wraps the given exception with a custom message.
         Creates an object that mocks the exception class.
     """
@@ -299,7 +304,7 @@ def wrap_exception(exception, message):
     except:
         return exception
 
-def prepend_jinja2_traceback(exception, tb = None):
+def prepend_jinja2_traceback(exception: _TException, tb: str = None) -> _TException:
     """ Prepends the Jinja2 traceback to the given exception.
         Creates an object that derives the exception class.
     """
@@ -348,15 +353,15 @@ def prepend_jinja2_traceback(exception, tb = None):
     message = f"\n{stacktrace}\n{message}" if stacktrace else f"\n{message}"
     return wrap_exception(exception, message)
 
-def clean_traceback(exception):
+def clean_traceback(exception: _TException) -> _TException:
     """ Removes the traceback of the given exception.
     """
     return prepend_jinja2_traceback(exception).with_traceback(None)
 
 ### --debug option enabled
 
-class DebugAttributeError(BaseException):
-    def __init__(self, message):
+class DebugAttributeError(Exception):
+    def __init__(self, message: str):
         super().__init__(message)
 
 _disallowed_stacktraces = [
@@ -367,7 +372,7 @@ _disallowed_stacktraces = [
     "autojinja_fdel"
 ]
 
-def clean_wrapped_stacktrace(exception):
+def clean_wrapped_stacktrace(exception: _TException) -> str:
     """ Cleans the the given exception's stacktrace from useless wrapper calls.
     """
     if exception.__class__.__module__ != "builtins":
@@ -378,8 +383,8 @@ def clean_wrapped_stacktrace(exception):
     lines = stacktrace.splitlines()
     start = -1
     for i in range(0, len(lines), 1):
-        if lines[i].endswith("line 15, in autojinja_wrapped_fcall") \
-        or lines[i].endswith("line 18, in autojinja_wrapped_fcall"): # /!\ easily breakable
+        if lines[i].endswith("line 18, in autojinja_wrapped_fcall") \
+        or lines[i].endswith("line 21, in autojinja_wrapped_fcall"): # /!\ easily breakable
             start = i
             break
     end = -1
@@ -405,22 +410,22 @@ def clean_wrapped_stacktrace(exception):
 
 _wrapped_properties = set()
 
-def _autojinja_fcall(wrapped_callable):
+def _autojinja_fcall(wrapped_callable: Callable):
     def autojinja_fcall(*args, **kwargs):
         return wrapped_callable(*args, **kwargs)
     return wrap_callable(autojinja_fcall)
 
-def _autojinja_fget(wrapped_property):
+def _autojinja_fget(wrapped_property: property):
     def autojinja_fget(self):
         return wrapped_property.fget(self)
     return wrap_callable(autojinja_fget)
 
-def _autojinja_fset(wrapped_property):
+def _autojinja_fset(wrapped_property: property):
     def autojinja_fset(self, value):
         return wrapped_property.fset(self, value)
     return wrap_callable(autojinja_fset)
 
-def _autojinja_fdel(wrapped_property):
+def _autojinja_fdel(wrapped_property: property):
     def autojinja_fdel(self):
         return wrapped_property.fdel(self)
     return wrap_callable(autojinja_fdel)
@@ -436,7 +441,9 @@ _disallowed_modules = set([
     "builtins",
 ])
 
-def wrap_object_attributes(obj):
+_TObject = TypeVar("_TObject")
+
+def wrap_object_attributes(obj: _TObject) -> _TObject:
     """ Wraps all properties and methods of the given objects in order to bypass
         AttributeError handling of Jinja and provide better exception stacktraces.
     """

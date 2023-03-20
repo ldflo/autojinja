@@ -4,13 +4,13 @@ import autojinja
 import os
 import tempfile
 
-def invalid_autojinja(exception_type, message, *args, **kwargs):
-    def function(*args, **kwargs):
+def invalid_autojinja(exception_type: type, message: str, *args: str, **kwargs: str):
+    def function(*args: str, **kwargs: str):
         autojinja.main(*args, **kwargs)
     assert_exception(function, exception_type, message, *args, **kwargs)
 
 tmp = tempfile.TemporaryDirectory()
-root = autojinja.path[tmp.name]
+root = autojinja.Path[tmp.name]
 output = root.join("output.txt")
 
 def clear_output():
@@ -124,6 +124,10 @@ with open(file15, 'w') as f:
             f"    if '{autojinja.defaults.AUTOJINJA_SUMMARY}' in os.environ:\n" \
             f"        f.write(os.environ['{autojinja.defaults.AUTOJINJA_SUMMARY}'] + '\\n')\n")
 
+class TestVersion:
+    def test_1(self):
+        assert autojinja.__version__ == "1.8.1"
+
 class TestSearch:
     def test_1(self):
         clear_output()
@@ -194,12 +198,12 @@ class TestSearch:
         invalid_autojinja(Exception, message, ".")
 
     def test_14(self):
-        file = autojinja.path("script.py")
+        file = autojinja.Path("script.py")
         message = f"File or directory at path \"{file.abspath}\" doesn't exist"
         invalid_autojinja(Exception, message, file)
 
     def test_15(self):
-        dir = autojinja.path["dir"]
+        dir = autojinja.Path["dir"]
         message = f"File or directory at path \"{dir.abspath}\" doesn't exist"
         invalid_autojinja(Exception, message, dir)
 
@@ -247,35 +251,35 @@ class TestIncludes:
     def test_1(self):
         clear_output()
         autojinja.main("--includes", dir1, file10)
-        assert read_output() == f"{dir1[:-1]}\n"
+        assert read_output() == f"{dir1}\n"
 
     def test_2(self):
         clear_output()
         autojinja.main(f"--includes={dir1}", file10)
-        assert read_output() == f"{dir1[:-1]}\n"
+        assert read_output() == f"{dir1}\n"
 
     def test_3(self):
         clear_output()
         autojinja.main("-i", dir1, file10)
-        assert read_output() == f"{dir1[:-1]}\n"
+        assert read_output() == f"{dir1}\n"
 
     def test_4(self):
         clear_output()
         autojinja.main(f"-i={dir1}", file10)
-        assert read_output() == f"{dir1[:-1]}\n"
+        assert read_output() == f"{dir1}\n"
 
     def test_5(self):
         clear_output()
         os.environ["PYTHONPATH"] = "test"
         autojinja.main("-i", dir1, "-i", dir2, file10)
-        assert read_output() == f"test;{dir1[:-1]};{dir2[:-1]}\n"
+        assert read_output() == f"test;{dir1};{dir2}\n"
         del os.environ["PYTHONPATH"]
 
     def test_6(self):
         clear_output()
         os.environ["PYTHONPATH"] = "test"
         autojinja.main("-i", f"{dir1};{dir2}", file10)
-        assert read_output() == f"test;{dir1[:-1]};{dir2[:-1]}\n"
+        assert read_output() == f"test;{dir1};{dir2}\n"
         del os.environ["PYTHONPATH"]
 
 class TestRemoveMarkers:
@@ -413,7 +417,7 @@ class TestSilent:
         message_end = f"Error 1 while executing script at path \"{file13}\""
         try:
             autojinja.main(file13)
-        except BaseException as e:
+        except Exception as e:
             exception = e
         else:
             exception = None

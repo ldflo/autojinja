@@ -4,17 +4,18 @@ import autojinja
 import jinja2
 import os
 import tempfile
+from typing import Dict, Optional, Tuple, Type, Union
 
 settingsRemoveMarkers = autojinja.ParserSettings(remove_markers = True)
 settingsPreserveMarkers = autojinja.ParserSettings(remove_markers = False)
 
 tmp = tempfile.TemporaryDirectory()
-root = autojinja.path[tmp.name]
+root = autojinja.Path[tmp.name]
 input_file = root.join("input.txt")
 output_file = root.join("output.txt")
 
-def invalid_autojinja(input, exception_type, message, *args, **kwargs):
-    def function(*args, **kwargs):
+def invalid_autojinja(input: str, exception_type: type, message: str, *args: str, **kwargs: str):
+    def function(*args: str, **kwargs: str):
         template = autojinja.JinjaTemplate.from_string(input)
         template.context(*args, **kwargs).render()
     assert_clean_exception(function, exception_type, message, *args, **kwargs)
@@ -22,12 +23,12 @@ def invalid_autojinja(input, exception_type, message, *args, **kwargs):
 ### RawTemplate
 
 class Generator_RawTemplate:
-    def render(template, expected, args, kwargs):
+    def render(template: autojinja.templates.BaseTemplate, expected: str, args: Tuple[str, ...], kwargs: Dict[str, str]):
         result = template.context(*args, **kwargs).render()
         if result != expected:
             raise DiffException(result, expected)
 
-    def render_file(template, expected, output, encoding, newline, args, kwargs):
+    def render_file(template: autojinja.templates.BaseTemplate, expected: str, output: Optional[str], encoding: Optional[str], newline: Optional[str], args: Tuple[str, ...], kwargs: Dict[str, str]):
         result = template.context(*args, **kwargs).render_file(output, encoding, newline)
         if result != expected:
             raise DiffException(result, expected)
@@ -40,7 +41,7 @@ class Generator_RawTemplate:
             if content != result:
                 raise DiffException(content, result)
 
-    def check(input, expected, *args, **kwargs):
+    def check(input: str, expected: str, *args: str, **kwargs: str):
         with open(input_file, 'w') as f:
             f.write(input)
         ### Output
@@ -62,12 +63,12 @@ class Generator_RawTemplate:
 ### CogTemplate / JinjaTemplate
 
 class Generator:
-    def render(template, output, expected, remove_markers, args, kwargs):
+    def render(template: autojinja.templates.BaseTemplate, output: Optional[str], expected: str, remove_markers: Optional[bool], args: Tuple[str, ...], kwargs: Dict[str, str]):
         result = template.context(*args, **kwargs).render(output, remove_markers)
         if result != expected:
             raise DiffException(result, expected)
 
-    def render_file(template, output, expected, remove_markers, encoding, newline, args, kwargs):
+    def render_file(template: autojinja.templates.BaseTemplate, output: str, expected, remove_markers: Optional[bool], encoding: Optional[str], newline: Optional[str], args: Tuple[str, ...], kwargs: Dict[str, str]):
         result = template.context(*args, **kwargs).render_file(output, remove_markers, encoding, newline)
         if result != expected:
             raise DiffException(result, expected)
@@ -79,7 +80,7 @@ class Generator:
             if content != result:
                 raise DiffException(content, result)
 
-    def check(class_type, input, output, expected, remove_markers, *args, **kwargs):
+    def check(class_type: Union[Type[autojinja.CogTemplate], Type[autojinja.JinjaTemplate]], input: str, output: Optional[str], expected: str, remove_markers: Optional[bool], *args: str, **kwargs: str):
         def prepare():
             if output_file.exists:
                 os.remove(output_file)

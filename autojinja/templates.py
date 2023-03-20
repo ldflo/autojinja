@@ -4,39 +4,40 @@ from . import path
 from . import parser
 from . import utils
 
+import inspect
 import io
 import jinja2
-import os.path
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 class AutoLoader(jinja2.BaseLoader):
     """ Jinja2 loader to find templates near already loaded templates """
-    all_dirpaths_used = set()
+    all_dirpaths_used: Set[path.Path] = set()
 
-    def __init__(self, additional_dirpaths):
+    def __init__(self, additional_dirpaths: Optional[List[str]]):
         if additional_dirpaths != None:
             for dirpath in additional_dirpaths:
-                AutoLoader.all_dirpaths_used.add(dirpath)
+                AutoLoader.all_dirpaths_used.add(path.Path(dirpath).slash)
 
-    def get_source(self, environment, template):
+    def get_source(self, environment: jinja2.Environment, template: str) -> Tuple[str, str, Callable[[], float]]:
         for dirpath in AutoLoader.all_dirpaths_used:
             filepath = dirpath.join(template)
             if filepath.exists:
                 with open(filepath) as f:
                     source = f.read()
-                mtime = os.path.getmtime(filepath)
-                return source, filepath, lambda: mtime == os.path.getmtime(filepath)
+                mtime = path.getmtime(filepath)
+                return source, filepath, lambda: mtime == path.getmtime(filepath)
         raise jinja2.TemplateNotFound(template)
 
 class RawTemplate:
     """ Shared Jinja2 environment """
-    environment = None
+    environment: jinja2.Environment = None
 
     @staticmethod
-    def create_loader(additional_dirpaths = None):
+    def create_loader(additional_dirpaths: Optional[List[str]] = None) -> AutoLoader:
         return AutoLoader(additional_dirpaths)
 
     @staticmethod
-    def create_environment(*args, **kwargs):
+    def create_environment(*args: str, **kwargs: str) -> jinja2.Environment:
         if "loader" not in kwargs:
             kwargs["loader"] = RawTemplate.create_loader()
         if "keep_trailing_newline" not in kwargs:
@@ -49,263 +50,289 @@ class RawTemplate:
             kwargs["undefined"] = jinja2.StrictUndefined
         return jinja2.Environment(*args, **kwargs)
 
-    def __init__(self, string, input = None, output = None, encoding = None, newline = None, globals = None):
+    def __init__(self, string: str, input: Optional[str] = None, output: Optional[str] = None, encoding: Optional[str] = None, newline: Optional[str] = None, globals: Optional[Dict[str, Any]] = None):
         if RawTemplate.environment == None:
             RawTemplate.environment = RawTemplate.create_environment()
-        template = RawTemplate.environment.from_string(source = string, globals = globals)
+        jinja2_template: jinja2.Template = RawTemplate.environment.from_string(source = string, globals = globals)
         if input != None:
-            template.filename = input
-            AutoLoader.all_dirpaths_used.add(path(input).dirpath)
+            jinja2_template.filename = input
+            AutoLoader.all_dirpaths_used.add(path.Path(input).dirpath)
         else:
-            template.filename = exceptions.format_text(string)
-        self.jinja2_template = template
-        self.string = string
-        self.input = input
-        self.output = output
-        self.encoding = encoding
-        self.newline = newline
-    def __getattr__(self, attr):
-        return getattr(self.template, attr)
+            jinja2_template.filename = exceptions.format_text(string)
+        self.jinja2_template: jinja2.Template = jinja2_template
+        self.string: str = string
+        self.input: Optional[str] = input
+        self.output: Optional[str] = output
+        self.encoding: Optional[str] = encoding
+        self.newline : Optional[str] = newline
+
+    def __getattribute__(self, attr: str):
+        try:
+            this_attr = object.__getattribute__(self, attr)
+            if not inspect.ismethod(this_attr) or hasattr(this_attr, "__self__"):
+                return this_attr
+        except AttributeError:
+            pass
+        wrapped: jinja2.Template = object.__getattribute__(self, "jinja2_template")
+        return getattr(wrapped, attr)
 
     @staticmethod
-    def from_file(input, output = None, encoding = None, newline = None, globals = None):
+    def from_file(input: str, output: Optional[str] = None, encoding: Optional[str] = None, newline: Optional[str] = None, globals: Optional[Dict[str, Any]] = None) -> "RawTemplate":
         try:
             with open(input, 'r', encoding = encoding or "utf-8") as file:
                 return RawTemplate(file.read(), input, output, encoding, newline, globals)
-        except BaseException as e:
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
             raise exceptions.clean_traceback(e) from None
     @staticmethod
-    def from_string(string, output = None, encoding = None, newline = None, globals = None):
+    def from_string(string: str, output: Optional[str] = None, encoding: Optional[str] = None, newline: Optional[str] = None, globals: Optional[Dict[str, Any]] = None) -> "RawTemplate":
         try:
             return RawTemplate(string, None, output, encoding, newline, globals)
-        except BaseException as e:
+        except Exception as e:
             raise exceptions.clean_traceback(e) from None
 
-    def render_file(self, output = None, encoding = None, newline = None):
+    def render_file(self, output: Optional[str] = None, encoding: Optional[str] = None, newline: Optional[str] = None) -> str:
         try:
             return self.context().render_file(output, encoding, newline)
-        except BaseException as e:
+        except Exception as e:
             raise exceptions.clean_traceback(e) from None
-    def render(self):
+    def render(self) -> str:
         try:
             return self.context().render()
-        except BaseException as e:
+        except Exception as e:
             raise exceptions.clean_traceback(e) from None
 
-    def context(__autojinja_self__, *args, **kwargs):
+    def context(__autojinja_self__, *args, **kwargs) -> "RawTemplateContext":
         if "self" in kwargs:
             kwargs["this"] = kwargs["self"] # Avoid conflict with Jinja2
             del kwargs["self"]
-        return RawTemplate.Context(__autojinja_self__, args, kwargs)
+        return RawTemplateContext(__autojinja_self__, args, kwargs)
 
-    class Context:
-        """ Forwards Jinja2 data model """
-        def __init__(self, template, args = (), kwargs = {}):
-            self.template = template
-            self.args = args
-            self.kwargs = kwargs
-        def __getattr__(self, attr):
-            return getattr(self.template, attr)
+class RawTemplateContext(RawTemplate):
+    """ Forwards Jinja2 data model """
+    def __init__(self, template: RawTemplate, args: Tuple[Any, ...] = (), kwargs: Dict[str, Any] = {}):
+        self.template: RawTemplate = template
+        self.args: Tuple[Any, ...] = args
+        self.kwargs: Dict[str, Any] = kwargs
 
-        def render_file(self, output = None, encoding = None, newline = None):
-            try:
-                output = output or self.output
-                assert output != None, "output filepath parameter can't be None"
-                if defaults.osenviron_debug():
-                    args, kwargs = utils.wrap_objects(*self.args, **self.kwargs)
-                else:
-                    args, kwargs = self.args, self.kwargs
-                result = self.jinja2_template.render(*args, **kwargs)
-                utils.generate_file(output, result, None, encoding or self.encoding, newline or self.newline)
-                return result
-            except BaseException as e:
-                raise exceptions.clean_traceback(e) from None
-        def render(self):
-            try:
-                if defaults.osenviron_debug():
-                    args, kwargs = utils.wrap_objects(*self.args, **self.kwargs)
-                else:
-                    args, kwargs = self.args, self.kwargs
-                return self.jinja2_template.render(*args, **kwargs)
-            except BaseException as e:
-                raise exceptions.clean_traceback(e) from None
+    def __getattribute__(self, attr: str):
+        try:
+            this_attr = object.__getattribute__(self, attr)
+            if not inspect.ismethod(this_attr) or hasattr(this_attr, "__self__"):
+                return this_attr
+        except AttributeError:
+            pass
+        wrapped: RawTemplate = object.__getattribute__(self, "template")
+        return getattr(wrapped, attr)
+
+    def render_file(self, output: str = None, encoding: Optional[str] = None, newline: Optional[str] = None) -> str:
+        try:
+            output = output or self.output
+            assert output != None, "output filepath parameter can't be None"
+            if defaults.osenviron_debug():
+                args, kwargs = utils.wrap_objects(*self.args, **self.kwargs)
+            else:
+                args, kwargs = self.args, self.kwargs
+            result = self.jinja2_template.render(*args, **kwargs)
+            utils.generate_file(output, result, None, encoding or self.encoding, newline or self.newline)
+            return result
+        except Exception as e:
+            raise exceptions.clean_traceback(e) from None
+    def render(self) -> str:
+        try:
+            if defaults.osenviron_debug():
+                args, kwargs = utils.wrap_objects(*self.args, **self.kwargs)
+            else:
+                args, kwargs = self.args, self.kwargs
+            return self.jinja2_template.render(*args, **kwargs)
+        except Exception as e:
+            raise exceptions.clean_traceback(e) from None
 
 class BaseTemplate:
-    def __init__(self, string, input = None, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
+    def __init__(self, string: str, input: Optional[str] = None, output: Optional[str] = None, settings: Optional[parser.ParserSettings] = None, remove_markers: Optional[bool] = None, encoding: Optional[str] = None, newline: Optional[str] = None, globals: Optional[Dict[str, Any]] = None):
         if input != None:
-            AutoLoader.all_dirpaths_used.add(path(input).dirpath)
-        self.string = string
-        self.input = input
-        self.output = output
-        self.settings = settings or parser.ParserSettings()
-        self.remove_markers = remove_markers
-        self.encoding = encoding
-        self.newline = newline
-        self.globals = globals
-        self.overriden_edits = None
-        self.parser = None
+            AutoLoader.all_dirpaths_used.add(path.Path(input).dirpath)
+        self.string: str = string
+        self.input: Optional[str] = input
+        self.output: Optional[str] = output
+        self.settings: parser.ParserSettings = settings or parser.ParserSettings()
+        self._remove_markers: Optional[bool] = remove_markers
+        self._encoding: Optional[str] = encoding
+        self._newline: Optional[str] = newline
+        self.globals: Optional[Dict[str, Any]] = globals
+        self.overriden_edits: Optional[Dict[str, str]] = None
+        self.parser: BaseGenerator = None
 
     @property
-    def remove_markers(self):
-        return self._removeMarkers or self.settings.remove_markers
+    def remove_markers(self) -> Optional[bool]:
+        return self._remove_markers or self.settings.remove_markers
     @remove_markers.setter
-    def remove_markers(self, remove_markers):
-        self._removeMarkers = remove_markers
+    def remove_markers(self, remove_markers: Optional[bool]):
+        self._remove_markers = remove_markers
 
     @property
-    def encoding(self):
+    def encoding(self) -> Optional[str]:
         return self._encoding or self.settings.encoding
     @encoding.setter
-    def encoding(self, encoding):
+    def encoding(self, encoding: Optional[str]):
         self._encoding = encoding
 
     @property
-    def newline(self):
+    def newline(self) -> Optional[str]:
         return self._newline or self.settings.newline
     @newline.setter
-    def newline(self, newline):
+    def newline(self, newline: Optional[str]):
         self._newline = newline
 
     @property
-    def markers(self):
+    def markers(self) -> List[parser.Marker]:
         return self.parser.markers
     @property
-    def blocks(self):
+    def blocks(self) -> List[parser.Block]:
         return self.parser.blocks
     @property
-    def cog_blocks(self):
+    def cog_blocks(self) -> List[parser.CogBlock]:
         return self.parser.cog_blocks
     @property
-    def edit_blocks(self):
+    def edit_blocks(self) -> List[parser.EditBlock]:
         return self.parser.edit_blocks
 
     @property
-    def edits(self):
+    def edits(self) -> Dict[str, str]:
         if self.overriden_edits == None:
             return self.parser.edits
         return self.overriden_edits.copy()
     @edits.setter
-    def edits(self, edits):
+    def edits(self, edits: Optional[Dict[str, str]]):
         self.overriden_edits = edits
 
-    def render_file(self, output = None, remove_markers = None, encoding = None, newline = None):
+    def render_file(self, output: Optional[str] = None, remove_markers: Optional[bool] = None, encoding: Optional[str] = None, newline: Optional[str] = None) -> str:
         try:
             return self.context().render_file(output, remove_markers, encoding, newline)
-        except BaseException as e:
+        except Exception as e:
             raise exceptions.clean_traceback(e) from None
-    def render(self, output = None, remove_markers = None):
+    def render(self, output: Optional[str] = None, remove_markers: Optional[bool] = None) -> str:
         try:
             return self.context().render(output, remove_markers)
-        except BaseException as e:
+        except Exception as e:
             raise exceptions.clean_traceback(e) from None
 
-    def context(__autojinja_self__, *args, **kwargs):
+    def context(__autojinja_self__, *args, **kwargs) -> "BaseTemplateContext":
         if "self" in kwargs:
             kwargs["this"] = kwargs["self"] # Avoid conflict with Jinja2
             del kwargs["self"]
-        return BaseTemplate.Context(__autojinja_self__, args, kwargs)
+        return BaseTemplateContext(__autojinja_self__, args, kwargs)
 
-    class Context:
-        """ Forwards Jinja2 data model """
-        def __init__(self, template, args = (), kwargs = {}):
-            self.template = template
-            self.args = args
-            self.kwargs = kwargs
-        def __getattr__(self, attr):
-            return getattr(self.template, attr)
+class BaseTemplateContext(BaseTemplate):
+    """ Forwards Jinja2 data model """
+    def __init__(self, template: RawTemplate, args: Tuple[Any, ...] = (), kwargs: Dict[str, Any] = {}):
+        self.template: RawTemplate = template
+        self.args: Tuple[Any, ...] = args
+        self.kwargs: Dict[str, Any] = kwargs
 
-        def render_file(self, output = None, remove_markers = None, encoding = None, newline = None):
-            try:
-                output = output or self.output
-                assert output != None, "output filepath parameter can't be None"
-                ### Retrieve output edits
-                edit_blocks_to_generate = {} # Dict[str, EditBlock], for generation
-                if not os.path.isfile(output): # File doesn't exist
-                    old_content = None
-                elif self.input and os.path.samefile(self.input, output): # Same file
-                    old_content = self.string
-                else: # Not same file
-                    with open(output, 'r', encoding = encoding or self.encoding or "utf-8") as file:
-                        old_content = file.read()
-                        edit_blocks = utils.edit_blocks_from_string(old_content, self.settings)
-                        edit_blocks_to_generate.update(edit_blocks)
-                ### Render
-                result = self.parser.generate(edit_blocks_to_generate, self.overriden_edits, remove_markers or self.remove_markers, self.globals, self.args, self.kwargs)
-                utils.generate_file(output, result, old_content, encoding or self.encoding, newline or self.newline)
-                return result
-            except BaseException as e:
-                raise exceptions.clean_traceback(e) from None
-        def render(self, output = None, remove_markers = None):
-            try:
-                ### Retrieve output edits
-                edit_blocks_to_generate = {} # Dict[str, EditBlock], for generation
-                if output != None:
-                    edit_blocks = utils.edit_blocks_from_string(output, self.settings)
+    def __getattribute__(self, attr: str):
+        try:
+            this_attr = object.__getattribute__(self, attr)
+            if not inspect.ismethod(this_attr) or hasattr(this_attr, "__self__"):
+                return this_attr
+        except AttributeError:
+            pass
+        wrapped: BaseTemplate = object.__getattribute__(self, "template")
+        return getattr(wrapped, attr)
+
+    def render_file(self, output: Optional[str] = None, remove_markers: Optional[bool] = None, encoding: Optional[str] = None, newline: Optional[str] = None) -> str:
+        try:
+            output = output or self.output
+            assert output != None, "output filepath parameter can't be None"
+            ### Retrieve output edits
+            edit_blocks_to_generate: Dict[str, parser.EditBlock] = {} # For generation
+            if not path.isfile(output): # File doesn't exist
+                old_content = None
+            elif self.input and path.samefile(self.input, output): # Same file
+                old_content = self.string
+            else: # Not same file
+                with open(output, 'r', encoding = encoding or self.encoding or "utf-8") as file:
+                    old_content = file.read()
+                    edit_blocks = utils.edit_blocks_from_string(old_content, self.settings)
                     edit_blocks_to_generate.update(edit_blocks)
-                ### Render
-                return self.parser.generate(edit_blocks_to_generate, self.overriden_edits, remove_markers or self.remove_markers, self.globals, self.args, self.kwargs)
-            except BaseException as e:
-                raise exceptions.clean_traceback(e) from None
+            ### Render
+            result = self.parser.generate(edit_blocks_to_generate, self.overriden_edits, remove_markers or self.remove_markers, self.globals, self.args, self.kwargs)
+            utils.generate_file(output, result, old_content, encoding or self.encoding, newline or self.newline)
+            return result
+        except Exception as e:
+            raise exceptions.clean_traceback(e) from None
+    def render(self, output: Optional[str] = None, remove_markers: Optional[bool] = None) -> str:
+        try:
+            ### Retrieve output edits
+            edit_blocks_to_generate: Dict[str, parser.EditBlock] = {} # For generation
+            if output != None:
+                edit_blocks = utils.edit_blocks_from_string(output, self.settings)
+                edit_blocks_to_generate.update(edit_blocks)
+            ### Render
+            return self.parser.generate(edit_blocks_to_generate, self.overriden_edits, remove_markers or self.remove_markers, self.globals, self.args, self.kwargs)
+        except Exception as e:
+            raise exceptions.clean_traceback(e) from None
 
 class CogTemplate(BaseTemplate):
-    def __init__(self, string, input = None, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
+    def __init__(self, string: str, input: Optional[str] = None, output: Optional[str] = None, settings: Optional[parser.ParserSettings] = None, remove_markers: Optional[bool] = None, encoding: Optional[str] = None, newline: Optional[str] = None, globals: Optional[Dict[str, Any]] = None):
         super().__init__(string, input, output or input, settings, remove_markers, encoding, newline, globals)
-        self.parser = CogGenerator(string, self.settings)
+        self.parser: CogGenerator = CogGenerator(string, self.settings)
         self.parser.parse()
 
     @staticmethod
-    def from_file(input, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
+    def from_file(input: str, output: Optional[str] = None, settings: Optional[parser.ParserSettings] = None, remove_markers: Optional[bool] = None, encoding: Optional[str] = None, newline: Optional[str] = None, globals: Optional[Dict[str, Any]] = None) -> "CogTemplate":
         try:
             with open(input, 'r', encoding = encoding or (settings.encoding if settings else None) or "utf-8") as file:
                 return CogTemplate(file.read(), input, output, settings, remove_markers, encoding, newline, globals)
-        except BaseException as e:
+        except Exception as e:
             raise exceptions.clean_traceback(e) from None
     @staticmethod
-    def from_string(string, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
+    def from_string(string: str, output: Optional[str] = None, settings: Optional[parser.ParserSettings] = None, remove_markers: Optional[bool] = None, encoding: Optional[str] = None, newline: Optional[str] = None, globals: Optional[Dict[str, Any]] = None) -> "CogTemplate":
         try:
             return CogTemplate(string, None, output, settings, remove_markers, encoding, newline, globals)
-        except BaseException as e:
+        except Exception as e:
             raise exceptions.clean_traceback(e) from None
 
 class JinjaTemplate(BaseTemplate):
-    def __init__(self, string, input = None, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
+    def __init__(self, string: str, input: Optional[str] = None, output: Optional[str] = None, settings: Optional[parser.ParserSettings] = None, remove_markers: Optional[bool] = None, encoding: Optional[str] = None, newline: Optional[str] = None, globals: Optional[Dict[str, Any]] = None):
         super().__init__(string, input, output, settings, remove_markers, encoding, newline, globals)
-        self.parser = JinjaGenerator(string, self.settings)
+        self.parser: JinjaTemplate = JinjaGenerator(string, self.settings)
         self.parser.parse()
 
     @staticmethod
-    def from_file(input, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
+    def from_file(input: str, output: Optional[str] = None, settings: Optional[parser.ParserSettings] = None, remove_markers: Optional[bool] = None, encoding: Optional[str] = None, newline: Optional[str] = None, globals: Optional[Dict[str, Any]] = None) -> "JinjaTemplate":
         try:
             with open(input, 'r', encoding = encoding or (settings.encoding if settings else None) or "utf-8") as file:
                 return JinjaTemplate(file.read(), input, output, settings, remove_markers, encoding, newline, globals)
-        except BaseException as e:
+        except Exception as e:
             raise exceptions.clean_traceback(e) from None
     @staticmethod
-    def from_string(string, output = None, settings = None, remove_markers = None, encoding = None, newline = None, globals = None):
+    def from_string(string: str, output: Optional[str] = None, settings: Optional[parser.ParserSettings] = None, remove_markers: Optional[bool] = None, encoding: Optional[str] = None, newline: Optional[str] = None, globals: Optional[Dict[str, Any]] = None) -> "JinjaTemplate":
         try:
             return JinjaTemplate(string, None, output, settings, remove_markers, encoding, newline, globals)
-        except BaseException as e:
+        except Exception as e:
             raise exceptions.clean_traceback(e) from None
 
 ### Generators
 
 class BaseGenerator(parser.Parser):
-    def __init__(self, string, settings):
+    def __init__(self, string: str, settings: parser.ParserSettings):
         super().__init__(string, settings)
 
-    def generate(self, edit_blocks_to_generate, overriden_edits, remove_markers, globals, args, kwargs):
+    def generate(self, edit_blocks_to_generate: Dict[str, parser.EditBlock], overriden_edits: Optional[Dict[str, str]], remove_markers: Optional[bool], globals: Optional[Dict[str, Any]], args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> str:
         ### Save settings
         old_remove_markers = self.settings.remove_markers
         if self.settings.remove_markers != remove_markers:
             self.settings.remove_markers = remove_markers
         try:
             ### Generate
-            self.edit_blocks_to_generate = self.edit_blocks.copy()
-            self.overriden_edits = overriden_edits
-            self.edit_blocks_generated = set()
-            self.globals = globals
-            self.args = args
-            self.kwargs = kwargs
+            self.edit_blocks_to_generate: Dict[str, parser.EditBlock] = self.edit_blocks.copy()
+            self.overriden_edits: Optional[Dict[str, str]] = overriden_edits
+            self.edit_blocks_generated: Set[str] = set()
+            self.globals: Optional[Dict[str, Any]] = globals
+            self.args: Tuple[Any, ...] = args
+            self.kwargs: Dict[str, Any] = kwargs
             output = self.generate_output(edit_blocks_to_generate) # To inherit
             ### Check unused edits
             diff = set(self.edit_blocks_to_generate) - self.edit_blocks_generated
@@ -319,7 +346,10 @@ class BaseGenerator(parser.Parser):
                 self.settings.remove_markers = old_remove_markers
         return output
 
-    def evaluate(self, string):
+    def generate_output(self, edit_blocks_to_generate: Dict[str, parser.EditBlock]) -> str:
+        raise NotImplementedError() # To override
+
+    def evaluate(self, string: str) -> str:
         generator = CogGenerator(string, self.settings)
         generator.parse()
         generator.edit_blocks_to_generate = generator.edit_blocks.copy()
@@ -332,10 +362,10 @@ class BaseGenerator(parser.Parser):
         return generator.generate_output({})
 
 class CogGenerator(BaseGenerator):
-    def __init__(self, string, settings):
+    def __init__(self, string: str, settings: parser.ParserSettings):
         super().__init__(string, settings)
 
-    def generate_output(self, edit_blocks_to_generate):
+    def generate_output(self, edit_blocks_to_generate: Dict[str, parser.EditBlock]) -> str:
         self.edit_blocks_to_generate.update(edit_blocks_to_generate) # Update for generation
         stringio = io.StringIO()
         idx = 0
@@ -378,7 +408,7 @@ class CogGenerator(BaseGenerator):
         stringio.write(self.string[idx:])
         return stringio.getvalue()
 
-    def generate_marker(self, marker):
+    def generate_marker(self, marker: parser.Marker) -> str:
         if not marker.is_edit:
             if marker.header_empty:
                 return None
@@ -409,15 +439,15 @@ class CogGenerator(BaseGenerator):
             if self.settings.remove_markers and len(result) == 0:
                 return None
             return result
-        except BaseException as e:
+        except Exception as e:
             raise exceptions.CommonException.from_exception(e, marker) from None
 
 class JinjaGenerator(BaseGenerator):
-    def __init__(self, string, settings):
+    def __init__(self, string: str, settings: parser.ParserSettings):
         super().__init__(string, settings)
 
-    def generate_output(self, edit_blocks_to_generate):
-        to_reinsert = {} # str -> [Marker, Marker]
+    def generate_output(self, edit_blocks_to_generate: Dict[str, parser.EditBlock]) -> str:
+        to_reinsert: Dict[str, Tuple[parser.Marker, parser.Marker]] = {}
         stringio = io.StringIO()
         idx = 0
         depth = 0
@@ -451,7 +481,7 @@ class JinjaGenerator(BaseGenerator):
         stringio.write(self.string[idx:])
         return self.generate_reinsert(stringio.getvalue(), to_reinsert, edit_blocks_to_generate)
 
-    def generate_reinsert(self, string, to_reinsert, edit_blocks_to_generate):
+    def generate_reinsert(self, string: str, to_reinsert: Dict[str, Tuple[parser.Marker, parser.Marker]], edit_blocks_to_generate: Dict[str, parser.EditBlock]) -> str:
         ### Generate raw template
         template = RawTemplate(string, globals = self.globals)
         output = template.context(*self.args, **self.kwargs).render()
@@ -466,5 +496,5 @@ class JinjaGenerator(BaseGenerator):
             output = self.evaluate(output)
         return output
 
-    def unique_id(self, idx):
+    def unique_id(self, idx: int) -> str:
         return f"°#@[AUTOJINJA_{idx}]+&*"

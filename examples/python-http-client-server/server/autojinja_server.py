@@ -1,6 +1,7 @@
 from autojinja import *
 from utility import *
 import json
+from typing import Any, Dict, Generator
 
 ### Read the Postman collection
 with open(os.environ["POSTMAN_COLLECTION"]) as f:
@@ -27,20 +28,20 @@ def {{ jsonitem.name(item) }}():
 
 # Prepare some helpers for above template
 class jsonitem:
-    def path(item):
+    def path(item: Dict[str, Any]) -> str:
         return '/'.join(item['request']['url']['path'])
-    def method(item):
+    def method(item: Dict[str, Any]) -> str:
         return item['request']['method']
-    def name(item):
+    def name(item: Dict[str, Any]) -> str:
         return item['name'].replace(' ', '_')
-    def defs(item):
+    def defs(item: Dict[str, Any]) -> Generator[str, None, None]:
         with ignore(KeyError):
             for arg in [x for x in item['request']['url']['query']]:
                 yield f"{arg['key']} = request.args['{arg['key']}']"
         with ignore(KeyError):
             for form in [x for x in item['request']['body']['formdata']]:
                 yield f"{form['key']} = request.form['{form['key']}']"
-    def bodies(item):
+    def bodies(item: Dict[str, Any]) -> Generator[str, None, None]:
         with ignore(KeyError):
             body = item['request']['body']['raw']
             yield "PAYLOAD EXAMPLE:"

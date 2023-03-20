@@ -1,5 +1,7 @@
 ### prevent discovery ###
 from autojinja import *
+from lxml import etree
+from typing import Generator, List
 
 ######################################
 ###         Arg definition         ###
@@ -15,13 +17,13 @@ function_arg_def_t = RawTemplate.from_string("""
 """.strip())
 
 ### Generates one XML argument
-def function_arg_def(xarg):
+def function_arg_def(xarg: etree._Element) -> str:
     return function_arg_def_t.context(Type = xarg.attrib['type'],
                                       Name = xarg.attrib['name'],
                                       Default = xarg.attrib.get('default')).render()
 
 ### Generates several XML arguments
-def function_arg_defs(xargs):
+def function_arg_defs(xargs: List[etree._Element]) -> Generator[str, None, None]:
     for xarg in xargs:
         yield function_arg_def(xarg)
 
@@ -35,12 +37,12 @@ function_arg_impl_t = RawTemplate.from_string("""
 """.strip())
 
 ### Generates one XML argument
-def function_arg_impl(xarg):
+def function_arg_impl(xarg: etree._Element) -> str:
     return function_arg_impl_t.context(Type = xarg.attrib['type'],
                                        Name = xarg.attrib['name']).render()
 
 ### Generates several XML arguments
-def function_arg_impls(xargs):
+def function_arg_impls(xargs: List[etree._Element]) -> Generator[str, None, None]:
     for xarg in xargs:
         yield function_arg_impl(xarg)
 
@@ -54,10 +56,10 @@ function_arg_call_t = RawTemplate.from_string("""
 """.strip())
 
 ### Generates one XML argument
-def function_arg_call(xarg):
+def function_arg_call(xarg: etree._Element) -> str:
     return function_arg_call_t.context(Name = xarg.attrib['name']).render()
 
 ### Generates several XML arguments
-def function_arg_calls(xargs):
+def function_arg_calls(xargs: List[etree._Element]) -> Generator[str, None, None]:
     for xarg in xargs:
         yield function_arg_call(xarg)

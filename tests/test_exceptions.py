@@ -5,8 +5,8 @@ import jinja2
 import os
 import sys
 
-def invalid_marker(input, output, exception_type, message, *args, **kwargs):
-    def function(*args, **kwargs):
+def invalid_marker(input: str, output: str, exception_type: type, message: str, *args: str, **kwargs: str):
+    def function(*args: str, **kwargs: str):
         template = autojinja.CogTemplate.from_string(input)
         template.context(*args, **kwargs).render(output)
     assert_exception(function, exception_type, message, *args, **kwargs)
@@ -1326,38 +1326,38 @@ class Test:
         assert autojinja.exceptions.format_text(input, 20, "__") == "abcdef\\nghijklmnopqrs__"
 
     def test_split_traceback(self):
-        input = "autojinja.exceptions.BaseException: line"
-        assert autojinja.exceptions.split_traceback(input) == (None, "autojinja.exceptions.BaseException: line")
+        input = "autojinja.exceptions.Exception: line"
+        assert autojinja.exceptions.split_traceback(input) == (None, "autojinja.exceptions.Exception: line")
         assert autojinja.exceptions.split_traceback(input, True) == (None, "line")
-        input = "autojinja.exceptions.BaseException: line\n"
-        assert autojinja.exceptions.split_traceback(input) == ("autojinja.exceptions.BaseException: line", "")
-        assert autojinja.exceptions.split_traceback(input, True) == ("autojinja.exceptions.BaseException: line", None)
+        input = "autojinja.exceptions.Exception: line\n"
+        assert autojinja.exceptions.split_traceback(input) == ("autojinja.exceptions.Exception: line", "")
+        assert autojinja.exceptions.split_traceback(input, True) == ("autojinja.exceptions.Exception: line", None)
         input = "  File <>\n" \
                 "    abcdef\n" \
                 "  File <>\n" \
                 "    ghijkl\n" \
-                "autojinja.exceptions.BaseException: line1\n" \
+                "autojinja.exceptions.Exception: line1\n" \
                 "line2"
-        assert autojinja.exceptions.split_traceback(input) == ("  File <>\n    abcdef\n  File <>\n    ghijkl", "autojinja.exceptions.BaseException: line1\nline2")
+        assert autojinja.exceptions.split_traceback(input) == ("  File <>\n    abcdef\n  File <>\n    ghijkl", "autojinja.exceptions.Exception: line1\nline2")
         assert autojinja.exceptions.split_traceback(input, True) == ("  File <>\n    abcdef\n  File <>\n    ghijkl", "line1\nline2")
         input = "  File <>\n" \
                 "    abcdef\n" \
-                "autojinja.exceptions.BaseException:  \n" \
+                "autojinja.exceptions.Exception:  \n" \
                 "line2"
-        assert autojinja.exceptions.split_traceback(input) == ("  File <>\n    abcdef", "autojinja.exceptions.BaseException:  \nline2")
+        assert autojinja.exceptions.split_traceback(input) == ("  File <>\n    abcdef", "autojinja.exceptions.Exception:  \nline2")
         assert autojinja.exceptions.split_traceback(input, True) == ("  File <>\n    abcdef", " \nline2")
         input = "  File <>\n" \
                 "    abcdef\n" \
-                "autojinja.exceptions.BaseException: \n" \
+                "autojinja.exceptions.Exception: \n" \
                 "line2"
-        assert autojinja.exceptions.split_traceback(input) == ("  File <>\n    abcdef", "autojinja.exceptions.BaseException: \nline2")
+        assert autojinja.exceptions.split_traceback(input) == ("  File <>\n    abcdef", "autojinja.exceptions.Exception: \nline2")
         assert autojinja.exceptions.split_traceback(input, True) == ("  File <>\n    abcdef", "line2")
 
         input = "  File <>\n" \
                 "    abcdef\n" \
-                "autojinja.exceptions.BaseException:\n" \
+                "autojinja.exceptions.Exception:\n" \
                 "line2"
-        assert autojinja.exceptions.split_traceback(input) == ("  File <>\n    abcdef", "autojinja.exceptions.BaseException:\nline2")
+        assert autojinja.exceptions.split_traceback(input) == ("  File <>\n    abcdef", "autojinja.exceptions.Exception:\nline2")
         assert autojinja.exceptions.split_traceback(input, True) == ("  File <>\n    abcdef", None) # Searches for ' '
         input = "  File <>\n" \
                 "    abcdef\n" \
@@ -1374,7 +1374,7 @@ class Test:
 
     def test_prepend_jinja2_traceback(self):
         exception = Exception("Message")
-        tb = "autojinja.exceptions.BaseException: line"
+        tb = "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\nline"
         tb = "line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\n"
@@ -1383,17 +1383,17 @@ class Test:
               "    abcdef\n" \
               "  File <>\n" \
               "    ghijkl\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\n  File <>\n    ghijkl\nline"
         tb = f"  File <> in \"jinja2{os.sep}environment.py\", line 1\n" \
               "    abcdef\n" \
               "  File <>\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\n  File <>\nline"
         tb = f"  File <> in \"jinja2{os.sep}environment.py\", line 1\n" \
               "  File <>\n" \
               "    ghijkl\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\n  File <>\n    ghijkl\nline"
         tb =  "  File <>\n" \
               "    abcdef\n" \
@@ -1401,11 +1401,11 @@ class Test:
               "    abcdef\n" \
               "  File <>\n" \
               "    ghijkl\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\n  File <>\n    ghijkl\nline"
         tb = f"  File <> in \"jinja2{os.sep}environment.py\", line 1\n" \
               "    abcdef\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\nline"
         tb = f"  File <> in \"jinja2{os.sep}environment.py\", line 1\n" \
               "    abcdef\n" \
@@ -1413,7 +1413,7 @@ class Test:
               "    abcdef\n" \
              f"  File <> in \"jinja2{os.sep}environment.py\", line 1\n" \
               "    ghijkl\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\nline"
         tb =  "  File <>\n" \
               "    abcdef\n" \
@@ -1423,7 +1423,7 @@ class Test:
               "    ghijkl\n" \
              f"  File <> in \"jinja2{os.sep}environment.py\", line 1\n" \
               "    abcdef\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\nline"
         tb =  "  File <>\n" \
               "    abcdef\n" \
@@ -1432,7 +1432,7 @@ class Test:
               "    ghijkl\n" \
              f"  File <> in \"jinja2{os.sep}environment.py\", line 1\n" \
               "    abcdef\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\nline"
         tb =  "  File <>\n" \
               "    abcdef\n" \
@@ -1441,7 +1441,7 @@ class Test:
               "  File <>\n" \
               "    ghijkl\n" \
              f"  File <> in \"jinja2{os.sep}environment.py\", line 1\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\nline"
         tb =  "  File <>\n" \
               "    abcdef\n" \
@@ -1450,7 +1450,7 @@ class Test:
               "  File <>\n" \
               "    ghijkl\n" \
              f"  File <> in \"jinja2{os.sep}environment.py\", line 1\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\nline"
         ### autojinja
         tb = f"  File <> in \"jinja2{os.sep}environment.py\", line 1\n" \
@@ -1459,27 +1459,27 @@ class Test:
               "    ghijkl\n" \
              f"  File <> in \"autojinja{os.sep}templates.py\", line 1\n" \
               "    abc\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\n  File <>\n    ghijkl\nline"
         tb = f"  File <> in \"jinja2{os.sep}environment.py\", line 1\n" \
               "    abcdef\n" \
               "  File <>\n" \
              f"  File <> in \"autojinja{os.sep}templates.py\", line 1\n" \
               "    abc\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\n  File <>\nline"
         tb = f"  File <> in \"jinja2{os.sep}environment.py\", line 1\n" \
               "    abcdef\n" \
               "  File <>\n" \
               "    ghijkl\n" \
              f"  File <> in \"autojinja{os.sep}templates.py\", line 1\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\n  File <>\n    ghijkl\nline"
         tb = f"  File <> in \"jinja2{os.sep}environment.py\", line 1\n" \
               "    abcdef\n" \
               "  File <>\n" \
              f"  File <> in \"autojinja{os.sep}templates.py\", line 1\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\n  File <>\nline"
         tb = f"  File <> in \"jinja2{os.sep}environment.py\", line 1\n" \
               "    abcdef\n" \
@@ -1489,5 +1489,5 @@ class Test:
               "    abcdef\n" \
               "  File <>\n" \
               "    ghijkl\n" \
-              "autojinja.exceptions.BaseException: line"
+              "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\n  File <>\n    ghijkl\nline"

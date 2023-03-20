@@ -13,3 +13,20 @@ from .templates import RawTemplate
 from . import utils
 
 import os
+import typing
+
+class PathWrapper:
+    """ Allows to perform autojinja.Path(...) and autojinja.Path[...].
+    """
+    def __call__(self, arg1: str, *args: str) -> path.Path:
+        """ /dir1/dir2   file.txt -> /dir1/dir2/file.txt
+            /dir1/dir2/  dir3/    -> /dir1/dir2/dir3/
+        """
+        return path.Path(path.join(arg1, *args))
+    def __getitem__(self, args: typing.Union[str, typing.Tuple[str, ...]]) -> path.Path:
+        """ /dir1/dir2   file.txt -> /dir1/dir2/file.txt/
+            /dir1/dir2/  dir3/    -> /dir1/dir2/dir3/
+        """
+        return path.Path(path.join[args])
+
+Path = PathWrapper()

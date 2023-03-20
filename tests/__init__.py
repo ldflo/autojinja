@@ -1,14 +1,16 @@
+from typing import Callable
+
 class DiffException(Exception):
-    def __init__(self, result, expected):
+    def __init__(self, result: str, expected: str):
         result = str(result).replace('\t', "\\t").replace('\n', "\\n\n")
         expected = str(expected).replace('\t', "\\t").replace('\n', "\\n\n")
         message = f"--- Expected ---\n{expected}\\0\n--- Got ---\n{result}\\0"
         super().__init__(message)
 
-def assert_exception(callable, exception_type, message, *args, **kwargs):
+def assert_exception(callable: Callable, exception_type: type, message: str, *args: str, **kwargs: str):
     try:
         callable(*args, **kwargs)
-    except BaseException as e:
+    except Exception as e:
         exception = e
     else:
         exception = None
@@ -17,7 +19,7 @@ def assert_exception(callable, exception_type, message, *args, **kwargs):
     if exception == None or not isinstance(exception, exception_type):
         raise DiffException(type(exception), exception_type)
 
-def clean_exception(exception):
+def clean_exception(exception: Exception):
     result = str(exception)
     lines = result.splitlines(keepends=True)
     for i in range(len(lines)):
@@ -28,10 +30,10 @@ def clean_exception(exception):
                 lines[i] = "  File \"\", line ?" + lines[i][idx2:]
     return ''.join(lines)
 
-def assert_clean_exception(callable, exception_type, message, *args, **kwargs):
+def assert_clean_exception(callable: Callable, exception_type: type, message: str, *args: str, **kwargs: str):
     try:
         callable(*args, **kwargs)
-    except BaseException as e:
+    except Exception as e:
         exception = e
     else:
         exception = None

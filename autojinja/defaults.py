@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 AUTOJINJA_DEFAULT_FILENAME   = "__jinja__.py"
 AUTOJINJA_DEFAULT_TAG        = "autojinja"
@@ -15,7 +16,7 @@ AUTOJINJA_SILENT         = "AUTOJINJA_SILENT"
 AUTOJINJA_SUMMARY        = "AUTOJINJA_SUMMARY"
 AUTOJINJA_THIS_DIRPATH   = "THIS_DIRPATH"
 
-def osenviron_debug(env = None):
+def osenviron_debug(env: os._Environ = None) -> int:
     env = env or os.environ
     if AUTOJINJA_DEBUG not in env:
         return 0
@@ -29,7 +30,7 @@ def osenviron_debug(env = None):
         raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_DEBUG}'")
     return 1 if value == "1" else 0
 
-def osenviron_remove_markers(env = None):
+def osenviron_remove_markers(env: os._Environ = None) -> int:
     env = env or os.environ
     if AUTOJINJA_REMOVE_MARKERS not in env:
         return 0
@@ -43,7 +44,7 @@ def osenviron_remove_markers(env = None):
         raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_REMOVE_MARKERS}'")
     return 1 if value == "1" else 0
 
-def osenviron_silent(env = None):
+def osenviron_silent(env: os._Environ = None) -> int:
     env = env or os.environ
     if AUTOJINJA_SILENT not in env:
         return 0
@@ -57,7 +58,7 @@ def osenviron_silent(env = None):
         raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_SILENT}'")
     return 1 if value == "1" else 0
 
-def osenviron_summary(env = None):
+def osenviron_summary(env: os._Environ = None) -> str:
     env = env or os.environ
     if AUTOJINJA_SUMMARY not in env:
         return "1"
@@ -74,6 +75,6 @@ def osenviron_summary(env = None):
         raise Exception(f"Expected 0, 1 or flags for environment variable '{AUTOJINJA_SUMMARY}'")
     return value
 
-def osenviron_this_dirpath(env = None):
+def osenviron_this_dirpath(env: os._Environ = None) -> Optional[str]:
     env = env or os.environ
     return env.get(AUTOJINJA_THIS_DIRPATH)

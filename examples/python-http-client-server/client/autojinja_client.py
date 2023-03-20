@@ -1,6 +1,7 @@
 from autojinja import *
 from utility import *
 import json
+from typing import Any, Dict, Generator, List
 
 ### Read the Postman collection
 with open(os.environ["POSTMAN_COLLECTION"]) as f:
@@ -26,13 +27,13 @@ def {{ jsonitem.name(item) }}({{ ', '.join(jsonitem.args(item)) }}):
 
 # Prepare some helpers for above template
 class jsonitem:
-    def path(item):
+    def path(item: Dict[str, Any]) -> str:
         return '/'.join(item['request']['url']['path'])
-    def method(item):
+    def method(item: Dict[str, Any]) -> str:
         return item['request']['method']
-    def name(item):
+    def name(item: Dict[str, Any]) -> str:
         return item['name'].replace(' ', '_')
-    def args(item):
+    def args(item: Dict[str, Any]) -> Generator[str, None, None]:
         with ignore(KeyError):
             yield from [x['key'] for x in item['request']['url']['query']]
         with ignore(KeyError):
@@ -40,19 +41,19 @@ class jsonitem:
         with ignore(KeyError):
             item['request']['body']['raw']
             yield "payload"
-    def defs(item):
+    def defs(item: Dict[str, Any]) -> Generator[str, None, None]:
         with ignore(KeyError):
             params = [x for x in item['request']['url']['query']]
             yield f"params = {jsonitem.bound_json(params)}"
         with ignore(KeyError):
             forms = [x for x in item['request']['body']['formdata']]
             yield f"forms = {jsonitem.bound_json(forms)}"
-    def bodies(item):
+    def bodies(item: Dict[str, Any]) -> Generator[str, None, None]:
         with ignore(KeyError):
             body = item['request']['body']['raw']
             yield "PAYLOAD EXAMPLE:"
             yield from body.replace('\r', '').split('\n')
-    def binds(item):
+    def binds(item: Dict[str, Any]) -> Generator[str, None, None]:
         nobinds = True
         with ignore(KeyError):
             item['request']['url']['query']
@@ -67,7 +68,7 @@ class jsonitem:
             if nobinds: nobinds = False; yield '' # First comma
             yield "json = payload"
 
-    def bound_json(args):
+    def bound_json(args: List[Dict[str, Any]]) -> str:
         """ Allows to create a Json binding to the given arguments, without quotes
         """
         object = {arg['key']: f"@@{arg['key']}@@" for arg in args} # Usage of @@ marker
@@ -96,9 +97,9 @@ print()
 
 # Prepare some helpers for above template
 class jsonitem:
-    def name(item):
+    def name(item: Dict[str, Any]) -> str:
         return item['name'].replace(' ', '_')
-    def args(item):
+    def args(item: Dict[str, Any]) -> Generator[str, None, None]:
         with ignore(KeyError):
             yield from [f"\"{x['value']}\"" for x in item['request']['url']['query']]
         with ignore(KeyError):

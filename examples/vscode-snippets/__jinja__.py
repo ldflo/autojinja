@@ -1,9 +1,10 @@
 from autojinja import *
 from collections import defaultdict
+from typing import List
 
 ### Find recursively all files in 'snippets/' directory and group by extension
 snippet_dict = defaultdict(list)
-for snippet_file in path("snippets/").files("**"):
+for snippet_file in Path("snippets/").files("**"):
     snippet_dict[snippet_file.ext].append(snippet_file)
 
 ### Prepare a template for creating each VSCode snippet file
@@ -24,11 +25,11 @@ file_template = JinjaTemplate.from_string("""
 """.lstrip())
 
 # Prepare some helpers for above template
-def snippet_id(snippet_file):
+def snippet_id(snippet_file: path.Path) -> str:
     return snippet_file.filename
-def snippet_name(snippet_file):
+def snippet_name(snippet_file: path.Path) -> str:
     return snippet_file.filename.no_ext
-def snippet_lines(snippet_file):
+def snippet_lines(snippet_file: path.Path) -> List[str]:
     with open(snippet_file) as file:
         return file.read().replace('\\', '\\\\').replace('\t', '\\t').splitlines()
 
