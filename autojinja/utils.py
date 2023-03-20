@@ -7,7 +7,7 @@ import os
 import sys
 from typing import Dict, List, Optional
 
-def is_file_tagged(filepath: str, tag = defaults.AUTOJINJA_DEFAULT_TAG, encoding: str = None) -> bool:
+def is_file_tagged(filepath: str, tag = defaults.AUTOJINJA_DEFAULT_TAG, encoding: Optional[str] = None) -> bool:
     """ Returns True if the file at the given filepath is tagged with the given tag.
         The file's first line must contain this tag (ex: '### autojinja ###').
         Raises an error if the file can't be read.
@@ -15,7 +15,7 @@ def is_file_tagged(filepath: str, tag = defaults.AUTOJINJA_DEFAULT_TAG, encoding
     with open(filepath, 'r', encoding = encoding or "utf-8") as file:
         return tag in file.readline()
 
-def generate_file(filepath: str, new_content: str, old_content: str = None, encoding: str = None, newline: str = None):
+def generate_file(filepath: str, new_content: str, old_content: Optional[str] = None, encoding: Optional[str] = None, newline: Optional[str] = None):
     """ Generates the given content to the given filepath.
         Only writes the content to the file if the content is new.
         The previous content can be directly provided to avoid reading the file.
@@ -51,7 +51,7 @@ def generate_file(filepath: str, new_content: str, old_content: str = None, enco
     if message != None:
         print(message)
 
-def parse_file(filepath: str, settings: parser.ParserSettings = None, encoding: str = None) -> Optional[parser.Parser]:
+def parse_file(filepath: str, settings: Optional[parser.ParserSettings] = None, encoding: Optional[str] = None) -> Optional[parser.Parser]:
     """ Parses the given file and return the parsing result.
         Returns None if the file doesn't exist.
         Raises an error if the file can't be read.
@@ -61,7 +61,7 @@ def parse_file(filepath: str, settings: parser.ParserSettings = None, encoding: 
     with open(filepath, 'r', encoding = encoding or (settings.encoding if settings else None) or "utf-8") as file:
         return parse_string(file.read(), settings)
 
-def parse_string(string: str, settings: parser.ParserSettings = None) -> parser.Parser:
+def parse_string(string: str, settings: Optional[parser.ParserSettings] = None) -> parser.Parser:
     """ Parses the given string and returns the parsing result.
     """
     try:
@@ -122,7 +122,7 @@ def os_pathsep(value: str) -> str:
     else: # Windows
         return ';'
 
-def blocks_from_file(filepath: str, settings: parser.ParserSettings = None, encoding: str = None) -> List[parser.Block]:
+def blocks_from_file(filepath: str, settings: Optional[parser.ParserSettings] = None, encoding: Optional[str] = None) -> List[parser.Block]:
     """ Returns a list with all pairs of markers in the given file.
         Returns an empty list if the file doesn't exist.
         Raises an error if the file can't be read.
@@ -130,13 +130,13 @@ def blocks_from_file(filepath: str, settings: parser.ParserSettings = None, enco
     parser_obj = parse_file(filepath, settings, encoding)
     return parser_obj.blocks if parser_obj else []
 
-def blocks_from_string(string: str, settings: parser.ParserSettings = None) -> List[parser.Block]:
+def blocks_from_string(string: str, settings: Optional[parser.ParserSettings] = None) -> List[parser.Block]:
     """ Returns a list with all pairs of markers in the given string.
     """
     parser_obj = parse_string(string, settings)
     return parser_obj.blocks
 
-def cog_blocks_from_file(filepath: str, settings: parser.ParserSettings = None, encoding: str = None) -> List[parser.CogBlock]:
+def cog_blocks_from_file(filepath: str, settings: Optional[parser.ParserSettings] = None, encoding: Optional[str] = None) -> List[parser.CogBlock]:
     """ Returns a list with all pairs of cog markers in the given file.
         Returns an empty list if the file doesn't exist.
         Raises an error if the file can't be read.
@@ -144,13 +144,13 @@ def cog_blocks_from_file(filepath: str, settings: parser.ParserSettings = None, 
     parser_obj = parse_file(filepath, settings, encoding)
     return parser_obj.cog_blocks if parser_obj else []
 
-def cog_blocks_from_string(string: str, settings: parser.ParserSettings = None) -> List[parser.CogBlock]:
+def cog_blocks_from_string(string: str, settings: Optional[parser.ParserSettings] = None) -> List[parser.CogBlock]:
     """ Returns a list with all paris of cog markers in the given string.
     """
     parser_obj = parse_string(string, settings)
     return parser_obj.cog_blocks
 
-def edit_blocks_from_file(filepath: str, settings: parser.ParserSettings = None, encoding: str = None) -> Dict[str, parser.EditBlock]:
+def edit_blocks_from_file(filepath: str, settings: Optional[parser.ParserSettings] = None, encoding: Optional[str] = None) -> Dict[str, parser.EditBlock]:
     """ Returns a dictionary with all pairs of edit markers in the given file.
         Returns an empty dictionary if the file doesn't exist.
         Raises an error if the file can't be read.
@@ -158,13 +158,13 @@ def edit_blocks_from_file(filepath: str, settings: parser.ParserSettings = None,
     parser_obj = parse_file(filepath, settings, encoding)
     return parser_obj.edit_blocks if parser_obj else {}
 
-def edit_blocks_from_string(string: str, settings: parser.ParserSettings = None) -> Dict[str, parser.EditBlock]:
+def edit_blocks_from_string(string: str, settings: Optional[parser.ParserSettings] = None) -> Dict[str, parser.EditBlock]:
     """ Returns a dictionary with all pairs of edit markers in the given string.
     """
     object = parse_string(string, settings)
     return object.edit_blocks
 
-def edits_from_file(filepath: str, settings: parser.ParserSettings = None, encoding: str = None) -> Dict[str, str]:
+def edits_from_file(filepath: str, settings: Optional[parser.ParserSettings] = None, encoding: Optional[str] = None) -> Dict[str, str]:
     """ Returns a dictionary with all manual edits in the given file.
         Returns an empty dictionary if the file doesn't exist.
         Raises an error if the file can't be read.
@@ -172,7 +172,7 @@ def edits_from_file(filepath: str, settings: parser.ParserSettings = None, encod
     parser_obj = parse_file(filepath, settings, encoding)
     return parser_obj.edits if parser_obj else {}
 
-def edits_from_string(string: str, settings: parser.ParserSettings = None) -> Dict[str, str]:
+def edits_from_string(string: str, settings: Optional[parser.ParserSettings] = None) -> Dict[str, str]:
     """ Returns a dictionary with all manual edits in the given string.
     """
     parser_obj = parse_string(string, settings)
