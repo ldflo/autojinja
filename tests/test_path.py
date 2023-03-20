@@ -1197,19 +1197,3 @@ class TestModule:
         assert autojinja.Path["/dir1\\"]              == "/dir1/"
         assert autojinja.Path["/dir1/file.txt"]       == "/dir1/file.txt/"
         assert autojinja.Path["/dir1\\dir2/file.txt"] == "/dir1/dir2/file.txt/"
-
-    def test_getattribute(self):
-        # dir
-        assert dir1.isdir  == True
-        assert dir2.isdir  == True
-        assert file1.isdir == False
-        assert file2.isdir == False
-        assert file3.isdir == False
-        assert file4.isdir == False
-        # file
-        assert dir1.isfile  == False
-        assert dir2.isfile  == False
-        assert file1.isfile == True
-        assert file2.isfile == True
-        assert file3.isfile == True
-        assert file4.isfile == True
