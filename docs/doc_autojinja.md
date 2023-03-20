@@ -235,11 +235,11 @@ Hello, my name is John Doe !
     Loads a Jinja template from a file.
 
     Parameters :
-    - **input: str** : filepath containing the Jinja template
-    - **output: Optional[str]** : default output filepath when generating with `render_file` method
-    - **encoding: Optional[str]** : default encoding used when reading the file and when generating with `render_file` method. Default value is `utf-8`
-    - **newline: Optional[str]** : default newline when generating with `render_file` method. Default value is `\n`
-    - **globals: Optional[dict[str, Any]]** : dictionary of variables available in the template
+    - **input: `str`** : filepath containing the Jinja template
+    - **output: `Optional[str]`** : default output filepath when generating with `render_file` method
+    - **encoding: `Optional[str]`** : default encoding used when reading the file and when generating with `render_file` method. Default value is `utf-8`
+    - **newline: `Optional[str]`** : default newline when generating with `render_file` method. Default value is `\n`
+    - **globals: `Optional[dict[str, Any]]`** : dictionary of variables available in the template
 
     Return type :
     - `autojinja.RawTemplate`
@@ -249,11 +249,11 @@ Hello, my name is John Doe !
     Loads a Jinja template from a string.
 
     Parameters :
-    - **string: str** : Jinja template given as a string
-    - **output: Optional[str]** : default output filepath when generating with `render_file` method
-    - **encoding: Optional[str]** : default encoding when generating with `render_file` method. Default value is `utf-8`
-    - **newline: Optional[str]** : default newline when generating with `render_file` method. Default value is `\n`
-    - **globals: Optional[dict[str, Any]]** : dictionary of variables available in the template
+    - **string: `str`** : Jinja template given as a string
+    - **output: `Optional[str]`** : default output filepath when generating with `render_file` method
+    - **encoding: `Optional[str]`** : default encoding when generating with `render_file` method. Default value is `utf-8`
+    - **newline: `Optional[str]`** : default newline when generating with `render_file` method. Default value is `\n`
+    - **globals: `Optional[dict[str, Any]]`** : dictionary of variables available in the template
 
     Return type :
     - `autojinja.RawTemplate`
@@ -273,9 +273,9 @@ Hello, my name is John Doe !
     Renders the data model to a file and returns the generation output.
 
     Parameters :
-    - **output: Optional[str]** : output filepath for generated file. Default value is specified in constructor
-    - **encoding: Optional[str]** : encoding for generated file. Default value is specified in constructor
-    - **newline: Optional[str]** : newline for generated file. Default value is specified in constructor
+    - **output: `Optional[str]`** : output filepath for generated file. Default value is specified in constructor
+    - **encoding: `Optional[str]`** : encoding for generated file. Default value is specified in constructor
+    - **newline: `Optional[str]`** : newline for generated file. Default value is specified in constructor
 
     Return type :
     - `str`
@@ -351,13 +351,13 @@ void main() {
     Loads a file containing Jinja templates and hand-made sections enclosed within special markers.
 
     Parameters :
-    - **input: str** : filepath containing Jinja templates and hand-made sections enclosed within special markers
-    - **output: Optional[str]** : default output filepath when generating with `render_file` method. Default value is _input_ parameter value
-    - **settings: Optional[autojinja.parser.ParserSettings]** : [`ParserSettings`](#class-autojinjaparsersettings) used to resolve markers. Default value is `ParserSettings()`remove_markers
-    - **remove_markers: Optional[bool]** : removes cog and edits markers from generated output. Default value is _settings_ parameter
-    - **encoding: Optional[str]** : default encoding used when reading the file and when generating with `render_file` method. Default value is _settings_ parameter
-    - **newline: Optional[str]** : default newline when generating with `render_file` method. Default value is _settings_ parameter
-    - **globals: Optional[dict[str, Any]]** : dictionary of variables available in the template
+    - **input: `str`** : filepath containing Jinja templates and hand-made sections enclosed within special markers
+    - **output: `Optional[str]`** : default output filepath when generating with `render_file` method. Default value is _input_ parameter value
+    - **settings: `Optional[autojinja.parser.ParserSettings]`** : [`ParserSettings`](#class-autojinjaparsersettings) used to resolve markers. Default value is `ParserSettings()`remove_markers
+    - **remove_markers: `Optional[bool]`** : removes cog and edits markers from generated output. Default value is _settings_ parameter
+    - **encoding: `Optional[str]`** : default encoding used when reading the file and when generating with `render_file` method. Default value is _settings_ parameter
+    - **newline: `Optional[str]`** : default newline when generating with `render_file` method. Default value is _settings_ parameter
+    - **globals: `Optional[dict[str, Any]]`** : dictionary of variables available in the template
 
     Return type :
     - `autojinja.CogTemplate`
@@ -367,13 +367,13 @@ void main() {
     Loads a string containing Jinja templates and hand-made sections enclosed within special markers.
 
     Parameters :
-    - **string: str** : string containing Jinja templates and hand-made sections enclosed within special markers
-    - **output: Optional[str]** : default output filepath when generating with `render_file` method
-    - **settings: Optional[autojinja.parser.ParserSettings]** : [`ParserSettings`](#class-autojinjaparsersettings) used to resolve markers. Default value is `ParserSettings()`
-    - **remove_markers: Optional[bool]** : removes cog and edits markers from generated output. Default value is _settings_ parameter
-    - **encoding: Optional[str]** : default encoding when generating with `render_file` method. Default value is _settings_ parameter
-    - **newline: Optional[str]** : default newline when generating with `render_file` method. Default value is _settings_ parameter
-    - **globals: Optional[dict[str, Any]]** : dictionary of variables available in the template
+    - **string: `str`** : string containing Jinja templates and hand-made sections enclosed within special markers
+    - **output: `Optional[str]`** : default output filepath when generating with `render_file` method
+    - **settings: `Optional[autojinja.parser.ParserSettings]`** : [`ParserSettings`](#class-autojinjaparsersettings) used to resolve markers. Default value is `ParserSettings()`
+    - **remove_markers: `Optional[bool]`** : removes cog and edits markers from generated output. Default value is _settings_ parameter
+    - **encoding: `Optional[str]`** : default encoding when generating with `render_file` method. Default value is _settings_ parameter
+    - **newline: `Optional[str]`** : default newline when generating with `render_file` method. Default value is _settings_ parameter
+    - **globals: `Optional[dict[str, Any]]`** : dictionary of variables available in the template
 
     Return type :
     - `autojinja.CogTemplate`
@@ -393,10 +393,10 @@ void main() {
     Renders the data model to a file and returns the generation output. If the file already exists, hand-made modifications enclosed within edit markers in that file are retrieved and then reinserted into the generated output.
 
     Parameters :
-    - **output: Optional[str]** : output filepath for generated file. Default value is specified in constructor
-    - **remove_markers: Optional[bool]** : removes cog and edits markers from generated output. Default value is specified in constructor
-    - **encoding: Optional[str]** : encoding for generated file. Default value is specified in constructor
-    - **newline: Optional[str]** : newline for generated file. Default value is specified in constructor
+    - **output: `Optional[str]`** : output filepath for generated file. Default value is specified in constructor
+    - **remove_markers: `Optional[bool]`** : removes cog and edits markers from generated output. Default value is specified in constructor
+    - **encoding: `Optional[str]`** : encoding for generated file. Default value is specified in constructor
+    - **newline: `Optional[str]`** : newline for generated file. Default value is specified in constructor
 
     Return type :
     - `str`
@@ -406,8 +406,8 @@ void main() {
     Renders the data model and returns the generation output.
 
     Parameters :
-    - **output: Optional[str]** : optional string of previous generation containing edit markers to reinsert
-    - **remove_markers: Optional[bool]** : removes cog and edits markers from generated output. Default value is specified in constructor
+    - **output: `Optional[str]`** : optional string of previous generation containing edit markers to reinsert
+    - **remove_markers: `Optional[bool]`** : removes cog and edits markers from generated output. Default value is specified in constructor
 
     Return type :
     - `str`
@@ -497,13 +497,13 @@ void main() {
     Loads a Jinja template containing Jinja templates and hand-made sections enclosed within special markers.
 
     Parameters :
-    - **input: str** : filepath containing the Jinja template with Jinja templates and hand-made sections enclosed within special markers
-    - **output: Optional[str]** : default output filepath when generating with `render_file` method
-    - **settings: Optional[autojinja.parser.ParserSettings]** : [`ParserSettings`](#class-autojinjaparsersettings) used to resolve markers. Default value is `ParserSettings()`
-    - **remove_markers: Optional[bool]** : removes cog and edits markers from generated output. Default value is _settings_ parameter
-    - **encoding: Optional[str]** : default encoding used when reading the file and when generating with `render_file` method. Default value is _settings_ parameter
-    - **newline: Optional[str]** : default newline when generating with `render_file` method. Default value is _settings_ parameter
-    - **globals: Optional[dict[str, Any]]** : dictionary of variables available in the template
+    - **input: `str`** : filepath containing the Jinja template with Jinja templates and hand-made sections enclosed within special markers
+    - **output: `Optional[str]`** : default output filepath when generating with `render_file` method
+    - **settings: `Optional[autojinja.parser.ParserSettings]`** : [`ParserSettings`](#class-autojinjaparsersettings) used to resolve markers. Default value is `ParserSettings()`
+    - **remove_markers: `Optional[bool]`** : removes cog and edits markers from generated output. Default value is _settings_ parameter
+    - **encoding: `Optional[str]`** : default encoding used when reading the file and when generating with `render_file` method. Default value is _settings_ parameter
+    - **newline: `Optional[str]`** : default newline when generating with `render_file` method. Default value is _settings_ parameter
+    - **globals: `Optional[dict[str, Any]]`** : dictionary of variables available in the template
 
     Return type :
     - `autojinja.JinjaTemplate`
@@ -513,13 +513,13 @@ void main() {
     Loads a Jinja template as a string containing Jinja templates and hand-made sections enclosed within special markers.
 
     Parameters :
-    - **string: str** : string containing the Jinja template with Jinja templates and hand-made sections enclosed within special markers
-    - **output: Optional[str]** : default output filepath when generating with `render_file` method
-    - **settings: Optional[autojinja.parser.ParserSettings]** : [`ParserSettings`](#class-autojinjaparsersettings) used to resolve markers. Default value is `ParserSettings()`
-    - **remove_markers: Optional[bool]** : removes cog and edits markers from generated output. Default value is _settings_ parameter
-    - **encoding: Optional[str]** : default encoding when generating with `render_file` method. Default value is _settings_ parameter
-    - **newline: Optional[str]** : default newline when generating with `render_file` method. Default value is _settings_ parameter
-    - **globals: Optional[dict[str, Any]]** : dictionary of variables available in the template
+    - **string: `str`** : string containing the Jinja template with Jinja templates and hand-made sections enclosed within special markers
+    - **output: `Optional[str]`** : default output filepath when generating with `render_file` method
+    - **settings: `Optional[autojinja.parser.ParserSettings]`** : [`ParserSettings`](#class-autojinjaparsersettings) used to resolve markers. Default value is `ParserSettings()`
+    - **remove_markers: `Optional[bool]`** : removes cog and edits markers from generated output. Default value is _settings_ parameter
+    - **encoding: `Optional[str]`** : default encoding when generating with `render_file` method. Default value is _settings_ parameter
+    - **newline: `Optional[str]`** : default newline when generating with `render_file` method. Default value is _settings_ parameter
+    - **globals: `Optional[dict[str, Any]]`** : dictionary of variables available in the template
 
     Return type :
     - `autojinja.JinjaTemplate`
@@ -539,10 +539,10 @@ void main() {
     Renders the data model to a file and returns the generation output. If the file already exists, hand-made modifications enclosed within edit markers in that file are retrieved and then reinserted into the generated output.
 
     Parameters :
-    - **output: Optional[str]** : output filepath for generated file. Default value is specified in constructor
-    - **remove_markers: Optional[bool]** : removes cog and edits markers from generated output. Default value is specified in constructor
-    - **encoding: Optional[str]** : encoding for generated file. Default value is specified in constructor
-    - **newline: Optional[str]** : newline for generated file. Default value is specified in constructor
+    - **output: `Optional[str]`** : output filepath for generated file. Default value is specified in constructor
+    - **remove_markers: `Optional[bool]`** : removes cog and edits markers from generated output. Default value is specified in constructor
+    - **encoding: `Optional[str]`** : encoding for generated file. Default value is specified in constructor
+    - **newline: `Optional[str]`** : newline for generated file. Default value is specified in constructor
 
     Return type :
     - `str`
@@ -552,8 +552,8 @@ void main() {
     Renders the data model and returns the generation output.
 
     Parameters :
-    - **output: Optional[str]** : optional string of previous generation containing edit markers to reinsert
-    - **remove_markers: Optional[bool]** : removes cog and edits markers from generated output. Default value is specified in constructor
+    - **output: `Optional[str]`** : optional string of previous generation containing edit markers to reinsert
+    - **remove_markers: `Optional[bool]`** : removes cog and edits markers from generated output. Default value is specified in constructor
 
     Return type :
     - `str`
@@ -596,17 +596,17 @@ int main() {
     Constructs a `ParserSettings` object with the provided arguments.
 
     Parameters :
-    - **cog_open: str** : open token for cog markers. Default value is `[[[`
-    - **cog_close: str** : close token for cog markers. Default value is `]]]`
-    - **cog_end: str** : end token for cog markers. Default value is `end`
-    - **cog_as_comment: bool** : indicates that cog markers are comment tokens. Default value is `False`. See the [markers](#markers) section for more information
-    - **edit_open: str** : open token for edit markers. Default value is `<<[`
-    - **edit_close: str** : close token for edit markers. Default value is `]>>`
-    - **edit_end: str** : end token for edit markers. Default value is `end`
-    - **edit_as_comment: bool** : indicates that edit markers are comment tokens. Default value is `False`. See the [markers](#markers) section for more information
-    - **remove_markers: Optional[bool]** : removes cog and edits markers from generated output. Default value is `AUTOJINJA_REMOVE_MARKERS` environment variable value or `False`. See the [executable CLI](#executable-cli) section for more information
-    - **encoding: Optional[str]** : default encoding when generating with `render_file` templates' method. Default value is `utf-8`
-    - **newline: Optional[str]** : default newline when generating with `render_file` templates' method. Default value is `\n`
+    - **cog_open: `str`** : open token for cog markers. Default value is `[[[`
+    - **cog_close: `str`** : close token for cog markers. Default value is `]]]`
+    - **cog_end: `str`** : end token for cog markers. Default value is `end`
+    - **cog_as_comment: `bool`** : indicates that cog markers are comment tokens. Default value is `False`. See the [markers](#markers) section for more information
+    - **edit_open: `str`** : open token for edit markers. Default value is `<<[`
+    - **edit_close: `str`** : close token for edit markers. Default value is `]>>`
+    - **edit_end: `str`** : end token for edit markers. Default value is `end`
+    - **edit_as_comment: `bool`** : indicates that edit markers are comment tokens. Default value is `False`. See the [markers](#markers) section for more information
+    - **remove_markers: `Optional[bool]`** : removes cog and edits markers from generated output. Default value is `AUTOJINJA_REMOVE_MARKERS` environment variable value or `False`. See the [executable CLI](#executable-cli) section for more information
+    - **encoding: `Optional[str]`** : default encoding when generating with `render_file` templates' method. Default value is `utf-8`
+    - **newline: `Optional[str]`** : default newline when generating with `render_file` templates' method. Default value is `\n`
 
     Return type :
     - `ParserSettings`
@@ -935,17 +935,17 @@ void main() {
     Returns the dictionary of all sections enclosed within edit markers inside a file.
 
     Parameters :
-    - **filepath** : filepath containing edit markers
-    - **settings: Optional[autojinja.parser.ParserSettings]** : [`ParserSettings`](#class-autojinjaparsersettings) used to resolve markers. Default value is `ParserSettings()`
-    - **encoding: Optional[str]** : default encoding used when reading the file. Default value is `utf-8`
+    - **filepath: `str`** : filepath containing edit markers
+    - **settings: `Optional[autojinja.parser.ParserSettings]`** : [`ParserSettings`](#class-autojinjaparsersettings) used to resolve markers. Default value is `ParserSettings()`
+    - **encoding: `Optional[str]`** : default encoding used when reading the file. Default value is `utf-8`
 
 - ### _utils_.**edits_from_string**(_string, settings=None_):
 
     Returns the dictionary of all sections enclosed within edit markers inside a string.
 
     Parameters :
-    - **string: str** : string containing edit markers
-    - **settings: Optional[autojinja.parser.ParserSettings]** : [`ParserSettings`](#class-autojinjaparsersettings) used to resolve markers. Default value is `ParserSettings()`
+    - **string: `str`** : string containing edit markers
+    - **settings: `Optional[autojinja.parser.ParserSettings]`** : [`ParserSettings`](#class-autojinjaparsersettings) used to resolve markers. Default value is `ParserSettings()`
 
 # Executable CLI
 
