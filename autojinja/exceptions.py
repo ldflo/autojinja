@@ -324,15 +324,17 @@ def prepend_jinja2_traceback(exception: _TException, tb: str = None) -> _TExcept
                 startidx = stacktrace.find('\n', idx+len(token2))
             else:
                 startidx = stacktrace.find('\n', idx+len(token1))
-            if startidx < 0:
-                startidx = len(stacktrace)
-                break # No eol after token
-            if not stacktrace.startswith("    ", startidx+1):
-                continue # No inner traceback
-            startidx = stacktrace.find('\n', startidx+1)
-            if startidx < 0:
-                startidx = len(stacktrace)
-                break # No eol after inner traceback
+            while True:
+                if startidx < 0:
+                    startidx = len(stacktrace)
+                    exit = True
+                    break # No eol after token
+                if not stacktrace.startswith("    ", startidx+1):
+                    exit = False
+                    break # No inner traceback
+                startidx = stacktrace.find('\n', startidx+1)
+            if exit:
+                break # Done
         if startidx < 0:
             return exception
         stacktrace = stacktrace[startidx+1:]
@@ -396,9 +398,11 @@ def clean_wrapped_stacktrace(exception: _TException) -> str:
     message = io.StringIO()
     state = 0 # 0, 1
     for line in lines[:start]:
-        if state == 1 and line.startswith("    "):
-            state = 0 # Skip
-        elif line.startswith("Traceback (most recent call last)"):
+        if state == 1:
+            if line.startswith("    "):
+                continue # Skip
+            state = 0
+        if line.startswith("Traceback (most recent call last)"):
             pass # Skip
         elif not any(x in line for x in _disallowed_stacktraces):
             message.write(f"\n{line}")

@@ -12,7 +12,7 @@ import glob
 import os
 from typing import List, Tuple, Union
 
-class _join_class:
+class _join_wrapper:
     def __call__(self, arg1: str, *args: str) -> str:
         """ /dir1/dir2   file.txt -> /dir1/dir2/file.txt
             /dir1/dir2/  dir3/    -> /dir1/dir2/dir3/
@@ -26,7 +26,7 @@ class _join_class:
             return slash(join.__call__(*args))
         return slash(join.__call__(args))
 
-join = _join_class()
+join = _join_wrapper()
 
 def add(arg1: str, *args: str) -> str:
     """ /dir1/dir2   file.txt -> /dir1/dir2file.txt
@@ -154,7 +154,7 @@ def slash(path: str) -> str:
         /dir1/dir2/         -> /dir1/dir2/
     """
     if not path:
-        return "/"
+        return ""
     path = no_antislash(path)
     if path[-1] == '/':
         return path
@@ -307,7 +307,7 @@ class Path(str):
             return str.__new__(cls, **kwargs)
         return str.__new__(cls, no_antislash(args[0]), *args[1:], **kwargs)
 
-    class join_wrapper:
+    class _join_wrapper:
         def __init__(self, path: str):
             self.path: str = path
         def __call__(self, *args: str) -> "Path":
@@ -316,7 +316,7 @@ class Path(str):
             """
             path = join.__call__(self.path, *args)
             return Path(path)
-        def __getitem__(self, args: Union[str, Tuple[str, ...]]) -> "Path":
+        def __getitem__(self, args: Union[str, Tuple[str, ...]]) -> "DirPath":
             """ /dir1/dir2   file.txt -> /dir1/dir2/file.txt/
                 /dir1/dir2/  dir3/    -> /dir1/dir2/dir3/
             """
@@ -324,11 +324,11 @@ class Path(str):
                 path = slash(join.__call__(self.path, *args))
             else:
                 path = slash(join.__call__(self.path, args))
-            return Path(path)
+            return DirPath(path)
 
     @property
-    def join(self) -> join_wrapper:
-        return Path.join_wrapper(self)
+    def join(self) -> _join_wrapper:
+        return Path._join_wrapper(self)
 
     def add(self, *args: str) -> "Path":
         result = add(self, *args)
@@ -344,9 +344,9 @@ class Path(str):
         result = files(self, pattern)
         return [Path(path) for path in result]
 
-    def dirs(self, pattern: str = "*") -> List["Path"]:
+    def dirs(self, pattern: str = "*") -> List["DirPath"]:
         result = dirs(self, pattern)
-        return [Path(path) for path in result]
+        return [DirPath(path) for path in result]
 
     @property
     def filepath(self) -> "Path":
@@ -363,9 +363,9 @@ class Path(str):
         return Path(result)
 
     @property
-    def dirpath(self) -> "Path":
+    def dirpath(self) -> "DirPath":
         result = dirpath(self)
-        return Path(result)
+        return DirPath(result)
 
     @property
     def dirname(self) -> "Path":
@@ -373,9 +373,9 @@ class Path(str):
         return Path(result)
 
     @property
-    def parent_dirpath(self) -> "Path":
+    def parent_dirpath(self) -> "DirPath":
         result = parent_dirpath(self)
-        return Path(result)
+        return DirPath(result)
 
     @property
     def parent_dirname(self) -> "Path":
@@ -411,9 +411,9 @@ class Path(str):
         return Path(result)
 
     @property
-    def slash(self) -> "Path":
+    def slash(self) -> "DirPath":
         result = slash(self)
-        return Path(result)
+        return DirPath(result)
 
     @property
     def no_slash(self) -> "Path":
@@ -429,9 +429,9 @@ class Path(str):
         result = abspath(self)
         return Path(result)
 
-    def commonpath(self, paths: List[str]) -> "Path":
+    def commonpath(self, paths: List[str]) -> "DirPath":
         result = commonpath([self] + paths)
-        return Path(result)
+        return DirPath(result)
 
     def commonprefix(self, paths: List[str]) -> "Path":
         result = commonprefix([self] + paths)
@@ -513,16 +513,78 @@ class Path(str):
         return samestat(os.stat(self), stat)
 
     @property
-    def splitpath(self) -> Tuple["Path", "Path"]:
+    def splitpath(self) -> Tuple["DirPath", "Path"]:
         result = splitpath(self)
-        return (Path(result[0]), Path(result[1]))
+        return (DirPath(result[0]), Path(result[1]))
 
     @property
-    def splitdrive(self) -> Tuple["Path", "Path"]:
+    def splitdrive(self) -> Tuple["DirPath", "Path"]:
         result = splitdrive(self)
-        return (Path(result[0]), Path(result[1]))
+        return (DirPath(result[0]), Path(result[1]))
 
     @property
     def splitext(self) -> Tuple["Path", "Path"]:
         result = splitext(self)
         return (Path(result[0]), Path(result[1]))
+
+class DirPath(Path):
+    """ DirPath is a Path that ends with a trailing slash.
+
+            print(Path("/dir1"))    # Prints "/dir1"
+            print(DirPath("/dir1")) # Prints "/dir1/"
+    """
+    def __new__(cls, *args: str, **kwargs):
+        return Path.__new__(cls, slash(args[0]), *args[1:], **kwargs)
+
+    @property
+    def abspath(self) -> "DirPath":
+        result = abspath(self)
+        return DirPath(result)
+
+    def commonpath(self, paths: List[str]) -> "DirPath":
+        result = commonpath([self] + paths)
+        return DirPath(result)
+
+    @property
+    def expanduser(self) -> "DirPath":
+        result = expanduser(self)
+        return DirPath(result)
+
+    @property
+    def expandvars(self) -> "DirPath":
+        result = expandvars(self)
+        return DirPath(result)
+
+    @property
+    def normcase(self) -> "DirPath":
+        result = normcase(self)
+        return DirPath(result)
+
+    @property
+    def normpath(self) -> "DirPath":
+        result = normpath(self)
+        return DirPath(result)
+
+    @property
+    def realpath(self) -> "DirPath":
+        result = realpath(self)
+        return DirPath(result)
+
+    def relpath(self, start: str = ".") -> "DirPath":
+        result = relpath(self, start)
+        return DirPath(result)
+
+    @property
+    def splitpath(self) -> Tuple["DirPath", "DirPath"]:
+        result = splitpath(self)
+        return (DirPath(result[0]), DirPath(result[1]))
+
+    @property
+    def splitdrive(self) -> Tuple["DirPath", "DirPath"]:
+        result = splitdrive(self)
+        return (DirPath(result[0]), DirPath(result[1]))
+
+    @property
+    def splitext(self) -> Tuple["DirPath", "Path"]:
+        result = splitext(self)
+        return (DirPath(result[0]), Path(result[1]))

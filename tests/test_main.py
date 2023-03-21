@@ -10,7 +10,7 @@ def invalid_autojinja(exception_type: type, message: str, *args: str, **kwargs: 
     assert_exception(function, exception_type, message, *args, **kwargs)
 
 tmp = tempfile.TemporaryDirectory()
-root = autojinja.Path[tmp.name]
+root = autojinja.path.DirPath(tmp.name)
 output = root.join("output.txt")
 
 def clear_output():
@@ -198,12 +198,12 @@ class TestSearch:
         invalid_autojinja(Exception, message, ".")
 
     def test_14(self):
-        file = autojinja.Path("script.py")
+        file = autojinja.path.Path("script.py")
         message = f"File or directory at path \"{file.abspath}\" doesn't exist"
         invalid_autojinja(Exception, message, file)
 
     def test_15(self):
-        dir = autojinja.Path["dir"]
+        dir = autojinja.path.DirPath("dir")
         message = f"File or directory at path \"{dir.abspath}\" doesn't exist"
         invalid_autojinja(Exception, message, dir)
 

@@ -1,5 +1,5 @@
 ### prevent discovery ###
-from autojinja import *
+import autojinja
 from lxml import etree
 from typing import Generator, List
 
@@ -8,7 +8,7 @@ from typing import Generator, List
 ######################################
 
 ### Template
-function_arg_def_t = RawTemplate.from_string("""
+function_arg_def_t = autojinja.RawTemplate.from_string("""
 {%- if Default != None -%}
 {{ Type }} {{ Name }} = {{ Default }}
 {%- else -%}
@@ -32,7 +32,7 @@ def function_arg_defs(xargs: List[etree._Element]) -> Generator[str, None, None]
 ######################################
 
 ### Template
-function_arg_impl_t = RawTemplate.from_string("""
+function_arg_impl_t = autojinja.RawTemplate.from_string("""
 {{ Type }} {{ Name }}
 """.strip())
 
@@ -51,7 +51,7 @@ def function_arg_impls(xargs: List[etree._Element]) -> Generator[str, None, None
 ######################################
 
 ### Template
-function_arg_call_t = RawTemplate.from_string("""
+function_arg_call_t = autojinja.RawTemplate.from_string("""
 {{ Name }}
 """.strip())
 

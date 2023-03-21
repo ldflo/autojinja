@@ -1,5 +1,5 @@
 ### prevent discovery ###
-from autojinja import *
+import autojinja
 from arg import *
 from lxml import etree
 from typing import Callable, Generator, List, Optional
@@ -9,7 +9,7 @@ from typing import Callable, Generator, List, Optional
 #######################################
 
 ### Template
-function_def_t = RawTemplate.from_string("""
+function_def_t = autojinja.RawTemplate.from_string("""
 /// @brief {{ Description }}
 {{ ReturnType }} {{ Name }}({{ ', '.join(Args) }});
 """.strip())
@@ -31,7 +31,7 @@ def function_defs(xfunctions: List[etree._Element]) -> Generator[str, None, None
 #######################################
 
 ### Template
-function_impl_t = RawTemplate.from_string("""
+function_impl_t = autojinja.RawTemplate.from_string("""
 /// @brief {{ Description }}
 {{ ReturnType }} {{ Name }}({{ ', '.join(Args) }}) {
     {% for line in Implementation.split('\n') %}
@@ -58,7 +58,7 @@ def function_impls(xfunctions: List[etree._Element], implementation_func: Option
 #######################################
 
 ### Template
-function_call_t = RawTemplate.from_string("""
+function_call_t = autojinja.RawTemplate.from_string("""
 {{ Name }}({{ ', '.join(Args) }})
 """.strip())
 

@@ -1,5 +1,6 @@
-from autojinja import *
+import autojinja
 from lxml import etree
+import os
 import utility
 
 ### Read XML
@@ -11,7 +12,7 @@ xfunctions = xroot.xpath("Function")
 #######################################
 
 ### Insert inside 'ServerApi.h'
-file_template = CogTemplate.from_file("ServerApi.h")
+file_template = autojinja.CogTemplate.from_file("ServerApi.h")
 file_template.context(api_defs = utility.function_defs(xfunctions)).render_file()
 
 #######################################
@@ -19,7 +20,7 @@ file_template.context(api_defs = utility.function_defs(xfunctions)).render_file(
 #######################################
 
 # Prepare a template for server API implementations
-implementation = RawTemplate.from_string("""
+implementation = autojinja.RawTemplate.from_string("""
 // <<[ impl_{{ Name }} ]>>
 static_assert(false, "ServerApi::{{ Name }} is not implemented...");
 // <<[ end ]>>
@@ -30,7 +31,7 @@ def implementation_func(xfunction: etree._Element) -> str:
     return implementation.context(Name = xfunction.attrib['name']).render()
 
 ### Insert inside 'ServerApi.cpp'
-file_template = CogTemplate.from_file("ServerApi.cpp")
+file_template = autojinja.CogTemplate.from_file("ServerApi.cpp")
 file_template.context(api_impls = utility.function_impls(xfunctions, implementation_func)).render_file()
 
 #######################################
@@ -38,7 +39,7 @@ file_template.context(api_impls = utility.function_impls(xfunctions, implementat
 #######################################
 
 # Prepare a template for server API forwardings
-implementation = RawTemplate.from_string("""
+implementation = autojinja.RawTemplate.from_string("""
 {% for xfunction in xfunctions %}
 case {{ loop.index }}u: { /* {{ Name(xfunction) }} */
     {% for Arg in Args(xfunction) %}
@@ -70,5 +71,5 @@ def Call(xfunction: etree._Element) -> str:
 server_impls = implementation.context(**locals()).render()
 
 ### Insert result inside 'Server.cpp'
-file_template = CogTemplate.from_file("Server.cpp")
+file_template = autojinja.CogTemplate.from_file("Server.cpp")
 file_template.context(server_impls = server_impls).render_file()

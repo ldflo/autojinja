@@ -20,7 +20,7 @@ settings2 = autojinja.parser.ParserSettings(cog_open = autojinja.defaults.AUTOJI
                                             newline = None)
 
 tmp = tempfile.TemporaryDirectory()
-root = autojinja.Path[tmp.name]
+root = autojinja.path.DirPath(tmp.name)
 file1 = root.join("file1.txt")
 file2 = root.join("file2.txt")
 file3 = root.join("file3.txt")
@@ -191,21 +191,21 @@ class Test:
             with open(file2, 'r', encoding="ascii") as f:
                 old_content = f.read()
                 assert old_content == "Test1"
-            assert sys.stdout.getvalue() == f"[autojinja]    new    {file2.relpath(autojinja.Path(sys.argv[0]).dirpath)}\n"
+            assert sys.stdout.getvalue() == f"[autojinja]    new    {file2.relpath(autojinja.path.Path(sys.argv[0]).dirpath)}\n"
             sys.stdout.truncate(0)
             sys.stdout.seek(0)
             autojinja.utils.generate_file(file2, "Test1", old_content, encoding="ascii")
             with open(file2, 'r', encoding="ascii") as f:
                 old_content = f.read()
                 assert old_content == "Test1"
-            assert sys.stdout.getvalue() == f"[autojinja]  -------  {file2.relpath(autojinja.Path(sys.argv[0]).dirpath)}\n"
+            assert sys.stdout.getvalue() == f"[autojinja]  -------  {file2.relpath(autojinja.path.Path(sys.argv[0]).dirpath)}\n"
             sys.stdout.truncate(0)
             sys.stdout.seek(0)
             autojinja.utils.generate_file(file2, "Test2\nTest2", None, encoding="ascii", newline="\r\n")
             with open(file2, 'r', encoding="ascii", newline="\r\n") as f:
                 old_content = f.read()
                 assert old_content == "Test2\r\nTest2"
-            assert sys.stdout.getvalue() == f"[autojinja]  changed  {file2.relpath(autojinja.Path(sys.argv[0]).dirpath)}\n"
+            assert sys.stdout.getvalue() == f"[autojinja]  changed  {file2.relpath(autojinja.path.Path(sys.argv[0]).dirpath)}\n"
         finally:
             sys.stdout = sys.__stdout__
 
@@ -461,7 +461,7 @@ class Test:
         assert env["VAR2"] == "2"
         assert env["VAR3"] == "42"
         assert env["VAR4"] == "Test string"
-        assert env["VAR5"] == autojinja.Path(file4).abspath.dirpath
+        assert env["VAR5"] == autojinja.path.Path(file4).abspath.dirpath
 
     def test_evaluate(self):
         env = {"VAR1" : "1",
@@ -491,13 +491,25 @@ class Test:
 
         assert class1.a() != None
         assert class1.b != None
-        msg = "\n  File \"\", line ?, in x\n" \
-                "    return self.missing_x\n" \
-                "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in x\n" \
+                    "    return self.missing_x\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        else:
+            msg = "\n  File \"\", line ?, in x\n" \
+                    "    return self.missing_x\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_x'"
         assert_clean_exception(lambda: class1.x, autojinja.exceptions.DebugAttributeError, msg)
-        msg = "\n  File \"\", line ?, in f\n" \
-                "    return self.missing_f\n" \
-                "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        else:
+            msg = "\n  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_f'"
         assert_clean_exception(lambda: class1.f(), autojinja.exceptions.DebugAttributeError, msg)
         msg = "\n  File \"\", line ?, in ex\n" \
                 "    raise Exception(\"ex\")\n" \
@@ -510,62 +522,142 @@ class Test:
 
         assert class2.a() != None
         assert class2.b != None
-        msg = "\n  File \"\", line ?, in x\n" \
-                "    return Class1().x\n" \
-                "  File \"\", line ?, in x\n" \
-                "    return self.missing_x\n" \
-                "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in x\n" \
+                    "    return Class1().x\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return self.missing_x\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        else:
+            msg = "\n  File \"\", line ?, in x\n" \
+                    "    return Class1().x\n" \
+                    "           ^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return self.missing_x\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_x'"
         assert_clean_exception(lambda: class2.x, autojinja.exceptions.DebugAttributeError, msg)
-        msg = "\n  File \"\", line ?, in f\n" \
-                "    return Class1().f()\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return self.missing_f\n" \
-                "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in f\n" \
+                    "    return Class1().f()\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        else:
+            msg = "\n  File \"\", line ?, in f\n" \
+                    "    return Class1().f()\n" \
+                    "           ^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_f'"
         assert_clean_exception(lambda: class2.f(), autojinja.exceptions.DebugAttributeError, msg)
-        msg = "\n  File \"\", line ?, in ex\n" \
-                "    return Class1().ex\n" \
-                "  File \"\", line ?, in ex\n" \
-                "    raise Exception(\"ex\")\n" \
-                "Exception: ex"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in ex\n" \
+                    "    return Class1().ex\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    raise Exception(\"ex\")\n" \
+                    "Exception: ex"
+        else:
+            msg = "\n  File \"\", line ?, in ex\n" \
+                    "    return Class1().ex\n" \
+                    "           ^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    raise Exception(\"ex\")\n" \
+                    "Exception: ex"
         assert_clean_exception(lambda: class2.ex, Exception, msg)
-        msg = "\n  File \"\", line ?, in ef\n" \
-                "    return Class1().ef()\n" \
-                "  File \"\", line ?, in ef\n" \
-                "    raise Exception(\"ef\")\n" \
-                "Exception: ef"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in ef\n" \
+                    "    return Class1().ef()\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    raise Exception(\"ef\")\n" \
+                    "Exception: ef"
+        else:
+            msg = "\n  File \"\", line ?, in ef\n" \
+                    "    return Class1().ef()\n" \
+                    "           ^^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    raise Exception(\"ef\")\n" \
+                    "Exception: ef"
         assert_clean_exception(lambda: class2.ef(), Exception, msg)
 
         assert class3.a() != None
         assert class3.b != None
-        msg = "\n  File \"\", line ?, in x\n" \
-                "    return Class2().x\n" \
-                "  File \"\", line ?, in x\n" \
-                "    return Class1().x\n" \
-                "  File \"\", line ?, in x\n" \
-                "    return self.missing_x\n" \
-                "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in x\n" \
+                    "    return Class2().x\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return Class1().x\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return self.missing_x\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        else:
+            msg = "\n  File \"\", line ?, in x\n" \
+                    "    return Class2().x\n" \
+                    "           ^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return Class1().x\n" \
+                    "           ^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return self.missing_x\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_x'"
         assert_clean_exception(lambda: class3.x, autojinja.exceptions.DebugAttributeError, msg)
-        msg = "\n  File \"\", line ?, in f\n" \
-                "    return Class2().f()\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return Class1().f()\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return self.missing_f\n" \
-                "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in f\n" \
+                    "    return Class2().f()\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return Class1().f()\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        else:
+            msg = "\n  File \"\", line ?, in f\n" \
+                    "    return Class2().f()\n" \
+                    "           ^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return Class1().f()\n" \
+                    "           ^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_f'"
         assert_clean_exception(lambda: class3.f(), autojinja.exceptions.DebugAttributeError, msg)
-        msg = "\n  File \"\", line ?, in ex\n" \
-                "    return Class2().ex\n" \
-                "  File \"\", line ?, in ex\n" \
-                "    return Class1().ex\n" \
-                "  File \"\", line ?, in ex\n" \
-                "    raise Exception(\"ex\")\n" \
-                "Exception: ex"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in ex\n" \
+                    "    return Class2().ex\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    return Class1().ex\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    raise Exception(\"ex\")\n" \
+                    "Exception: ex"
+        else:
+            msg = "\n  File \"\", line ?, in ex\n" \
+                    "    return Class2().ex\n" \
+                    "           ^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    return Class1().ex\n" \
+                    "           ^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    raise Exception(\"ex\")\n" \
+                    "Exception: ex"
         assert_clean_exception(lambda: class3.ex, Exception, msg)
-        msg = "\n  File \"\", line ?, in ef\n" \
-                "    return Class2().ef()\n" \
-                "  File \"\", line ?, in ef\n" \
-                "    return Class1().ef()\n" \
-                "  File \"\", line ?, in ef\n" \
-                "    raise Exception(\"ef\")\n" \
-                "Exception: ef"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in ef\n" \
+                    "    return Class2().ef()\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    return Class1().ef()\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    raise Exception(\"ef\")\n" \
+                    "Exception: ef"
+        else:
+            msg = "\n  File \"\", line ?, in ef\n" \
+                    "    return Class2().ef()\n" \
+                    "           ^^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    return Class1().ef()\n" \
+                    "           ^^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    raise Exception(\"ef\")\n" \
+                    "Exception: ef"
         assert_clean_exception(lambda: class3.ef(), Exception, msg)

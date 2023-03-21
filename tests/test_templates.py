@@ -3,6 +3,7 @@ from . import assert_exception, assert_clean_exception, Class1, Class2, Class3, 
 import autojinja
 import jinja2
 import os
+import sys
 import tempfile
 from typing import Dict, Optional, Tuple, Type, Union
 
@@ -10,7 +11,7 @@ settingsRemoveMarkers = autojinja.ParserSettings(remove_markers = True)
 settingsPreserveMarkers = autojinja.ParserSettings(remove_markers = False)
 
 tmp = tempfile.TemporaryDirectory()
-root = autojinja.Path[tmp.name]
+root = autojinja.path.DirPath(tmp.name)
 input_file = root.join("input.txt")
 output_file = root.join("output.txt")
 
@@ -1314,23 +1315,190 @@ class Test_Miscellaneous:
                     raise DiffException(result, expected)
         test().generate()
 
-    def test_wrap_objects_debug(self):
+    def test_wrap_objects_debug_off(self):
+        os.environ[autojinja.defaults.AUTOJINJA_DEBUG] = "0"
+        class1 = Class1()
+        class2 = Class2()
+        class3 = Class3()
+
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "'tests.Class1 object' has no attribute 'x'"
+        invalid_autojinja("{{ class1.x }}", jinja2.exceptions.UndefinedError, msg, **locals())
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "'Class1' object has no attribute 'missing_f'"
+        else:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "'Class1' object has no attribute 'missing_f'"
+        invalid_autojinja("{{ class1.f() }}", AttributeError, msg, **locals())
+        msg = "\n  File \"\", line ?, in ex\n" \
+                "    raise Exception(\"ex\")\n" \
+                "ex"
+        invalid_autojinja("{{ class1.ex }}", Exception, msg, **locals())
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "  File \"\", line ?, in ef\n" \
+                "    raise Exception(\"ef\")\n" \
+                "ef"
+        invalid_autojinja("{{ class1.ef() }}", Exception, msg, **locals())
+
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "'tests.Class2 object' has no attribute 'x'"
+        invalid_autojinja("{{ class2.x }}", jinja2.exceptions.UndefinedError, msg, **locals())
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return Class1().f()\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "'Class1' object has no attribute 'missing_f'"
+        else:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return Class1().f()\n" \
+                    "           ^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "'Class1' object has no attribute 'missing_f'"
+        invalid_autojinja("{{ class2.f() }}", AttributeError, msg, **locals())
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in ex\n" \
+                    "    return Class1().ex\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    raise Exception(\"ex\")\n" \
+                    "ex"
+        else:
+            msg = "\n  File \"\", line ?, in ex\n" \
+                    "    return Class1().ex\n" \
+                    "           ^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    raise Exception(\"ex\")\n" \
+                    "ex"
+        invalid_autojinja("{{ class2.ex }}", Exception, msg, **locals())
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    return Class1().ef()\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    raise Exception(\"ef\")\n" \
+                    "ef"
+        else:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    return Class1().ef()\n" \
+                    "           ^^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    raise Exception(\"ef\")\n" \
+                    "ef"
+        invalid_autojinja("{{ class2.ef() }}", Exception, msg, **locals())
+
+        msg = "\n  File \"\", line ?, in top-level template code\n" \
+                "'tests.Class3 object' has no attribute 'x'"
+        invalid_autojinja("{{ class3.x }}", jinja2.exceptions.UndefinedError, msg, **locals())
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return Class2().f()\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return Class1().f()\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "'Class1' object has no attribute 'missing_f'"
+        else:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return Class2().f()\n" \
+                    "           ^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return Class1().f()\n" \
+                    "           ^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "'Class1' object has no attribute 'missing_f'"
+        invalid_autojinja("{{ class3.f() }}", AttributeError, msg, **locals())
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in ex\n" \
+                    "    return Class2().ex\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    return Class1().ex\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    raise Exception(\"ex\")\n" \
+                    "ex"
+        else:
+            msg = "\n  File \"\", line ?, in ex\n" \
+                    "    return Class2().ex\n" \
+                    "           ^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    return Class1().ex\n" \
+                    "           ^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    raise Exception(\"ex\")\n" \
+                    "ex"
+        invalid_autojinja("{{ class3.ex }}", Exception, msg, **locals())
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    return Class2().ef()\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    return Class1().ef()\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    raise Exception(\"ef\")\n" \
+                    "ef"
+        else:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    return Class2().ef()\n" \
+                    "           ^^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    return Class1().ef()\n" \
+                    "           ^^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    raise Exception(\"ef\")\n" \
+                    "ef"
+        invalid_autojinja("{{ class3.ef() }}", Exception, msg, **locals())
+        del os.environ[autojinja.defaults.AUTOJINJA_DEBUG]
+
+    def test_wrap_objects_debug_on(self):
         os.environ[autojinja.defaults.AUTOJINJA_DEBUG] = "1"
         class1 = Class1()
         class2 = Class2()
         class3 = Class3()
 
-        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
-                "    raise DebugAttributeError(message) from None\n" \
-                "  File \"\", line ?, in x\n" \
-                "    return self.missing_x\n" \
-                "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise DebugAttributeError(message) from None\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return self.missing_x\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        else:
+            msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise DebugAttributeError(message) from None\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return self.missing_x\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_x'"
         invalid_autojinja("{{ class1.x }}", autojinja.exceptions.DebugAttributeError, msg, **locals())
-        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
-                "    raise DebugAttributeError(message) from None\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return self.missing_f\n" \
-                "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise DebugAttributeError(message) from None\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        else:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise DebugAttributeError(message) from None\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_f'"
         invalid_autojinja("{{ class1.f() }}", autojinja.exceptions.DebugAttributeError, msg, **locals())
         msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
                 "    raise wrap_exception(e, message).with_traceback(None)\n" \
@@ -1346,158 +1514,181 @@ class Test_Miscellaneous:
                 "Exception: ef"
         invalid_autojinja("{{ class1.ef() }}", Exception, msg, **locals())
 
-        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
-                "    raise wrap_exception(e, message).with_traceback(None)\n" \
-                "  File \"\", line ?, in x\n" \
-                "    return Class1().x\n" \
-                "  File \"\", line ?, in x\n" \
-                "    return self.missing_x\n" \
-                "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return Class1().x\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return self.missing_x\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        else:
+            msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return Class1().x\n" \
+                    "           ^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return self.missing_x\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_x'"
         invalid_autojinja("{{ class2.x }}", autojinja.exceptions.DebugAttributeError, msg, **locals())
-        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
-                "    raise DebugAttributeError(message) from None\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return Class1().f()\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return self.missing_f\n" \
-                "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise DebugAttributeError(message) from None\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return Class1().f()\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        else:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise DebugAttributeError(message) from None\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return Class1().f()\n" \
+                    "           ^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_f'"
         invalid_autojinja("{{ class2.f() }}", autojinja.exceptions.DebugAttributeError, msg, **locals())
-        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
-                "    raise wrap_exception(e, message).with_traceback(None)\n" \
-                "  File \"\", line ?, in ex\n" \
-                "    return Class1().ex\n" \
-                "  File \"\", line ?, in ex\n" \
-                "    raise Exception(\"ex\")\n" \
-                "Exception: ex"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    return Class1().ex\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    raise Exception(\"ex\")\n" \
+                    "Exception: ex"
+        else:
+            msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    return Class1().ex\n" \
+                    "           ^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    raise Exception(\"ex\")\n" \
+                    "Exception: ex"
         invalid_autojinja("{{ class2.ex }}", Exception, msg, **locals())
-        msg = "\n  File \"\", line ?, in top-level template code\n" \
-                "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
-                "    raise wrap_exception(e, message).with_traceback(None)\n" \
-                "  File \"\", line ?, in ef\n" \
-                "    return Class1().ef()\n" \
-                "  File \"\", line ?, in ef\n" \
-                "    raise Exception(\"ef\")\n" \
-                "Exception: ef"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    return Class1().ef()\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    raise Exception(\"ef\")\n" \
+                    "Exception: ef"
+        else:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    return Class1().ef()\n" \
+                    "           ^^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    raise Exception(\"ef\")\n" \
+                    "Exception: ef"
         invalid_autojinja("{{ class2.ef() }}", Exception, msg, **locals())
 
-        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
-                "    raise wrap_exception(e, message).with_traceback(None)\n" \
-                "  File \"\", line ?, in x\n" \
-                "    return Class2().x\n" \
-                "  File \"\", line ?, in x\n" \
-                "    return Class1().x\n" \
-                "  File \"\", line ?, in x\n" \
-                "    return self.missing_x\n" \
-                "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return Class2().x\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return Class1().x\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return self.missing_x\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_x'"
+        else:
+            msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return Class2().x\n" \
+                    "           ^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return Class1().x\n" \
+                    "           ^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in x\n" \
+                    "    return self.missing_x\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_x'"
         invalid_autojinja("{{ class3.x }}", autojinja.exceptions.DebugAttributeError, msg, **locals())
-        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
-                "    raise DebugAttributeError(message) from None\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return Class2().f()\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return Class1().f()\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return self.missing_f\n" \
-                "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise DebugAttributeError(message) from None\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return Class2().f()\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return Class1().f()\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_f'"
+        else:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise DebugAttributeError(message) from None\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return Class2().f()\n" \
+                    "           ^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return Class1().f()\n" \
+                    "           ^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in f\n" \
+                    "    return self.missing_f\n" \
+                    "           ^^^^^^^^^^^^^^\n" \
+                    "AttributeError: 'Class1' object has no attribute 'missing_f'"
         invalid_autojinja("{{ class3.f() }}", autojinja.exceptions.DebugAttributeError, msg, **locals())
-        msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
-                "    raise wrap_exception(e, message).with_traceback(None)\n" \
-                "  File \"\", line ?, in ex\n" \
-                "    return Class2().ex\n" \
-                "  File \"\", line ?, in ex\n" \
-                "    return Class1().ex\n" \
-                "  File \"\", line ?, in ex\n" \
-                "    raise Exception(\"ex\")\n" \
-                "Exception: ex"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    return Class2().ex\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    return Class1().ex\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    raise Exception(\"ex\")\n" \
+                    "Exception: ex"
+        else:
+            msg = "\n  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    return Class2().ex\n" \
+                    "           ^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    return Class1().ex\n" \
+                    "           ^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ex\n" \
+                    "    raise Exception(\"ex\")\n" \
+                    "Exception: ex"
         invalid_autojinja("{{ class3.ex }}", Exception, msg, **locals())
-        msg = "\n  File \"\", line ?, in top-level template code\n" \
-                "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
-                "    raise wrap_exception(e, message).with_traceback(None)\n" \
-                "  File \"\", line ?, in ef\n" \
-                "    return Class2().ef()\n" \
-                "  File \"\", line ?, in ef\n" \
-                "    return Class1().ef()\n" \
-                "  File \"\", line ?, in ef\n" \
-                "    raise Exception(\"ef\")\n" \
-                "Exception: ef"
-        invalid_autojinja("{{ class3.ef() }}", Exception, msg, **locals())
-        del os.environ[autojinja.defaults.AUTOJINJA_DEBUG]
-
-    def test_wrap_objects_debug(self):
-        os.environ[autojinja.defaults.AUTOJINJA_DEBUG] = "0"
-        class1 = Class1()
-        class2 = Class2()
-        class3 = Class3()
-
-        msg = "\n  File \"\", line ?, in top-level template code\n" \
-                "'tests.Class1 object' has no attribute 'x'"
-        invalid_autojinja("{{ class1.x }}", jinja2.exceptions.UndefinedError, msg, **locals())
-        msg = "\n  File \"\", line ?, in top-level template code\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return self.missing_f\n" \
-                "'Class1' object has no attribute 'missing_f'"
-        invalid_autojinja("{{ class1.f() }}", AttributeError, msg, **locals())
-        msg = "\n  File \"\", line ?, in ex\n" \
-                "    raise Exception(\"ex\")\n" \
-                "ex"
-        invalid_autojinja("{{ class1.ex }}", Exception, msg, **locals())
-        msg = "\n  File \"\", line ?, in top-level template code\n" \
-                "  File \"\", line ?, in ef\n" \
-                "    raise Exception(\"ef\")\n" \
-                "ef"
-        invalid_autojinja("{{ class1.ef() }}", Exception, msg, **locals())
-
-        msg = "\n  File \"\", line ?, in top-level template code\n" \
-                "'tests.Class2 object' has no attribute 'x'"
-        invalid_autojinja("{{ class2.x }}", jinja2.exceptions.UndefinedError, msg, **locals())
-        msg = "\n  File \"\", line ?, in top-level template code\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return Class1().f()\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return self.missing_f\n" \
-                "'Class1' object has no attribute 'missing_f'"
-        invalid_autojinja("{{ class2.f() }}", AttributeError, msg, **locals())
-        msg = "\n  File \"\", line ?, in ex\n" \
-                "    return Class1().ex\n" \
-                "  File \"\", line ?, in ex\n" \
-                "    raise Exception(\"ex\")\n" \
-                "ex"
-        invalid_autojinja("{{ class2.ex }}", Exception, msg, **locals())
-        msg = "\n  File \"\", line ?, in top-level template code\n" \
-                "  File \"\", line ?, in ef\n" \
-                "    return Class1().ef()\n" \
-                "  File \"\", line ?, in ef\n" \
-                "    raise Exception(\"ef\")\n" \
-                "ef"
-        invalid_autojinja("{{ class2.ef() }}", Exception, msg, **locals())
-
-        msg = "\n  File \"\", line ?, in top-level template code\n" \
-                "'tests.Class3 object' has no attribute 'x'"
-        invalid_autojinja("{{ class3.x }}", jinja2.exceptions.UndefinedError, msg, **locals())
-        msg = "\n  File \"\", line ?, in top-level template code\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return Class2().f()\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return Class1().f()\n" \
-                "  File \"\", line ?, in f\n" \
-                "    return self.missing_f\n" \
-                "'Class1' object has no attribute 'missing_f'"
-        invalid_autojinja("{{ class3.f() }}", AttributeError, msg, **locals())
-        msg = "\n  File \"\", line ?, in ex\n" \
-                "    return Class2().ex\n" \
-                "  File \"\", line ?, in ex\n" \
-                "    return Class1().ex\n" \
-                "  File \"\", line ?, in ex\n" \
-                "    raise Exception(\"ex\")\n" \
-                "ex"
-        invalid_autojinja("{{ class3.ex }}", Exception, msg, **locals())
-        msg = "\n  File \"\", line ?, in top-level template code\n" \
-                "  File \"\", line ?, in ef\n" \
-                "    return Class2().ef()\n" \
-                "  File \"\", line ?, in ef\n" \
-                "    return Class1().ef()\n" \
-                "  File \"\", line ?, in ef\n" \
-                "    raise Exception(\"ef\")\n" \
-                "ef"
+        if sys.version_info[1] < 11:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    return Class2().ef()\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    return Class1().ef()\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    raise Exception(\"ef\")\n" \
+                    "Exception: ef"
+        else:
+            msg = "\n  File \"\", line ?, in top-level template code\n" \
+                    "  File \"\", line ?, in autojinja_wrapped_fcall\n" \
+                    "    raise wrap_exception(e, message).with_traceback(None)\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    return Class2().ef()\n" \
+                    "           ^^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    return Class1().ef()\n" \
+                    "           ^^^^^^^^^^^^^\n" \
+                    "  File \"\", line ?, in ef\n" \
+                    "    raise Exception(\"ef\")\n" \
+                    "Exception: ef"
         invalid_autojinja("{{ class3.ef() }}", Exception, msg, **locals())
         del os.environ[autojinja.defaults.AUTOJINJA_DEBUG]

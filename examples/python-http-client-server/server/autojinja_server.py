@@ -1,6 +1,7 @@
-from autojinja import *
-from utility import *
+import autojinja
 import json
+import os
+from utility import *
 from typing import Any, Dict, Generator
 
 ### Read the Postman collection
@@ -8,7 +9,7 @@ with open(os.environ["POSTMAN_COLLECTION"]) as f:
     collection = json.load(f)
 
 # Prepare a template
-handler_template = RawTemplate.from_string("""
+handler_template = autojinja.RawTemplate.from_string("""
 {% for item in collection['item'] %}
 @app.route('/{{ jsonitem.path(item) }}', methods=['{{ jsonitem.method(item) }}'])
 def {{ jsonitem.name(item) }}():
@@ -52,5 +53,5 @@ class jsonitem:
 handlers = handler_template.context(**locals()).render()
 
 ### Insert result inside 'server.py'
-file_template = CogTemplate.from_file("server.py")
+file_template = autojinja.CogTemplate.from_file("server.py")
 file_template.context(handlers = handlers).render_file()

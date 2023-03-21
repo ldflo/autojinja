@@ -1,6 +1,7 @@
-from autojinja import *
-from utility import *
+import autojinja
 import json
+import os
+from utility import *
 from typing import Any, Dict, Generator, List
 
 ### Read the Postman collection
@@ -12,7 +13,7 @@ with open(os.environ["POSTMAN_COLLECTION"]) as f:
 #####################################
 
 # Prepare a template
-function_template = RawTemplate.from_string("""
+function_template = autojinja.RawTemplate.from_string("""
 {% for item in collection['item'] %}
 def {{ jsonitem.name(item) }}({{ ', '.join(jsonitem.args(item)) }}):
     {% for def in jsonitem.defs(item) %}
@@ -83,7 +84,7 @@ functions = function_template.context(**locals()).render()
 ####################################
 
 # Prepare a template
-example_template = RawTemplate.from_string("""
+example_template = autojinja.RawTemplate.from_string("""
 {% for item in collection['item'] %}
 # {{ jsonitem.name(item) }}
 print("Executing {{ jsonitem.name(item) }}")
@@ -112,5 +113,5 @@ class jsonitem:
 examples = example_template.context(**locals()).render()
 
 ### Insert results inside 'client.py'
-file_template = CogTemplate.from_file("client.py")
+file_template = autojinja.CogTemplate.from_file("client.py")
 file_template.context(functions = functions, examples = examples).render_file()

@@ -1,5 +1,6 @@
-from autojinja import *
+import autojinja
 from lxml import etree
+import os
 import utility
 
 ### Read XML
@@ -11,7 +12,7 @@ xfunctions = xroot.xpath("Function")
 #######################################
 
 ### Insert inside 'ClientApi.h'
-file_template = CogTemplate.from_file("ClientApi.h")
+file_template = autojinja.CogTemplate.from_file("ClientApi.h")
 file_template.context(api_defs = utility.function_defs(xfunctions)).render_file()
 
 #######################################
@@ -19,7 +20,7 @@ file_template.context(api_defs = utility.function_defs(xfunctions)).render_file(
 #######################################
 
 # Prepare a template for client API implementations
-implementation = RawTemplate.from_string("""
+implementation = autojinja.RawTemplate.from_string("""
 std::unique_lock<std::mutex> lock(shared_memory::mutex);
 shared_memory::clear();
 serialize({{ Index }}u /* {{ Name }} */, shared_memory::ptr);
@@ -43,5 +44,5 @@ def implementation_func(xfunction: etree._Element) -> str:
                                   ReturnType = xfunction.xpath("ReturnType/@type")[0]).render()
 
 ### Insert inside 'ClientApi.cpp'
-file_template = CogTemplate.from_file("ClientApi.cpp")
+file_template = autojinja.CogTemplate.from_file("ClientApi.cpp")
 file_template.context(api_impls = utility.function_impls(xfunctions, implementation_func)).render_file()

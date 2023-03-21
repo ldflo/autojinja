@@ -3,7 +3,7 @@ import os
 import tempfile
 
 tmp = tempfile.TemporaryDirectory()
-root = autojinja.Path[tmp.name]
+root = autojinja.path.DirPath(tmp.name)
 dir1 = root.join("dir1/")
 dir2 = root.join("dir1/dir2/")
 file1 = root.join("file1.txt")
@@ -326,7 +326,7 @@ class Test:
         assert autojinja.path.no_fullext("/dir1\\dir2/file.txt") == "/dir1/dir2/file"
 
     def test_slash(self):
-        assert autojinja.path.slash("")                     == "/"
+        assert autojinja.path.slash("")                     == ""
         assert autojinja.path.slash("file.txt")             == "file.txt/"
         assert autojinja.path.slash("/file.txt")            == "/file.txt/"
         assert autojinja.path.slash("C:/")                  == "C:/"
@@ -623,12 +623,12 @@ class TestPath:
         assert autojinja.path.Path("/dir1/") + "file.txt"      == "/dir1/file.txt"
         assert autojinja.path.Path("/dir1\\dir2") + "file.txt" == "/dir1/dir2file.txt"
 
-        assert  "" + autojinja.path.Path("file.txt")            == "file.txt"
-        assert  "/" + autojinja.path.Path("file.txt")           == "/file.txt"
-        assert  "C:/" + autojinja.path.Path("file.txt")         == "C:/file.txt"
-        assert  "\\dir1" + autojinja.path.Path("file.txt")      == "/dir1file.txt"
-        assert  "/dir1/" + autojinja.path.Path("file.txt")      == "/dir1/file.txt"
-        assert  "/dir1\\dir2" + autojinja.path.Path("file.txt") == "/dir1/dir2file.txt"
+        assert "" + autojinja.path.Path("file.txt")            == "file.txt"
+        assert "/" + autojinja.path.Path("file.txt")           == "/file.txt"
+        assert "C:/" + autojinja.path.Path("file.txt")         == "C:/file.txt"
+        assert "\\dir1" + autojinja.path.Path("file.txt")      == "/dir1file.txt"
+        assert "/dir1/" + autojinja.path.Path("file.txt")      == "/dir1/file.txt"
+        assert "/dir1\\dir2" + autojinja.path.Path("file.txt") == "/dir1/dir2file.txt"
 
     def test_truediv(self):
         assert autojinja.path.Path("") / "file.txt"            == "file.txt"
@@ -921,7 +921,7 @@ class TestPath:
         assert autojinja.path.Path("/dir1\\dir2/file.txt").no_fullext == "/dir1/dir2/file"
 
     def test_slash(self):
-        assert autojinja.path.Path("").slash                     == "/"
+        assert autojinja.path.Path("").slash                     == ""
         assert autojinja.path.Path("file.txt").slash             == "file.txt/"
         assert autojinja.path.Path("/file.txt").slash            == "/file.txt/"
         assert autojinja.path.Path("C:/").slash                  == "C:/"
@@ -1149,15 +1149,15 @@ class TestPath:
         assert autojinja.path.Path("C:/").splitpath                  == ("C:/", "")
         assert autojinja.path.Path("\\").splitpath                   == ("/", "")
         assert autojinja.path.Path("/dir1").splitpath                == ("/", "dir1")
-        assert autojinja.path.Path("/dir1\\").splitpath              == ("/dir1", "")
-        assert autojinja.path.Path("/dir1/file.txt").splitpath       == ("/dir1", "file.txt")
-        assert autojinja.path.Path("/dir1\\dir2/file.txt").splitpath == ("/dir1/dir2", "file.txt")
+        assert autojinja.path.Path("/dir1\\").splitpath              == ("/dir1/", "")
+        assert autojinja.path.Path("/dir1/file.txt").splitpath       == ("/dir1/", "file.txt")
+        assert autojinja.path.Path("/dir1\\dir2/file.txt").splitpath == ("/dir1/dir2/", "file.txt")
 
     def test_splitdrive(self):
         assert autojinja.path.Path("").splitdrive                     == ("", "")
         assert autojinja.path.Path("file.txt").splitdrive             == ("", "file.txt")
         assert autojinja.path.Path("/file.txt").splitdrive            == ("", "/file.txt")
-        assert autojinja.path.Path("C:/").splitdrive                  == ("C:", "/")
+        assert autojinja.path.Path("C:/").splitdrive                  == ("C:/", "/")
         assert autojinja.path.Path("\\").splitdrive                   == ("", "/")
         assert autojinja.path.Path("/dir1").splitdrive                == ("", "/dir1")
         assert autojinja.path.Path("/dir1\\").splitdrive              == ("", "/dir1/")
@@ -1175,25 +1175,248 @@ class TestPath:
         assert autojinja.path.Path("/dir1/file.txt").splitext       == ("/dir1/file", ".txt")
         assert autojinja.path.Path("/dir1\\dir2/file.txt").splitext == ("/dir1/dir2/file", ".txt")
 
-class TestModule:
-    def test_call(self):
-        assert autojinja.Path("")                     == ""
-        assert autojinja.Path("file.txt")             == "file.txt"
-        assert autojinja.Path("/file.txt")            == "/file.txt"
-        assert autojinja.Path("C:/")                  == "C:/"
-        assert autojinja.Path("\\")                   == "/"
-        assert autojinja.Path("/dir1")                == "/dir1"
-        assert autojinja.Path("/dir1\\")              == "/dir1/"
-        assert autojinja.Path("/dir1/file.txt")       == "/dir1/file.txt"
-        assert autojinja.Path("/dir1\\dir2/file.txt") == "/dir1/dir2/file.txt"
+class TestDirPath:
+    def test_abspath(self):
+        assert len(autojinja.path.DirPath("").abspath)                     >= len("")
+        assert len(autojinja.path.DirPath("file.txt").abspath)             >= len("file.txt")
+        assert len(autojinja.path.DirPath("/file.txt").abspath)            >= len("/file.txt")
+        assert len(autojinja.path.DirPath("C:/").abspath)                  >= len("C:/")
+        assert len(autojinja.path.DirPath("\\").abspath)                   >= len("/")
+        assert len(autojinja.path.DirPath("/dir1").abspath)                >= len("/dir1")
+        assert len(autojinja.path.DirPath("/dir1\\").abspath)              >= len("/dir1/")
+        assert len(autojinja.path.DirPath("/dir1/file.txt").abspath)       >= len("/dir1/file.txt")
+        assert len(autojinja.path.DirPath("/dir1\\dir2/file.txt").abspath) >= len("/dir1/dir2/file.txt")
 
-    def test_getitem(self):
-        assert autojinja.Path[""]                     == "/"
-        assert autojinja.Path["file.txt"]             == "file.txt/"
-        assert autojinja.Path["/file.txt"]            == "/file.txt/"
-        assert autojinja.Path["C:/"]                  == "C:/"
-        assert autojinja.Path["\\"]                   == "/"
-        assert autojinja.Path["/dir1"]                == "/dir1/"
-        assert autojinja.Path["/dir1\\"]              == "/dir1/"
-        assert autojinja.Path["/dir1/file.txt"]       == "/dir1/file.txt/"
-        assert autojinja.Path["/dir1\\dir2/file.txt"] == "/dir1/dir2/file.txt/"
+    def test_commonpath(self):
+        assert autojinja.path.DirPath("/dir1").commonpath(["/dir1\\", "/dir1/file.txt", "/dir1\\dir2/file.txt"]) == "/dir1/"
+
+    def test_commonprefix(self):
+        assert autojinja.path.DirPath("/dir1").commonprefix(["/dir1\\", "/dir1/file.txt", "/dir1\\dir2/file.txt"]) == "/dir1"
+
+    def test_exists(self):
+        assert autojinja.path.DirPath(root).exists == True
+        assert autojinja.path.DirPath(dir1).exists == True
+        assert autojinja.path.DirPath(dir2).exists == True
+        assert autojinja.path.DirPath(file1).exists == False
+        assert autojinja.path.DirPath(file2).exists == False
+        assert autojinja.path.DirPath(file3).exists == False
+        assert autojinja.path.DirPath(file4).exists == False
+        assert autojinja.path.DirPath(root.join("dummy")).exists == False
+        assert autojinja.path.DirPath(dir1.join("dummy")).exists == False
+        assert autojinja.path.DirPath(dir2.join("dummy")).exists == False
+        assert autojinja.path.DirPath(file1.join("dummy")).exists == False
+        assert autojinja.path.DirPath(file2.join("dummy")).exists == False
+        assert autojinja.path.DirPath(file3.join("dummy")).exists == False
+        assert autojinja.path.DirPath(file4.join("dummy")).exists == False
+
+    def test_lexists(self):
+        assert autojinja.path.DirPath(root).lexists == True
+        assert autojinja.path.DirPath(dir1).lexists == True
+        assert autojinja.path.DirPath(dir2).lexists == True
+        assert autojinja.path.DirPath(file1).lexists == False
+        assert autojinja.path.DirPath(file2).lexists == False
+        assert autojinja.path.DirPath(file3).lexists == False
+        assert autojinja.path.DirPath(file4).lexists == False
+        assert autojinja.path.DirPath(root.join("dummy")).lexists == False
+        assert autojinja.path.DirPath(dir1.join("dummy")).lexists == False
+        assert autojinja.path.DirPath(dir2.join("dummy")).lexists == False
+        assert autojinja.path.DirPath(file1.join("dummy")).lexists == False
+        assert autojinja.path.DirPath(file2.join("dummy")).lexists == False
+        assert autojinja.path.DirPath(file3.join("dummy")).lexists == False
+        assert autojinja.path.DirPath(file4.join("dummy")).lexists == False
+
+    def test_expanduser(self):
+        assert autojinja.path.DirPath("").expanduser                     == ""
+        assert autojinja.path.DirPath("file.txt").expanduser             == "file.txt/"
+        assert autojinja.path.DirPath("/file.txt").expanduser            == "/file.txt/"
+        assert autojinja.path.DirPath("C:/").expanduser                  == "C:/"
+        assert autojinja.path.DirPath("\\").expanduser                   == "/"
+        assert autojinja.path.DirPath("/dir1").expanduser                == "/dir1/"
+        assert autojinja.path.DirPath("/dir1\\").expanduser              == "/dir1/"
+        assert autojinja.path.DirPath("/dir1/file.txt").expanduser       == "/dir1/file.txt/"
+        assert autojinja.path.DirPath("/dir1\\dir2/file.txt").expanduser == "/dir1/dir2/file.txt/"
+
+    def test_expandvars(self):
+        assert autojinja.path.DirPath("").expandvars                     == ""
+        assert autojinja.path.DirPath("file.txt").expandvars             == "file.txt/"
+        assert autojinja.path.DirPath("/file.txt").expandvars            == "/file.txt/"
+        assert autojinja.path.DirPath("C:/").expandvars                  == "C:/"
+        assert autojinja.path.DirPath("\\").expandvars                   == "/"
+        assert autojinja.path.DirPath("/dir1").expandvars                == "/dir1/"
+        assert autojinja.path.DirPath("/dir1\\").expandvars              == "/dir1/"
+        assert autojinja.path.DirPath("/dir1/file.txt").expandvars       == "/dir1/file.txt/"
+        assert autojinja.path.DirPath("/dir1\\dir2/file.txt").expandvars == "/dir1/dir2/file.txt/"
+
+    def test_getatime(self):
+        assert autojinja.path.DirPath(root).getatime > 0
+        assert autojinja.path.DirPath(dir1).getatime > 0
+        assert autojinja.path.DirPath(dir2).getatime > 0
+        try:
+            autojinja.path.DirPath(file1).getatime > 0
+            autojinja.path.DirPath(file2).getatime > 0
+            autojinja.path.DirPath(file3).getatime > 0
+            autojinja.path.DirPath(file4).getatime > 0
+            assert False
+        except:
+            assert True
+
+    def test_getmtime(self):
+        assert autojinja.path.DirPath(root).getmtime > 0
+        assert autojinja.path.DirPath(dir1).getmtime > 0
+        assert autojinja.path.DirPath(dir2).getmtime > 0
+        try:
+            autojinja.path.DirPath(file1).getmtime > 0
+            autojinja.path.DirPath(file2).getmtime > 0
+            autojinja.path.DirPath(file3).getmtime > 0
+            autojinja.path.DirPath(file4).getmtime > 0
+            assert False
+        except:
+            assert True
+
+    def test_getctime(self):
+        assert autojinja.path.DirPath(root).getctime > 0
+        assert autojinja.path.DirPath(dir1).getctime > 0
+        assert autojinja.path.DirPath(dir2).getctime > 0
+        try:
+            autojinja.path.DirPath(file1).getctime > 0
+            autojinja.path.DirPath(file2).getctime > 0
+            autojinja.path.DirPath(file3).getctime > 0
+            autojinja.path.DirPath(file4).getctime > 0
+            assert False
+        except:
+            assert True
+
+    def test_isabs(self):
+        assert autojinja.path.DirPath("").isabs                     == False
+        assert autojinja.path.DirPath("file.txt").isabs             == False
+        assert autojinja.path.DirPath("/file.txt").isabs            == True
+        assert autojinja.path.DirPath("C:/").isabs                  == True
+        assert autojinja.path.DirPath("\\").isabs                   == True
+        assert autojinja.path.DirPath("/dir1").isabs                == True
+        assert autojinja.path.DirPath("/dir1\\").isabs              == True
+        assert autojinja.path.DirPath("/dir1/file.txt").isabs       == True
+        assert autojinja.path.DirPath("/dir1\\dir2/file.txt").isabs == True
+
+    def test_isfile(self):
+        assert autojinja.path.DirPath(root) .isfile == False
+        assert autojinja.path.DirPath(dir1) .isfile == False
+        assert autojinja.path.DirPath(dir2) .isfile == False
+        assert autojinja.path.DirPath(file1).isfile == False
+        assert autojinja.path.DirPath(file2).isfile == False
+        assert autojinja.path.DirPath(file3).isfile == False
+        assert autojinja.path.DirPath(file4).isfile == False
+        assert autojinja.path.DirPath(root.join("dummy")).isfile == False
+        assert autojinja.path.DirPath(dir1.join("dummy")).isfile == False
+        assert autojinja.path.DirPath(dir2.join("dummy")).isfile == False
+        assert autojinja.path.DirPath(file1.join("dummy")).isfile == False
+        assert autojinja.path.DirPath(file2.join("dummy")).isfile == False
+        assert autojinja.path.DirPath(file3.join("dummy")).isfile == False
+        assert autojinja.path.DirPath(file4.join("dummy")).isfile == False
+
+    def test_isdir(self):
+        assert autojinja.path.DirPath(root) .isdir == True
+        assert autojinja.path.DirPath(dir1) .isdir == True
+        assert autojinja.path.DirPath(dir2) .isdir == True
+        assert autojinja.path.DirPath(file1).isdir == False
+        assert autojinja.path.DirPath(file2).isdir == False
+        assert autojinja.path.DirPath(file3).isdir == False
+        assert autojinja.path.DirPath(file4).isdir == False
+        assert autojinja.path.DirPath(root.join("dummy")).isdir == False
+        assert autojinja.path.DirPath(dir1.join("dummy")).isdir == False
+        assert autojinja.path.DirPath(dir2.join("dummy")).isdir == False
+        assert autojinja.path.DirPath(file1.join("dummy")).isdir == False
+        assert autojinja.path.DirPath(file2.join("dummy")).isdir == False
+        assert autojinja.path.DirPath(file3.join("dummy")).isdir == False
+        assert autojinja.path.DirPath(file4.join("dummy")).isdir == False
+
+    def test_islink(self):
+        assert autojinja.path.DirPath(root).islink  == False
+        assert autojinja.path.DirPath(dir1).islink  == False
+        assert autojinja.path.DirPath(dir2).islink  == False
+        assert autojinja.path.DirPath(file1).islink == False
+        assert autojinja.path.DirPath(file2).islink == False
+        assert autojinja.path.DirPath(file3).islink == False
+        assert autojinja.path.DirPath(file4).islink == False
+
+    def test_ismount(self):
+        assert autojinja.path.DirPath(root).ismount  == False
+        assert autojinja.path.DirPath(dir1).ismount  == False
+        assert autojinja.path.DirPath(dir2).ismount  == False
+        assert autojinja.path.DirPath(file1).ismount == False
+        assert autojinja.path.DirPath(file2).ismount == False
+        assert autojinja.path.DirPath(file3).ismount == False
+        assert autojinja.path.DirPath(file4).ismount == False
+
+    def test_normcase(self):
+        assert autojinja.path.DirPath("").normcase                     == ""
+        assert autojinja.path.DirPath("file.txt").normcase             == "file.txt/"
+        assert autojinja.path.DirPath("/file.txt").normcase            == "/file.txt/"
+        assert autojinja.path.DirPath("C:/").normcase                  == "c:/"
+        assert autojinja.path.DirPath("\\").normcase                   == "/"
+        assert autojinja.path.DirPath("/dir1").normcase                == "/dir1/"
+        assert autojinja.path.DirPath("/dir1\\").normcase              == "/dir1/"
+        assert autojinja.path.DirPath("/dir1/file.txt").normcase       == "/dir1/file.txt/"
+        assert autojinja.path.DirPath("/dir1\\dir2/file.txt").normcase == "/dir1/dir2/file.txt/"
+
+    def test_normpath(self):
+        assert autojinja.path.DirPath("").normpath                     == ""
+        assert autojinja.path.DirPath("file.txt").normpath             == "file.txt/"
+        assert autojinja.path.DirPath("/file.txt").normpath            == "/file.txt/"
+        assert autojinja.path.DirPath("C:/").normpath                  == "C:/"
+        assert autojinja.path.DirPath("\\").normpath                   == "/"
+        assert autojinja.path.DirPath("/dir1").normpath                == "/dir1/"
+        assert autojinja.path.DirPath("/dir1\\").normpath              == "/dir1/"
+        assert autojinja.path.DirPath("/dir1/file.txt").normpath       == "/dir1/file.txt/"
+        assert autojinja.path.DirPath("/dir1\\dir2/file.txt").normpath == "/dir1/dir2/file.txt/"
+
+    def test_realpath(self):
+        assert len(autojinja.path.DirPath("").realpath)                     >= len("")
+        assert len(autojinja.path.DirPath("file.txt").realpath)             >= len("file.txt/")
+        assert len(autojinja.path.DirPath("/file.txt").realpath)            >= len("/file.txt/")
+        assert len(autojinja.path.DirPath("C:/").realpath)                  >= len("C:/")
+        assert len(autojinja.path.DirPath("\\").realpath)                   >= len("/")
+        assert len(autojinja.path.DirPath("/dir1").realpath)                >= len("/dir1/")
+        assert len(autojinja.path.DirPath("/dir1\\").realpath)              >= len("/dir1/")
+        assert len(autojinja.path.DirPath("/dir1/file.txt").realpath)       >= len("/dir1/file.txt/")
+        assert len(autojinja.path.DirPath("/dir1\\dir2/file.txt").realpath) >= len("/dir1/dir2/file.txt/" )
+
+    def test_samefile(self):
+        assert autojinja.path.DirPath(root).samefile(root) == True
+        assert autojinja.path.DirPath(root).samefile(file1) == False
+
+    def test_samestat(self):
+        assert autojinja.path.DirPath(root).samestat(os.stat(root)) == True
+        assert autojinja.path.DirPath(root).samestat(os.stat(file1)) == False
+
+    def test_splitpath(self):
+        assert autojinja.path.DirPath("").splitpath                     == ("", "")
+        assert autojinja.path.DirPath("file.txt").splitpath             == ("file.txt/", "")
+        assert autojinja.path.DirPath("/file.txt").splitpath            == ("/file.txt/", "")
+        assert autojinja.path.DirPath("C:/").splitpath                  == ("C:/", "")
+        assert autojinja.path.DirPath("\\").splitpath                   == ("/", "")
+        assert autojinja.path.DirPath("/dir1").splitpath                == ("/dir1/", "")
+        assert autojinja.path.DirPath("/dir1\\").splitpath              == ("/dir1/", "")
+        assert autojinja.path.DirPath("/dir1/file.txt").splitpath       == ("/dir1/file.txt/", "")
+        assert autojinja.path.DirPath("/dir1\\dir2/file.txt").splitpath == ("/dir1/dir2/file.txt/", "")
+
+    def test_splitdrive(self):
+        assert autojinja.path.DirPath("").splitdrive                     == ("", "")
+        assert autojinja.path.DirPath("file.txt").splitdrive             == ("", "file.txt/")
+        assert autojinja.path.DirPath("/file.txt").splitdrive            == ("", "/file.txt/")
+        assert autojinja.path.DirPath("C:/").splitdrive                  == ("C:/", "/")
+        assert autojinja.path.DirPath("\\").splitdrive                   == ("", "/")
+        assert autojinja.path.DirPath("/dir1").splitdrive                == ("", "/dir1/")
+        assert autojinja.path.DirPath("/dir1\\").splitdrive              == ("", "/dir1/")
+        assert autojinja.path.DirPath("/dir1/file.txt").splitdrive       == ("", "/dir1/file.txt/")
+        assert autojinja.path.DirPath("/dir1\\dir2/file.txt").splitdrive == ("", "/dir1/dir2/file.txt/")
+
+    def test_splitext(self):
+        assert autojinja.path.DirPath("").splitext                     == ("", "")
+        assert autojinja.path.DirPath("file.txt").splitext             == ("file.txt/", "")
+        assert autojinja.path.DirPath("/file.txt").splitext            == ("/file.txt/", "")
+        assert autojinja.path.DirPath("C:/").splitext                  == ("C:/", "")
+        assert autojinja.path.DirPath("\\").splitext                   == ("/", "")
+        assert autojinja.path.DirPath("/dir1").splitext                == ("/dir1/", "")
+        assert autojinja.path.DirPath("/dir1\\").splitext              == ("/dir1/", "")
+        assert autojinja.path.DirPath("/dir1/file.txt").splitext       == ("/dir1/file.txt/", "")
+        assert autojinja.path.DirPath("/dir1\\dir2/file.txt").splitext == ("/dir1/dir2/file.txt/", "")
