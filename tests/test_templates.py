@@ -1692,3 +1692,24 @@ class Test_Miscellaneous:
                     "Exception: ef"
         invalid_autojinja("{{ class3.ef() }}", Exception, msg, **locals())
         del os.environ[autojinja.defaults.AUTOJINJA_DEBUG]
+
+    def test_multicontext_RawTemplate(self):
+        input    = "{{ var1 }},{{ var2 }},{{ var3 }}"
+        expected = "1,2,33"
+        template = autojinja.RawTemplate.from_string(input)
+        result   = template.context(var1 = 1, var3 = 3).context(var2 = 2, var3 = 33).render()
+        assert result == expected
+
+    def test_multicontext_CogTemplate(self):
+        input    = "[[[{{ var1 }},{{ var2 }},{{ var3 }}]]][[[end]]]"
+        expected = "[[[{{ var1 }},{{ var2 }},{{ var3 }}]]] 1,2,33 [[[end]]]"
+        template = autojinja.CogTemplate.from_string(input)
+        result   = template.context(var1 = 1, var3 = 3).context(var2 = 2, var3 = 33).render()
+        assert result == expected
+
+    def test_multicontext_JinjaTemplate(self):
+        input    = "{{ var1 }},{{ var2 }},{{ var3 }}[[[{{ var1 }},{{ var2 }},{{ var3 }}]]][[[end]]]"
+        expected = "1,2,33[[[{{ var1 }},{{ var2 }},{{ var3 }}]]] 1,2,33 [[[end]]]"
+        template = autojinja.JinjaTemplate.from_string(input)
+        result = template.context(var1 = 1, var3 = 3).context(var2 = 2, var3 = 33).render()
+        assert result == expected

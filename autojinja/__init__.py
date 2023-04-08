@@ -8,7 +8,7 @@ from .path import DirPath, Path
 from . import parser
 from .parser import ParserSettings
 from . import templates
-from .templates import AutoLoader, CogTemplate, JinjaTemplate, RawTemplate
+from .templates import Context, CogTemplate, CogTemplateContext, JinjaTemplate, JinjaTemplateContext, RawTemplate, RawTemplateContext, Template
 from . import utils
 
 import os
