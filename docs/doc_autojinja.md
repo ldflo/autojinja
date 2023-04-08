@@ -100,17 +100,17 @@ t3 = JinjaTemplate.from_string("...")
 t3 = JinjaTemplate.from_file("template.cpp")
 ```
 
-...and performs generation using the `render` or `render_file` methods, given a data model beforehand with the `context` method :
+...and performs generation using the `render` or `render_file` methods, given variables beforehand with the `context` method :
 
 ```python
 r1 = t1.context(firstname = "John", lastname = "Doe").render()
 r1 = t1.context(firstname = "John", lastname = "Doe").render_file("output.txt")
 
-r2 = t2.context(datamodel = ...).render()
-r2 = t2.context(datamodel = ...).render_file()
+r2 = t2.context(...).render()
+r2 = t2.context(...).render_file()
 
-r3 = t3.context(datamodel = ...).render()
-r3 = t3.context(datamodel = ...).render_file("output.cpp")
+r3 = t3.context(...).render()
+r3 = t3.context(...).render_file("output.cpp")
 ```
 
 Here is a table summarizing what `RawTemplate`, `CogTemplate` and `JinjaTemplate` are capable of :
@@ -260,17 +260,17 @@ Hello, my name is John Doe !
 
 - ### **context**(_self, &ast;args, &ast;&ast;kwargs_):
 
-    Forwards a data model to `render` / `render_file` methods.
+    Provides variables for rendering the template with the `render` / `render_file` methods.
 
     Parameters :
-    - **&ast;args**, **&ast;&ast;kwargs** : data model available in the template
+    - **&ast;args**, **&ast;&ast;kwargs** : variables available in the template
 
     Return type :
     - `autojinja.RawTemplate.Context`
 
 - ### **render_file**(_self, output=None, encoding=None, newline=None_):
 
-    Renders the data model to a file and returns the generation output.
+    Renders the template to a file and returns the generation output.
 
     Parameters :
     - **output: `Optional[str]`** : output filepath for generated file. Default value is specified in constructor
@@ -282,7 +282,7 @@ Hello, my name is John Doe !
 
 - ### **render**(_self_):
 
-    Renders the data model and returns the generation output.
+    Renders the template and returns the generation output.
 
     Return type :
     - `str`
@@ -380,17 +380,17 @@ void main() {
 
 - ### **context**(_self, &ast;args, &ast;&ast;kwargs_):
 
-    Forwards a data model to `render` / `render_file` methods.
+    Provides variables for rendering the template with the `render` / `render_file` methods.
 
     Parameters :
-    - **&ast;args**, **&ast;&ast;kwargs** : data model available in the template
+    - **&ast;args**, **&ast;&ast;kwargs** : variables available in the template
 
     Return type :
     - `autojinja.CogTemplate.Context`
 
 - ### **render_file**(_self, output=None, remove_markers=None, encoding=None, newline=None_):
 
-    Renders the data model to a file and returns the generation output. If the file already exists, hand-made modifications enclosed within edit markers in that file are retrieved and then reinserted into the generated output.
+    Renders the template to a file and returns the generation output. If the file already exists, hand-made modifications enclosed within edit markers in that file are retrieved and then reinserted into the generated output.
 
     Parameters :
     - **output: `Optional[str]`** : output filepath for generated file. Default value is specified in constructor
@@ -403,7 +403,7 @@ void main() {
 
 - ### **render**(_self, output=None, remove_markers=None_):
 
-    Renders the data model and returns the generation output.
+    Renders the template and returns the generation output.
 
     Parameters :
     - **output: `Optional[str]`** : optional string of previous generation containing edit markers to reinsert
@@ -526,17 +526,17 @@ void main() {
 
 - ### **context**(_self, &ast;args, &ast;&ast;kwargs_):
 
-    Forwards a data model to `render` / `render_file` methods.
+    Provides variables for rendering the template with the `render` / `render_file` methods.
 
     Parameters :
-    - **&ast;args**, **&ast;&ast;kwargs** : data model available in the template
+    - **&ast;args**, **&ast;&ast;kwargs** : variables available in the template
 
     Return type :
     - `autojinja.JinjaTemplate.Context`
 
 - ### **render_file**(_self, output=None, remove_markers=None, encoding=None, newline=None_):
 
-    Renders the data model to a file and returns the generation output. If the file already exists, hand-made modifications enclosed within edit markers in that file are retrieved and then reinserted into the generated output.
+    Renders the template to a file and returns the generation output. If the file already exists, hand-made modifications enclosed within edit markers in that file are retrieved and then reinserted into the generated output.
 
     Parameters :
     - **output: `Optional[str]`** : output filepath for generated file. Default value is specified in constructor
@@ -549,7 +549,7 @@ void main() {
 
 - ### **render**(_self, output=None, remove_markers=None_):
 
-    Renders the data model and returns the generation output.
+    Renders the template and returns the generation output.
 
     Parameters :
     - **output: `Optional[str]`** : optional string of previous generation containing edit markers to reinsert
@@ -709,7 +709,7 @@ try:
 
     try:
         template = CogTemplate.from_file("main.cpp")
-        template.context(datamodel = ...).render_file()
+        template.context(...).render_file()
     except exceptions.ParsingException as e:
         raise e
     except exceptions.GenerationException as e:
