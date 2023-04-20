@@ -266,7 +266,7 @@ Hello, my name is John Doe !
     - **&ast;args**, **&ast;&ast;kwargs** : variables available in the template
 
     Return type :
-    - `autojinja.RawTemplate.Context`
+    - `autojinja.RawTemplateContext`
 
 - ### **render_file**(_self, output=None, encoding=None, newline=None_):
 
@@ -386,7 +386,7 @@ void main() {
     - **&ast;args**, **&ast;&ast;kwargs** : variables available in the template
 
     Return type :
-    - `autojinja.CogTemplate.Context`
+    - `autojinja.CogTemplateContext`
 
 - ### **render_file**(_self, output=None, remove_markers=None, encoding=None, newline=None_):
 
@@ -532,7 +532,7 @@ void main() {
     - **&ast;args**, **&ast;&ast;kwargs** : variables available in the template
 
     Return type :
-    - `autojinja.JinjaTemplate.Context`
+    - `autojinja.JinjaTemplateContext`
 
 - ### **render_file**(_self, output=None, remove_markers=None, encoding=None, newline=None_):
 
