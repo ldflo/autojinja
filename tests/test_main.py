@@ -118,7 +118,7 @@ with open(file15, 'w') as f:
 
 class TestVersion:
     def test_1(self):
-        assert autojinja.__version__ == "1.11.0"
+        assert autojinja.__version__ == "1.12.0"
 
 class TestSearch:
     def test_1(self):

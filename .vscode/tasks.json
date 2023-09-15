@@ -72,10 +72,10 @@
             "label": "autojinja: pip-reinstall-local",
             "type": "shell",
             "linux": {
-                "command": "python3 setup.py sdist bdist_wheel ; pip3 install --user --no-warn-script-location dist/autojinja-1.11.0.tar.gz",
+                "command": "python3 setup.py sdist bdist_wheel ; pip3 install --user --no-warn-script-location dist/autojinja-1.12.0.tar.gz",
             },
             "windows": {
-                "command": "python setup.py sdist bdist_wheel ; pip install --user --no-warn-script-location dist/autojinja-1.11.0.tar.gz",
+                "command": "python setup.py sdist bdist_wheel ; pip install --user --no-warn-script-location dist/autojinja-1.12.0.tar.gz",
             },
         },
     ]
