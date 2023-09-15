@@ -1,13 +1,55 @@
-from . import defaults
 from . import exceptions
 from . import path
 from . import parser
 from . import utils
 
 import inspect
+import importlib
 import io
-import jinja2
+import sys
 from typing import Any, Callable, Dict, Generic, List, Optional, Set, Tuple, Type, TypeVar
+
+### Huge hack that modifies jinja2.environment.getattr and jinja2.environment.getitem methods to avoid UndefinedErrors with properties.
+### We can't simply replace the methods, as the stacktraces of the exception won't be located in jinja2 module and won't work.
+
+def modify_and_import(module_name: str, package: str, modification_func: Callable[[str], str]):
+    spec = importlib.util.find_spec(module_name, package)
+    source = spec.loader.get_source(module_name)
+    new_source = modification_func(source)
+    module = importlib.util.module_from_spec(spec)
+    codeobj = compile(new_source, module.__spec__.origin, "exec")
+    exec(codeobj, module.__dict__)
+    sys.modules[module_name] = module
+
+def modification_func(src: str) -> str:
+    src = src.replace("def getattr", """def getattr(self, obj, attribute):
+        try:
+            return getattr(obj, attribute)
+        except AttributeError as e:
+            try:
+                return obj[attribute]
+            except:
+                pass
+            raise e
+    def oldgetattr""")
+    src = src.replace("def getitem", """def getitem(self, obj, argument):
+        try:
+            return obj[argument]
+        except (AttributeError, TypeError, LookupError):
+            if isinstance(argument, str):
+                try:
+                    attr = str(argument)
+                except Exception:
+                    pass
+                else:
+                    return getattr(obj, attr)
+            return self.undefined(obj=obj, name=argument)
+    def oldgetitem""")
+    return src
+
+modify_and_import("jinja2.environment", None, modification_func)
+import jinja2
+importlib.reload(jinja2)
 
 class Template:
     @staticmethod
@@ -162,10 +204,7 @@ class RawTemplateContext(Context[RawTemplate]):
         try:
             output = output or self.template.output
             assert output != None, "output filepath parameter can't be None"
-            if defaults.osenviron_debug():
-                args, kwargs = utils.wrap_objects(*self.args, **self.kwargs)
-            else:
-                args, kwargs = self.args, self.kwargs
+            args, kwargs = self.args, self.kwargs
             result = self.template.jinja2_template.render(*args, **kwargs)
             utils.generate_file(output, result, None, encoding or self.template.encoding, newline or self.template.newline)
             return result
@@ -173,10 +212,7 @@ class RawTemplateContext(Context[RawTemplate]):
             raise exceptions.clean_traceback(e) from None
     def render(self) -> str:
         try:
-            if defaults.osenviron_debug():
-                args, kwargs = utils.wrap_objects(*self.args, **self.kwargs)
-            else:
-                args, kwargs = self.args, self.kwargs
+            args, kwargs = self.args, self.kwargs
             return self.template.jinja2_template.render(*args, **kwargs)
         except Exception as e:
             raise exceptions.clean_traceback(e) from None

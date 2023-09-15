@@ -38,9 +38,6 @@ OPTIONS:
     --silent                      Prevents executed python scripts from writing to stdout/stderr
                                   Enabled if environment variable 'AUTOJINJA_SILENT' == 1
                                   Overrides environment variable 'AUTOJINJA_SILENT'
-    --debug                       enhances stacktraces for exceptions raised from Jinja context variables
-                                  Enabled if environment variable 'AUTOJINJA_DEBUG' == 1
-                                  Overrides environment variable 'AUTOJINJA_DEBUG'
     ---summary=VALUE/FLAGS        Enables notifications for generated files to stdout
                                   Overrides environment variable 'AUTOJINJA_SUMMARY'
                                   Default value is '1':
@@ -127,11 +124,6 @@ def main(*arguments):
                         help=f"prevents executed python scripts from writing to stdout/stderr\n"
                              f"Enabled if environment variable '{defaults.AUTOJINJA_SILENT}' == 1\n"
                              f"Overrides environment variable '{defaults.AUTOJINJA_SILENT}'")
-    parser.add_argument("--debug",
-                        action="store_true",
-                        help=f"enhances stacktraces for exceptions raised from Jinja context variables\n"
-                             f"Enabled if environment variable '{defaults.AUTOJINJA_DEBUG}' == 1\n"
-                             f"Overrides environment variable '{defaults.AUTOJINJA_DEBUG}'")
     parser.add_argument("--summary",
                         help=f"enables notifications for generated files to stdout\n"
                              f"Overrides environment variable '{defaults.AUTOJINJA_SUMMARY}'\n"
@@ -191,13 +183,6 @@ def main(*arguments):
     else:
         args.silent = 1
     env[defaults.AUTOJINJA_SILENT] = str(args.silent)
-
-    # debug
-    if args.debug == None or args.debug == False:
-        args.debug = defaults.osenviron_debug(env)
-    else:
-        args.debug = 1
-    env[defaults.AUTOJINJA_DEBUG] = str(args.debug)
 
     # summary
     if args.summary != None:

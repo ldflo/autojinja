@@ -10,25 +10,10 @@ AUTOJINJA_DEFAULT_EDIT_OPEN  = "<<["
 AUTOJINJA_DEFAULT_EDIT_CLOSE = "]>>"
 AUTOJINJA_DEFAULT_EDIT_END   = "end"
 
-AUTOJINJA_DEBUG          = "AUTOJINJA_DEBUG"
 AUTOJINJA_REMOVE_MARKERS = "AUTOJINJA_REMOVE_MARKERS"
 AUTOJINJA_SILENT         = "AUTOJINJA_SILENT"
 AUTOJINJA_SUMMARY        = "AUTOJINJA_SUMMARY"
 AUTOJINJA_THIS_DIRPATH   = "THIS_DIRPATH"
-
-def osenviron_debug(env: Optional[os._Environ] = None) -> int:
-    env = env or os.environ
-    if AUTOJINJA_DEBUG not in env:
-        return 0
-    value = env[AUTOJINJA_DEBUG]
-    is_valid = True
-    if len(value) != 1:
-        is_valid = False
-    elif value != "0" and value != "1":
-        is_valid = False
-    if not is_valid:
-        raise Exception(f"Expected 0 or 1 for environment variable '{AUTOJINJA_DEBUG}'")
-    return 1 if value == "1" else 0
 
 def osenviron_remove_markers(env: Optional[os._Environ] = None) -> int:
     env = env or os.environ

@@ -1,5 +1,4 @@
 from . import defaults
-from . import exceptions
 from . import parser
 from . import path
 
@@ -177,17 +176,3 @@ def edits_from_string(string: str, settings: Optional[parser.ParserSettings] = N
     """
     parser_obj = parse_string(string, settings)
     return parser_obj.edits
-
-def wrap_objects(*args, **kwargs):
-    """ Wraps the given objects when the --debug option is enabled.
-    """
-    if len(args) > 0:
-        args = list(args)
-        for i in range(len(args)):
-            if args[i] != None:
-                args[i] = exceptions.wrap_object_attributes(args[i])
-        args = tuple(args)
-    for key, value in kwargs.items():
-        if value != None:
-            kwargs[key] = exceptions.wrap_object_attributes(value)
-    return (args, kwargs)

@@ -992,9 +992,6 @@ OPTIONS:
     --silent                      Prevents executed python scripts from writing to stdout/stderr
                                   Enabled if environment variable 'AUTOJINJA_SILENT' == 1
                                   Overrides environment variable 'AUTOJINJA_SILENT'
-    --debug                       Enhances stacktraces for exceptions raised from Jinja context variables
-                                  Enabled if environment variable 'AUTOJINJA_DEBUG' == 1
-                                  Overrides environment variable 'AUTOJINJA_DEBUG'
     --summary=VALUE/FLAGS         Enables notifications for generated files to stdout
                                   Overrides environment variable 'AUTOJINJA_SUMMARY'
                                   Default value is '1':
