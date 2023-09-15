@@ -155,7 +155,7 @@ class DirectlyEnclosedEditException(ParsingException):
                                            marker,
                                            marker.header_open,
                                            len(marker.open),
-                                           f"Directly enclosed edit marker \"{marker.open} {marker.header} {marker.close}\", consider reusing/removing it:")
+                                           f"Directly enclosed edit marker \"{marker.open} {marker.header} {marker.close}\", probably missing \"{marker.open} {marker.end} {marker.close}\":")
     def __init__(self, message: str):
         super().__init__(message)
 

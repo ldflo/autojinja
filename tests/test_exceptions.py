@@ -662,49 +662,49 @@ class Test_DuplicateEditException:
 class Test_DirectlyEnclosedEditException:
     def test_1(self):
         input = "<<[]>> abc <<[  end  ]>>"
-        msg   = "Directly enclosed edit marker \"<<[  end  ]>>\", consider reusing/removing it:\n" \
+        msg   = "Directly enclosed edit marker \"<<[  end  ]>>\", probably missing \"<<[ end ]>>\":\n" \
                 "<<[]>> abc <<[  end  ]>>\\0\n" \
                 "           ^^^ line 1, column 12"
         invalid_marker(input, None, autojinja.exceptions.DirectlyEnclosedEditException, msg)
 
     def test_2(self):
         input = "<<[]>> abc <<[ any ]>>"
-        msg   = "Directly enclosed edit marker \"<<[ any ]>>\", consider reusing/removing it:\n" \
+        msg   = "Directly enclosed edit marker \"<<[ any ]>>\", probably missing \"<<[ end ]>>\":\n" \
                 "<<[]>> abc <<[ any ]>>\\0\n" \
                 "           ^^^ line 1, column 12"
         invalid_marker(input, None, autojinja.exceptions.DirectlyEnclosedEditException, msg)
 
     def test_3(self):
         input = "<<[]>> abc <<[dne]>> <<[end]>>"
-        msg   = "Directly enclosed edit marker \"<<[ dne ]>>\", consider reusing/removing it:\n" \
+        msg   = "Directly enclosed edit marker \"<<[ dne ]>>\", probably missing \"<<[ end ]>>\":\n" \
                 "<<[]>> abc <<[dne]>> <<[end]>>\\0\n" \
                 "           ^^^ line 1, column 12"
         invalid_marker(input, None, autojinja.exceptions.DirectlyEnclosedEditException, msg)
 
     def test_4(self):
         input = "<<[]>> abc <<[dne]>> <<[zde]>> <<[end]>>"
-        msg   = "Directly enclosed edit marker \"<<[ dne ]>>\", consider reusing/removing it:\n" \
+        msg   = "Directly enclosed edit marker \"<<[ dne ]>>\", probably missing \"<<[ end ]>>\":\n" \
                 "<<[]>> abc <<[dne]>> <<[zde]>> <<[end]>>\\0\n" \
                 "           ^^^ line 1, column 12"
         invalid_marker(input, None, autojinja.exceptions.DirectlyEnclosedEditException, msg)
 
     def test_5(self):
         input = "<<[]>> abc <<[  end  ]>>"
-        msg   = "Directly enclosed edit marker \"<<[  end  ]>>\", consider reusing/removing it:\n" \
+        msg   = "Directly enclosed edit marker \"<<[  end  ]>>\", probably missing \"<<[ end ]>>\":\n" \
                 "<<[]>> abc <<[  end  ]>>\\0\n" \
                 "           ^^^ line 1, column 12"
         invalid_marker(input, None, autojinja.exceptions.DirectlyEnclosedEditException, msg)
 
     def test_6(self):
         input = "<<[]>> abc <<[ any ]>>"
-        msg   = "Directly enclosed edit marker \"<<[ any ]>>\", consider reusing/removing it:\n" \
+        msg   = "Directly enclosed edit marker \"<<[ any ]>>\", probably missing \"<<[ end ]>>\":\n" \
                 "<<[]>> abc <<[ any ]>>\\0\n" \
                 "           ^^^ line 1, column 12"
         invalid_marker(input, None, autojinja.exceptions.DirectlyEnclosedEditException, msg)
 
     def test_7(self):
         input = "<<[]>> abc <<[dne]>>"
-        msg   = "Directly enclosed edit marker \"<<[ dne ]>>\", consider reusing/removing it:\n" \
+        msg   = "Directly enclosed edit marker \"<<[ dne ]>>\", probably missing \"<<[ end ]>>\":\n" \
                 "<<[]>> abc <<[dne]>>\\0\n" \
                 "           ^^^ line 1, column 12"
         invalid_marker(input, None, autojinja.exceptions.DirectlyEnclosedEditException, msg)
@@ -712,7 +712,7 @@ class Test_DirectlyEnclosedEditException:
     def test_8(self):
         input = "<<[ a ]>> <<[ b ]>>\n" \
                 "<<[ end ]>>"
-        msg   = "Directly enclosed edit marker \"<<[ b ]>>\", consider reusing/removing it:\n" \
+        msg   = "Directly enclosed edit marker \"<<[ b ]>>\", probably missing \"<<[ end ]>>\":\n" \
                 "<<[ a ]>> <<[ b ]>>\\n\n" \
                 "          ^^^ line 1, column 11"
         invalid_marker(input, None, autojinja.exceptions.DirectlyEnclosedEditException, msg)
@@ -723,7 +723,7 @@ class Test_DirectlyEnclosedEditException:
                 "   // <<[ b ]>><<[ end ]>>\n" \
                 "// <<[ end ]>>\n" \
                 "// [[[ end ]]]"
-        msg   = "Directly enclosed edit marker \"<<[ b ]>>\", consider reusing/removing it:\n" \
+        msg   = "Directly enclosed edit marker \"<<[ b ]>>\", probably missing \"<<[ end ]>>\":\n" \
                 "   // <<[ b ]>><<[ end ]>>\\n\n" \
                 "      ^^^ line 3, column 7"
         invalid_marker(input, None, autojinja.exceptions.DirectlyEnclosedEditException, msg)
@@ -734,7 +734,7 @@ class Test_DirectlyEnclosedEditException:
                 "//   <<[ b ]>> abc <<[ end ]>>\n" \
                 "// <<[ end ]>>\n" \
                 "// [[[ end ]]]"
-        msg   = "Directly enclosed edit marker \"<<[ b ]>>\", consider reusing/removing it:\n" \
+        msg   = "Directly enclosed edit marker \"<<[ b ]>>\", probably missing \"<<[ end ]>>\":\n" \
                 "//   <<[ b ]>> abc <<[ end ]>>\\n\n" \
                 "     ^^^ line 3, column 6"
         invalid_marker(input, None, autojinja.exceptions.DirectlyEnclosedEditException, msg)
@@ -743,7 +743,7 @@ class Test_DirectlyEnclosedEditException:
         input = "// <<[ a ]>>\n" \
                 "//   <<[ b ]>><<[ end ]>>\n" \
                 "// <<[ end ]>>\n"
-        msg   = "Directly enclosed edit marker \"<<[ b ]>>\", consider reusing/removing it:\n" \
+        msg   = "Directly enclosed edit marker \"<<[ b ]>>\", probably missing \"<<[ end ]>>\":\n" \
                 "//   <<[ b ]>><<[ end ]>>\\n\n" \
                 "     ^^^ line 2, column 6"
         invalid_marker(input, None, autojinja.exceptions.DirectlyEnclosedEditException, msg)
@@ -756,7 +756,7 @@ class Test_DirectlyEnclosedEditException:
                 "// [[[ end ]]]\n" \
                 "  <<[ abc ]>> <<[d]>> <<[ end ]>>\n" \
                 "// [[[ end ]]]"
-        msg   = "Directly enclosed edit marker \"<<[ d ]>>\", consider reusing/removing it:\n" \
+        msg   = "Directly enclosed edit marker \"<<[ d ]>>\", probably missing \"<<[ end ]>>\":\n" \
                 "  <<[ abc ]>> <<[d]>> <<[ end ]>>\\n\n" \
                 "              ^^^ line 6, column 15"
         invalid_marker(input, None, autojinja.exceptions.DirectlyEnclosedEditException, msg)
