@@ -7,10 +7,10 @@
             "label": "autojinja: install-dependencies",
             "type": "shell",
             "linux": {
-                "command": "pip3 install --upgrade pip ; pip3 install -r requirements.txt --no-warn-script-location",
+                "command": "pip3 install --user --upgrade pip ; pip3 install --user --no-warn-script-location -r requirements.txt",
             },
             "windows": {
-                "command": "pip install --upgrade pip ; pip install -r requirements.txt --no-warn-script-location",
+                "command": "pip install --user --upgrade pip ; pip install --user --no-warn-script-location -r requirements.txt",
             },
         },
         {
@@ -62,20 +62,20 @@
             "label": "autojinja: pip-reinstall",
             "type": "shell",
             "linux": {
-                "command": "pip3 install autojinja --force-reinstall --no-warn-script-location",
+                "command": "pip3 install --user --force-reinstall --no-warn-script-location autojinja",
             },
             "windows": {
-                "command": "pip install autojinja --force-reinstall --no-warn-script-location",
+                "command": "pip install --user --force-reinstall --no-warn-script-location autojinja",
             },
         },
         {
             "label": "autojinja: pip-reinstall-local",
             "type": "shell",
             "linux": {
-                "command": "python3 setup.py sdist bdist_wheel ; pip3 install dist/autojinja-1.11.0.tar.gz --no-warn-script-location",
+                "command": "python3 setup.py sdist bdist_wheel ; pip3 install --user --no-warn-script-location dist/autojinja-1.11.0.tar.gz",
             },
             "windows": {
-                "command": "python setup.py sdist bdist_wheel ; pip install dist/autojinja-1.11.0.tar.gz --no-warn-script-location",
+                "command": "python setup.py sdist bdist_wheel ; pip install --user --no-warn-script-location dist/autojinja-1.11.0.tar.gz",
             },
         },
     ]
