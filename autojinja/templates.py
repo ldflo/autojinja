@@ -3,14 +3,14 @@ from . import path
 from . import parser
 from . import utils
 
-import inspect
 import importlib
+import inspect
 import io
 import sys
 from typing import Any, Callable, Dict, Generic, List, Optional, Set, Tuple, Type, TypeVar
 
 ### Huge hack that modifies jinja2.environment.getattr and jinja2.environment.getitem methods to avoid UndefinedErrors with properties.
-### We can't simply replace the methods, as the stacktraces of the exception won't be located in jinja2 module and won't work.
+### We can't simply replace the methods, as the stacktraces of the exceptions won't be located in jinja2 module and won't work.
 
 def modify_and_import(module_name: str, package: str, modification_func: Callable[[str], str]):
     spec = importlib.util.find_spec(module_name, package)
