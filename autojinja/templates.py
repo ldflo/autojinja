@@ -3,7 +3,7 @@ from . import path
 from . import parser
 from . import utils
 
-import importlib
+import importlib.util
 import inspect
 import io
 import sys
