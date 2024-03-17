@@ -13,20 +13,18 @@ class CommonException(Exception, Generic[_TException]):
     def from_marker(exceptionType: Type[_TException], marker: parser.Marker, pos: int, size: int, message: str) -> _TException:
         line = line_at_index(marker.string, pos)
         (l, c) = index_to_coordinates(marker.string, pos)
-        message = f"{message}\n{line}\n{' ' * (c-1)}{'^' * size} line {l}, column {c}"
+        message = f"{message}\n{line}\n{' ' * (c-1)}{'^' * size} line {marker.parent_lineno + l-1}, column {marker.parent_column + c}"
         exception = exceptionType(message)
-        exception.coordinates = (l, c)
         return exception
+    
     @staticmethod
     def from_exception(exception: _TException, marker: parser.Marker) -> _TException:
         exception = prepend_jinja2_traceback(exception)
         text = format_text(marker.header)
-        (l, c) = index_to_coordinates(marker.string, marker.header_open)
-        stack = f"\n  During {'reinsertion' if marker.is_edit else 'generation'} of \"{marker.open} {text} {marker.close}\" at line {l}, column {c}"
+        stack = f"\n  During {'reinsertion' if marker.is_edit else 'generation'} of \"{marker.open} {text} {marker.close}\" at line {marker.parent_lineno + marker.header_open_lineno-1}, column {marker.parent_column + marker.header_open_column+1}"
         message = str(exception).lstrip('\n')
         message = f"{stack}\n{message}"
         exception = wrap_exception(exception, message)
-        exception.coordinates = (l, c)
         return exception
 
     def __init__(self, message: str):
@@ -265,7 +263,7 @@ def wrap_exception(exception: _TException, message) -> _TException:
     """ Wraps the given exception with a custom message.
         Creates an object that mocks the exception class.
     """
-    if hasattr(exception, "_wrapped_exception") and hasattr(exception, "_wrapped_message"):
+    if hasattr(exception, "_wrapped_exception"):
         exception._wrapped_message = message
         return exception
     try:
@@ -284,7 +282,7 @@ def wrap_exception(exception: _TException, message) -> _TException:
         mock._wrapped_exception = exception
         mock._wrapped_message = message
         return mock
-    except:
+    except Exception:
         return exception
 
 def prepend_jinja2_traceback(exception: _TException, tb: str = None) -> _TException:
@@ -294,7 +292,9 @@ def prepend_jinja2_traceback(exception: _TException, tb: str = None) -> _TExcept
     if tb == None:
         tb = traceback.format_exc().rstrip('\n')
     (stacktrace, message) = split_traceback(tb, True)
-    if stacktrace != None:
+    if hasattr(exception, "_wrapped_exception"):
+        stacktrace = None
+    elif stacktrace != None:
         token1 = f"jinja2{os.sep}environment.py\", " # Jinja2 hack
         token2 = f"jinja2{os.sep}runtime.py\", " # Jinja2 hack
         startidx = -1

@@ -38,7 +38,7 @@ class Test_OpenMarkerNotFoundException:
         msg = "\n  During generation of \"[[[ <<[end]>> ]]]\" at line 1, column 1\n" \
                 "Couldn't find corresponding open marker \"<<[ ]>>\":\n" \
                 "<<[end]>>\\0\n" \
-                "^^^ line 1, column 1"
+                "^^^ line 1, column 17"
         invalid_marker(input, None, autojinja.exceptions.OpenMarkerNotFoundException, msg)
 
     def test_5(self):
@@ -49,11 +49,11 @@ class Test_OpenMarkerNotFoundException:
                 "<<[ end ]>>\n" \
                 "[[[end]]]\n"
         msg = "\n  During generation of \"[[[ <<[ a ]>> <<[ end ]>> ]]]\" at line 1, column 1\n" \
-                "  During reinsertion of \"<<[ a ]>>\" at line 1, column 1\n" \
-                "  During generation of \"[[[ <<[ end ]>> ]]]\" at line 1, column 5\n" \
+                "  During reinsertion of \"<<[ a ]>>\" at line 2, column 1\n" \
+                "  During generation of \"[[[ <<[ end ]>> ]]]\" at line 2, column 15\n" \
                 "Couldn't find corresponding open marker \"<<[ ]>>\":\n" \
                 "<<[ end ]>>\\0\n" \
-                "^^^ line 1, column 1"
+                "^^^ line 3, column 15"
         invalid_marker(input, None, autojinja.exceptions.OpenMarkerNotFoundException, msg)
 
     def test_6(self):
@@ -67,11 +67,11 @@ class Test_OpenMarkerNotFoundException:
                 "<<[ end ]>>\n" \
                 "[[[end]]]\n"
         msg = "\n  During generation of \"[[[   <<[ a ]>>\\n  <<[ end ]>> ]]]\" at line 1, column 1\n" \
-                "  During reinsertion of \"<<[ a ]>>\" at line 1, column 3\n" \
-                "  During generation of \"[[[ <<[ end ]>> ]]]\" at line 1, column 5\n" \
+                "  During reinsertion of \"<<[ a ]>>\" at line 5, column 3\n" \
+                "  During generation of \"[[[ <<[ end ]>> ]]]\" at line 6, column 7\n" \
                 "Couldn't find corresponding open marker \"<<[ ]>>\":\n" \
                 "<<[ end ]>>\\0\n" \
-                "^^^ line 1, column 1"
+                "^^^ line 7, column 7"
         invalid_marker(input, None, autojinja.exceptions.OpenMarkerNotFoundException, msg)
 
 class Test_CloseMarkerNotFoundException:
@@ -111,7 +111,7 @@ class Test_CloseMarkerNotFoundException:
         msg = "\n  During generation of \"[[[ <<[ a ]]]\" at line 1, column 1\n" \
                 "Couldn't find corresponding close marker \"]>>\":\n" \
                 "<<[ a\\0\n" \
-                "^^^ line 1, column 1"
+                "^^^ line 2, column 1"
         invalid_marker(input, None, autojinja.exceptions.CloseMarkerNotFoundException, msg)
 
 class Test_EndMarkerNotFoundException:
@@ -223,7 +223,7 @@ class Test_EndMarkerNotFoundException:
         msg = "\n  During generation of \"[[[ // <<[ a ]>> ]]]\" at line 1, column 1\n" \
                 "Couldn't find corresponding end marker \"<<[ end ]>>\":\n" \
                 "// <<[ a ]>>\\0\n" \
-                "         ^^^ line 1, column 10"
+                "         ^^^ line 2, column 10"
         invalid_marker(input, None, autojinja.exceptions.EndMarkerNotFoundException, msg)
 
     def test_14(self):
@@ -231,11 +231,11 @@ class Test_EndMarkerNotFoundException:
                 "<<[ a ]>> [[[ <<[ b ]>> ]]] [[[ end ]]] <<[ end ]>>\n" \
                 "[[[end]]]\n"
         msg = "\n  During generation of \"[[[ <<[ a ]>> <<[ end ]>> ]]]\" at line 1, column 1\n" \
-                "  During reinsertion of \"<<[ a ]>>\" at line 1, column 1\n" \
-                "  During generation of \"[[[ <<[ b ]>> ]]]\" at line 1, column 1\n" \
+                "  During reinsertion of \"<<[ a ]>>\" at line 2, column 1\n" \
+                "  During generation of \"[[[ <<[ b ]>> ]]]\" at line 2, column 11\n" \
                 "Couldn't find corresponding end marker \"<<[ end ]>>\":\n" \
                 "<<[ b ]>>\\0\n" \
-                "      ^^^ line 1, column 7"
+                "      ^^^ line 2, column 35"
         invalid_marker(input, None, autojinja.exceptions.EndMarkerNotFoundException, msg)
 
     def test_15(self):
@@ -246,11 +246,11 @@ class Test_EndMarkerNotFoundException:
                 "<<[ end ]>>\n" \
                 "[[[end]]]\n"
         msg = "\n  During generation of \"[[[ <<[ a ]>> <<[ end ]>> ]]]\" at line 1, column 1\n" \
-                "  During reinsertion of \"<<[ a ]>>\" at line 1, column 1\n" \
-                "  During generation of \"[[[ <<[ b ]>> ]]]\" at line 1, column 5\n" \
+                "  During reinsertion of \"<<[ a ]>>\" at line 2, column 1\n" \
+                "  During generation of \"[[[ <<[ b ]>> ]]]\" at line 2, column 15\n" \
                 "Couldn't find corresponding end marker \"<<[ end ]>>\":\n" \
                 "<<[ b ]>>\\0\n" \
-                "      ^^^ line 1, column 7"
+                "      ^^^ line 3, column 21"
         invalid_marker(input, None, autojinja.exceptions.EndMarkerNotFoundException, msg)
 
 class Test_RequireHeaderInlineException:
@@ -295,7 +295,7 @@ class Test_RequireHeaderInlineException:
         msg = "\n  During generation of \"[[[   <<[\\n  a\\n  ]>>\\n  <<[ end ]>> ]]]\" at line 1, column 1\n" \
                 "Marker can't have a multiline header:\n" \
                 "  <<[\\n\n" \
-                "  ^^^ line 1, column 3"
+                "  ^^^ line 7, column 3"
         invalid_marker(input, None, autojinja.exceptions.RequireHeaderInlineException, msg)
 
 class RequireHeaderMultilineException:
@@ -501,7 +501,7 @@ class Test_RequireNewlineException:
         msg = "\n  During generation of \"[[[  \\n    <<[ a ]>>\\n    <<[ end ]>> <<[ b ]>> ]]]\" at line 1, column 1\n" \
                 "Marker can't start on same line as previous end marker:\n" \
                 "    <<[ end ]>> <<[ b ]>>\\0\n" \
-                "                ^^^ line 3, column 17"
+                "                ^^^ line 7, column 17"
         invalid_marker(input, None, autojinja.exceptions.RequireNewlineException, msg)
 
     def test_4(self):
@@ -773,7 +773,7 @@ class Test_RequireBodyInlineException:
         msg = "\n  During generation of \"[[[ <<[ def ]>><<[ end ]>> ]]]\" at line 2, column 4\n" \
                 "Generated body must contain only one line to be inlined:\n" \
                 "<<[ def ]>><<[ end ]>>\\0\n" \
-                "^^^ line 1, column 1"
+                "^^^ line 3, column 1"
         invalid_marker(input, None, autojinja.exceptions.RequireBodyInlineException, msg)
 
     def test_2(self):
@@ -788,7 +788,7 @@ class Test_RequireBodyInlineException:
         msg = "\n  During generation of \"[[[ <<[ def ]>><<[ end ]>> ]]]\" at line 1, column 4\n" \
                 "Generated body must contain only one line to be inlined:\n" \
                 "<<[ def ]>><<[ end ]>>\\0\n" \
-                "^^^ line 1, column 1"
+                "^^^ line 2, column 1"
         invalid_marker(input, None, autojinja.exceptions.RequireBodyInlineException, msg)
 
 class Test_NonGeneratedEditException:
@@ -981,7 +981,7 @@ class Test_NonGeneratedEditException:
         try:
             template.context().render(output)
             assert False # Shouldn't be reached
-        except:
+        except Exception:
             pass
 
     def test_7(self):
@@ -1007,7 +1007,7 @@ class Test_NonGeneratedEditException:
         try:
             template.context().render(output)
             assert False # Shouldn't be reached
-        except:
+        except Exception:
             pass
 
     def test_8(self):
@@ -1033,7 +1033,7 @@ class Test_NonGeneratedEditException:
         try:
             template.context().render(output)
             assert False # Shouldn't be reached
-        except:
+        except Exception:
             pass
 
 class Test_AlreadyGeneratedEditException:
@@ -1044,7 +1044,7 @@ class Test_AlreadyGeneratedEditException:
         msg = "\n  During generation of \"[[[ <<[ abc ]>><<[ end ]>> ]]]\" at line 2, column 4\n" \
                 "Already generated edit marker \"<<[ abc ]>>\", consider fixing generation:\n" \
                 "<<[ abc ]>><<[ end ]>>\\0\n" \
-                "^^^ line 1, column 1"
+                "^^^ line 3, column 1"
         invalid_marker(input, None, autojinja.exceptions.AlreadyGeneratedEditException, msg)
 
     def test_2(self):
@@ -1054,10 +1054,10 @@ class Test_AlreadyGeneratedEditException:
                 "// [[[ end ]]]\n" \
                 "<<[ end ]>>"
         msg = "\n  During reinsertion of \"<<[ b ]>>\" at line 2, column 1\n" \
-                "  During generation of \"[[[ <<[ abc ]>><<[ end ]>> ]]]\" at line 1, column 4\n" \
+                "  During generation of \"[[[ <<[ abc ]>><<[ end ]>> ]]]\" at line 3, column 4\n" \
                 "Already generated edit marker \"<<[ abc ]>>\", consider fixing generation:\n" \
                 "<<[ abc ]>><<[ end ]>>\\0\n" \
-                "^^^ line 1, column 1"
+                "^^^ line 4, column 1"
         invalid_marker(input, None, autojinja.exceptions.AlreadyGeneratedEditException, msg)
 
     def test_3(self):
@@ -1078,11 +1078,11 @@ class Test_AlreadyGeneratedEditException:
                  "  <<[ end ]>>\n" \
                  "[[[ end ]]]"
         msg  = "\n  During generation of \"[[[   <<[ a ]>>\\n  <<[ end ]>>\\n  <<[ b ]>>\\n  <<[ end ]>... ]]]\" at line 1, column 1\n" \
-                 "  During reinsertion of \"<<[ a ]>>\" at line 1, column 3\n" \
-                 "  During generation of \"[[[ <<[ a ]>><<[ end ]>> ]]]\" at line 1, column 3\n" \
+                 "  During reinsertion of \"<<[ a ]>>\" at line 7, column 3\n" \
+                 "  During generation of \"[[[ <<[ a ]>><<[ end ]>> ]]]\" at line 8, column 5\n" \
                  "Already generated edit marker \"<<[ a ]>>\", consider fixing generation:\n" \
                  "<<[ a ]>><<[ end ]>>\\0\n" \
-                 "^^^ line 1, column 1"
+                 "^^^ line 9, column 5"
         invalid_marker(input, output, autojinja.exceptions.AlreadyGeneratedEditException, msg)
 
     def test_4(self):
@@ -1098,11 +1098,11 @@ class Test_AlreadyGeneratedEditException:
                  "  [[[ end ]]]\n" \
                  "<<[ end ]>>"
         msg  = "\n  During generation of \"[[[   <<[ a ]>>\\n  <<[ end ]>> ]]]\" at line 1, column 1\n" \
-                 "  During reinsertion of \"<<[ a ]>>\" at line 1, column 3\n" \
-                 "  During generation of \"[[[ <<[ a ]>><<[ end ]>> ]]]\" at line 1, column 3\n" \
+                 "  During reinsertion of \"<<[ a ]>>\" at line 5, column 3\n" \
+                 "  During generation of \"[[[ <<[ a ]>><<[ end ]>> ]]]\" at line 6, column 5\n" \
                  "Already generated edit marker \"<<[ a ]>>\", consider fixing generation:\n" \
                  "<<[ a ]>><<[ end ]>>\\0\n" \
-                 "^^^ line 1, column 1"
+                 "^^^ line 7, column 5"
         invalid_marker(input, output, autojinja.exceptions.AlreadyGeneratedEditException, msg)
 
 class Test_Jinja2Exceptions:
@@ -1110,7 +1110,7 @@ class Test_Jinja2Exceptions:
         def test_1(self):
             input = "[[[ {{ ]]]\n" \
                     "[[[ end ]]]"
-            msg = "\n  File \"<unknown>\", line 1, in template\n" \
+            msg = "\n  File \"{{\", line 1, in template\n" \
                     "unexpected 'end of template'"
             invalid_marker(input, None, jinja2.exceptions.TemplateSyntaxError, msg)
 
@@ -1125,8 +1125,8 @@ class Test_Jinja2Exceptions:
                     "  <<[ end ]>>\n" \
                     "[[[ end ]]]"
             msg = "\n  During generation of \"[[[   <<[ a ]>>\\n  <<[ end ]>> ]]]\" at line 1, column 1\n" \
-                    "  During reinsertion of \"<<[ a ]>>\" at line 1, column 3\n" \
-                    "  File \"<unknown>\", line 1, in template\n" \
+                    "  During reinsertion of \"<<[ a ]>>\" at line 5, column 3\n" \
+                    "  File \"{{\", line 6, in template\n" \
                     "unexpected 'end of template'"
             invalid_marker(input, None, jinja2.exceptions.TemplateSyntaxError, msg)
 
@@ -1149,8 +1149,8 @@ class Test_Jinja2Exceptions:
                     "  <<[ end ]>>\n" \
                     "[[[ end ]]]"
             msg = "\n  During generation of \"[[[   <<[ a ]>>\\n  <<[ end ]>> ]]]\" at line 1, column 1\n" \
-                    "  During reinsertion of \"<<[ a ]>>\" at line 1, column 3\n" \
-                    "  File \"{{ var }}\", line 1, in top-level template code\n" \
+                    "  During reinsertion of \"<<[ a ]>>\" at line 5, column 3\n" \
+                    "  File \"{{ var }}\", line 6, in top-level template code\n" \
                     "'var' is undefined"
             invalid_marker(input, None, jinja2.exceptions.UndefinedError, msg)
 
@@ -1158,7 +1158,7 @@ class Test_Jinja2Exceptions:
         def test_1(self):
             input = "[[[ {{ []|var_filter }} ]]]\n" \
                     "[[[ end ]]]"
-            msg = "\n  File \"<unknown>\", line 1, in template\n" \
+            msg = "\n  File \"{{ []|var_filter }}\", line 1, in template\n" \
                     "No filter named 'var_filter'."
             invalid_marker(input, None, jinja2.exceptions.TemplateAssertionError, msg)
 
@@ -1173,8 +1173,8 @@ class Test_Jinja2Exceptions:
                     "  <<[ end ]>>\n" \
                     "[[[ end ]]]"
             msg = "\n  During generation of \"[[[   <<[ a ]>>\\n  <<[ end ]>> ]]]\" at line 1, column 1\n" \
-                    "  During reinsertion of \"<<[ a ]>>\" at line 1, column 3\n" \
-                    "  File \"<unknown>\", line 1, in template\n" \
+                    "  During reinsertion of \"<<[ a ]>>\" at line 5, column 3\n" \
+                    "  File \"{{ []|var_filter }}\", line 6, in template\n" \
                     "No filter named 'var_filter'."
             invalid_marker(input, None, jinja2.exceptions.TemplateAssertionError, msg)
 
@@ -1262,13 +1262,13 @@ class Test_Jinja2Exceptions:
                         "[[[ end ]]]"
                 if sys.version_info[1] >= 10:
                     msg = "\n  During generation of \"[[[   <<[ a ]>>\\n  <<[ end ]>> ]]]\" at line 1, column 1\n" \
-                            "  During reinsertion of \"<<[ a ]>>\" at line 1, column 3\n" \
-                            "  File \"{{ ['arg1']|var_filter }}\", line 1, in top-level template code\n" \
+                            "  During reinsertion of \"<<[ a ]>>\" at line 5, column 3\n" \
+                            "  File \"{{ ['arg1']|var_filter }}\", line 6, in top-level template code\n" \
                             "Test_Jinja2Exceptions.Test_FilterError.test_2.<locals>.<lambda>() takes 0 positional arguments but 1 was given"
                 else:
                     msg = "\n  During generation of \"[[[   <<[ a ]>>\\n  <<[ end ]>> ]]]\" at line 1, column 1\n" \
-                            "  During reinsertion of \"<<[ a ]>>\" at line 1, column 3\n" \
-                            "  File \"{{ ['arg1']|var_filter }}\", line 1, in top-level template code\n" \
+                            "  During reinsertion of \"<<[ a ]>>\" at line 5, column 3\n" \
+                            "  File \"{{ ['arg1']|var_filter }}\", line 6, in top-level template code\n" \
                             "<lambda>() takes 0 positional arguments but 1 was given"
                 invalid_marker(input, None, TypeError, msg)
             finally:

@@ -5,7 +5,7 @@ import io
 from typing import Dict, List, Optional, Tuple
 
 class Marker:
-    def __init__(self, string: str, is_edit: bool, open: str, close: str, end: str, as_comment: bool, headerInline: Optional[bool], directEnclosure: bool):
+    def __init__(self, string: str, is_edit: bool, open: str, close: str, end: str, as_comment: bool, headerInline: Optional[bool], directEnclosure: bool, parent_lineno: int, parent_column: int):
         self.string: str = string
         self.is_edit: bool = is_edit
         self.is_end: bool = False
@@ -36,6 +36,15 @@ class Marker:
         self.body_end: int = 0 # Index
         # Dual
         self.dual: Marker = None # Open or end marker
+        # Line numbers
+        self.parent_lineno: int = parent_lineno
+        self.parent_column: int = parent_column
+        self.header_open_lineno: int = 1
+        self.header_open_column: int = 0
+        self.header_close_lineno: int = 1
+        self.header_start_lineno: int = 1
+        self.body_lineno: int = 1
+        self.body_start_column: int = 0
 
     @property
     def header_stripped(self) -> str:
@@ -84,23 +93,35 @@ class Marker:
         if self.same_line(self.header_open, idx):
             if self.header_inline == False:
                 raise exceptions.RequireHeaderMultilineException.from_marker(self)
+            self.header_inline = True
             if self.string[start] == ' ':
                 start += 1
             if self.string[idx-1] == ' ':
                 idx -= 1
             marker_content.write(self.string[start:idx])
             self.header_empty = idx <= start
+            # Line number
+            self.header_start_lineno = self.header_open_lineno
         ### Different lines
         else:
             if self.header_inline == True:
                 raise exceptions.RequireHeaderInlineException.from_marker(self)
+            self.header_inline = False
             # First line
             i = self.string.find('\n', start, idx)
             if i > start:
                 if self.string[start] == ' ':
                     start += 1
+                # Line number
+                if i > start:
+                    self.header_start_lineno = self.header_open_lineno
+                else:
+                    self.header_start_lineno = self.header_open_lineno + 1
                 marker_content.write(self.string[start:i])
                 self.header_empty = False
+            else:
+                # Line number
+                self.header_start_lineno = self.header_open_lineno
             # Other lines
             while True:
                 start = i+1
@@ -144,6 +165,8 @@ class Marker:
                 self.body_end = i
                 end_marker.header_open = i+1 # Adjust marker (marker prolongement)
             body.write(self.string[self.body_start:self.body_end])
+            # Line number
+            self.body_lineno = self.header_close_lineno
         ### Different lines
         else:
             self.body_inline = False
@@ -151,6 +174,8 @@ class Marker:
             self.body_end = self.string.rfind('\n', self.header_close, end_marker.header_open) + 1
             self.header_close = self.body_start
             body.write(self.string[self.body_start:self.body_end-1])
+            # Line number
+            self.body_lineno = self.header_close_lineno + 1
         self.body = body.getvalue()
         self.body_empty = len(self.body) == 0
 
@@ -297,9 +322,11 @@ class ParserSettings:
         self._removeMarkers = remove_markers or defaults.osenviron_remove_markers()
 
 class Parser:
-    def __init__(self, string: str, settings: ParserSettings):
+    def __init__(self, string: str, settings: ParserSettings, lineno: Optional[int] = None, column: Optional[int] = None):
         self.string: str = string
         self.settings: ParserSettings = settings
+        self.lineno = lineno or 1
+        self.column = column or 0
         self.markers: List[Marker] = None
         self.blocks: List[Block] = None
         self.cog_blocks: List[CogBlock] = None
@@ -310,13 +337,15 @@ class Parser:
         return { key: edit_block.body for key, edit_block in self.edit_blocks.items() }
 
     def parse(self):
-        idx = 0
         cog_markers: List[Marker] = []
         edit_markers: List[Marker] = []
         ### Find all [[[ ]]] pairs
+        idx = 0
+        linenoidx = -1
+        lineno = 1
         while True:
-            marker = Marker(self.string, False, self.settings.cog_open, self.settings.cog_close, self.settings.cog_end, self.settings.cog_as_comment, None, True)
-            marker, idx = self.find_marker(marker, idx, len(self.string))
+            marker = Marker(self.string, False, self.settings.cog_open, self.settings.cog_close, self.settings.cog_end, self.settings.cog_as_comment, None, True, self.lineno, self.column)
+            marker, idx, linenoidx, lineno = self.find_marker(marker, idx, len(self.string), linenoidx, lineno)
             if not marker:
                 break
             cog_markers.append(marker)
@@ -328,9 +357,14 @@ class Parser:
         sections[-1][1] = len(self.string)
         for section in sections:
             idx = section[0]
+            linenoidx = self.string.rfind('\n', 0, idx)
+            if linenoidx < 0:
+                lineno = 1
+            else:
+                lineno = self.string.count('\n', 0, linenoidx) + 1
             while True:
-                marker = Marker(self.string, True, self.settings.edit_open, self.settings.edit_close, self.settings.edit_end, self.settings.edit_as_comment, True, False)
-                marker, idx = self.find_marker(marker, idx, section[1])
+                marker = Marker(self.string, True, self.settings.edit_open, self.settings.edit_close, self.settings.edit_end, self.settings.edit_as_comment, True, False, self.lineno, self.column)
+                marker, idx, linenoidx, lineno = self.find_marker(marker, idx, section[1], linenoidx, lineno)
                 if not marker:
                     break
                 edit_markers.append(marker)
@@ -354,13 +388,17 @@ class Parser:
                     self.cog_blocks.append(block)
                 self.blocks.append(block)
 
-    def find_marker(self, marker: Marker, idx: int, end: int) -> Tuple[Marker, int]:
+    def find_marker(self, marker: Marker, idx: int, end: int, linenoidx: int, lineno: int) -> Tuple[Marker, int]:
         ### Find open
         found, idx = self.find_token(marker.open, idx, end)
         if not found:
-            return None, idx
+            return None, idx, linenoidx, lineno
         ### Set open location
         marker.header_open = idx
+        # Line number
+        linenoidx, lineno = self.get_lineno(idx, linenoidx, lineno)
+        marker.header_open_lineno = lineno
+        marker.header_open_column = idx - (linenoidx+1)
         ### Find close
         idx = idx + len(marker.open)
         found, idx = self.find_token(marker.close, idx, end)
@@ -369,16 +407,25 @@ class Parser:
         ### Set close location
         idx = idx + len(marker.close)
         marker.header_close = idx
+        # Line number
+        linenoidx, lineno = self.get_lineno(idx, linenoidx, lineno)
+        marker.header_close_lineno = lineno
         ### Extract header
         marker.extract_indent()
         marker.extract_header()
-        return marker, idx
+        return marker, idx, linenoidx, lineno
 
     def find_token(self, token: str, idx, end: int) -> Tuple[bool, int]:
         i = self.string.find(token, idx, end)
         if i < 0:
             return False, idx
         return True, i
+    
+    def get_lineno(self, idx: int, linenoidx: int, lineno: int) -> Tuple[int, int]:
+        newlinenoidx = self.string.rfind('\n', linenoidx+1, idx)
+        if newlinenoidx <= linenoidx:
+            return linenoidx, lineno
+        return newlinenoidx, lineno + self.string.count('\n', linenoidx+1, newlinenoidx) + 1
 
     def check_markers(self):
         stack: List[Marker] = []
@@ -444,11 +491,15 @@ class Parser:
                     openMarker.header_end = openMarker.header_close
                     marker.header_start = marker.header_open
                     marker.header_end = marker.header_close
+                    # Line number
+                    openMarker.body_start_column = openMarker.header_open_column + openMarker.body_start - openMarker.header_open
                 else:
                     state = 2
                     # Set end indexes
                     openMarker.header_end = openMarker.header_close
                     i = self.string.find('\n', marker.header_close)
                     marker.header_end = i+1 if i >= 0 else len(self.string)
+                    # Line number
+                    openMarker.body_start_column = openMarker.body_column
         if stack:
             raise exceptions.EndMarkerNotFoundException.from_marker(stack[-1])

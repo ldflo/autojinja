@@ -194,7 +194,7 @@ def main(*arguments):
     def is_file_tagged(script: path.Path):
         try:
             return utils.is_file_tagged(script, args.tag)
-        except:
+        except Exception:
             sys.stderr.write(f"[autojinja]  Couldn't read file at path  {script.abspath}\n")
 
     files: List[path.Path] = []

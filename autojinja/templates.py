@@ -7,7 +7,12 @@ import importlib.util
 import inspect
 import io
 import sys
-from typing import Any, Callable, Dict, Generic, List, Optional, Set, Tuple, Type, TypeVar
+from types import CodeType, MethodType
+from typing import Any, Callable, Dict, Generic, List, MutableMapping, Optional, Set, Tuple, Type, TypeVar, Union
+
+###
+### jinja2 API
+###
 
 ### Huge hack that modifies jinja2.environment.getattr and jinja2.environment.getitem methods to avoid UndefinedErrors with properties.
 ### We can't simply replace the methods, as the stacktraces of the exceptions won't be located in jinja2 module and won't work.
@@ -28,7 +33,7 @@ def modification_func(src: str) -> str:
         except AttributeError as e:
             try:
                 return obj[attribute]
-            except:
+            except Exception:
                 pass
             raise e
     def oldgetattr""")
@@ -50,6 +55,116 @@ def modification_func(src: str) -> str:
 modify_and_import("jinja2.environment", None, modification_func)
 import jinja2
 importlib.reload(jinja2)
+from jinja2.nodes import Template as Jinja2TemplateNode
+
+class CustomEnvironment(jinja2.Environment):
+    """ The core component of Jinja is the `Environment`. It contains
+        important shared variables like configuration, filters, tests,
+        globals and others. Instances of this class may be modified if
+        they are not shared and if no template was loaded so far.
+        Modifications on environments after the first template was loaded
+        will lead to surprising effects and undefined behavior.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+                   
+    def from_string(self, source: Union[str, Jinja2TemplateNode], globals: Optional[MutableMapping[str, Any]] = None, template_class: Optional[Type[jinja2.Template]] = None, filename: Optional[str] = None, lineno: Optional[int] = None) -> jinja2.Template:
+        """ Load a template from a source string without using
+            :attr:`loader`.
+            :param source: Jinja source to compile into a template.
+            :param globals: Extend the environment :attr:`globals` with
+                these extra variables available for all renders of this
+                template. If the template has already been loaded and
+                cached, its globals are updated with any new items.
+            :param template_class: Return an instance of this
+                :class:`Template` class.
+        """
+        gs = self.make_globals(globals)
+        cls = template_class or self.template_class
+        template = cls.from_code(self, self.compile(source, None, filename, None, False, lineno), gs, None)
+        ### Custom lineno method
+        template.old_get_corresponding_lineno = template.get_corresponding_lineno
+        parent_lineno = lineno or 1
+        def new_get_corresponding_lineno(self, lineno):
+            return parent_lineno + self.old_get_corresponding_lineno(lineno)-1
+        template.get_corresponding_lineno = MethodType(new_get_corresponding_lineno, template)
+        return template
+    
+    def compile(self, source: Union[str, Jinja2TemplateNode], name: Optional[str] = None, filename: Optional[str] = None, raw: bool = False, defer_init: bool = False, lineno: Optional[int] = None) -> Union[str, CodeType]:
+        """ Compile a node or template source code. The `name` parameter is
+            the load name of the template after it was joined using
+            :meth:`join_path` if necessary, not the filename on the file system.
+            the `filename` parameter is the estimated filename of the template on
+            the file system. If the template came from a database or memory this
+            can be omitted.
+
+            The return value of this method is a python code object.  If the `raw`
+            parameter is `True` the return value will be a string with python
+            code equivalent to the bytecode returned otherwise.  This method is
+            mainly used internally.
+
+            `defer_init` is use internally to aid the module code generator.  This
+            causes the generated code to be able to import without the global
+            environment variable to be set.
+
+            .. versionadded:: 2.4
+            `defer_init` parameter added.
+        """
+        source_hint = None
+        try:
+            if isinstance(source, str):
+                source_hint = source
+                source = self._parse(source, name, filename)
+            source = self._generate(source, name, filename, defer_init=defer_init)
+            if raw:
+                return source
+            if filename is None:
+                filename = "<template>"
+            return self._compile(source, filename)
+        except jinja2.exceptions.TemplateSyntaxError as e:
+            if lineno != None:
+                e.lineno += lineno-1
+            self.handle_exception(source=source_hint)
+
+class AutoLoader(jinja2.BaseLoader):
+    """ Jinja2 loader to find templates near already loaded templates """
+    all_dirpaths_used: Set[path.Path] = set()
+
+    def __init__(self, additional_dirpaths: Optional[List[str]]):
+        if additional_dirpaths != None:
+            for dirpath in additional_dirpaths:
+                AutoLoader.all_dirpaths_used.add(path.Path(dirpath).slash)
+
+    def get_source(self, environment: jinja2.Environment, template: str) -> Tuple[str, str, Callable[[], float]]:
+        """ Get the template source, filename and reload helper for a template.
+            It's passed the environment and template name and has to return a
+            tuple in the form ``(source, filename, uptodate)`` or raise a
+            `TemplateNotFound` error if it can't locate the template.
+
+            The source part of the returned tuple must be the source of the
+            template as a string. The filename should be the name of the
+            file on the filesystem if it was loaded from there, otherwise
+            ``None``. The filename is used by Python for the tracebacks
+            if no loader extension is used.
+
+            The last item in the tuple is the `uptodate` function.  If auto
+            reloading is enabled it's always called to check if the template
+            changed.  No arguments are passed so the function must store the
+            old state somewhere (for example in a closure). If it returns `False`
+            the template will be reloaded.
+        """
+        for dirpath in AutoLoader.all_dirpaths_used:
+            filepath = dirpath.join(template)
+            if filepath.exists:
+                with open(filepath) as f:
+                    source = f.read()
+                mtime = path.getmtime(filepath)
+                return source, filepath, lambda: mtime == path.getmtime(filepath)
+        raise jinja2.TemplateNotFound(template)
+
+###
+### autojinja API
+###
 
 class Template:
     @staticmethod
@@ -92,35 +207,16 @@ class Context(Generic[_Template]):
     def render(self, *args, **kwargs) -> str:
         raise NotImplementedError() # To override
 
-class AutoLoader(jinja2.BaseLoader):
-    """ Jinja2 loader to find templates near already loaded templates """
-    all_dirpaths_used: Set[path.Path] = set()
-
-    def __init__(self, additional_dirpaths: Optional[List[str]]):
-        if additional_dirpaths != None:
-            for dirpath in additional_dirpaths:
-                AutoLoader.all_dirpaths_used.add(path.Path(dirpath).slash)
-
-    def get_source(self, environment: jinja2.Environment, template: str) -> Tuple[str, str, Callable[[], float]]:
-        for dirpath in AutoLoader.all_dirpaths_used:
-            filepath = dirpath.join(template)
-            if filepath.exists:
-                with open(filepath) as f:
-                    source = f.read()
-                mtime = path.getmtime(filepath)
-                return source, filepath, lambda: mtime == path.getmtime(filepath)
-        raise jinja2.TemplateNotFound(template)
-
 class RawTemplate(Template):
     """ Shared Jinja2 environment """
-    environment: jinja2.Environment = None
+    environment: CustomEnvironment = None
 
     @staticmethod
     def create_loader(additional_dirpaths: Optional[List[str]] = None) -> AutoLoader:
         return AutoLoader(additional_dirpaths)
 
     @staticmethod
-    def create_environment(*args: str, **kwargs: str) -> jinja2.Environment:
+    def create_environment(*args: str, **kwargs: str) -> CustomEnvironment:
         if "loader" not in kwargs:
             kwargs["loader"] = RawTemplate.create_loader()
         if "keep_trailing_newline" not in kwargs:
@@ -131,17 +227,14 @@ class RawTemplate(Template):
             kwargs["trim_blocks"] = True
         if "undefined" not in kwargs:
             kwargs["undefined"] = jinja2.StrictUndefined
-        return jinja2.Environment(*args, **kwargs)
+        return CustomEnvironment(*args, **kwargs)
 
-    def __init__(self, string: str, input: Optional[str] = None, output: Optional[str] = None, encoding: Optional[str] = None, newline: Optional[str] = None, globals: Optional[Dict[str, Any]] = None):
+    def __init__(self, string: str, input: Optional[str] = None, output: Optional[str] = None, encoding: Optional[str] = None, newline: Optional[str] = None, globals: Optional[Dict[str, Any]] = None, lineno: Optional[int] = None):
         if RawTemplate.environment == None:
             RawTemplate.environment = RawTemplate.create_environment()
-        jinja2_template: jinja2.Template = RawTemplate.environment.from_string(source = string, globals = globals)
+        jinja2_template: jinja2.Template = RawTemplate.environment.from_string(string, globals, None, input or exceptions.format_text(string), lineno)
         if input != None:
-            jinja2_template.filename = input
             AutoLoader.all_dirpaths_used.add(path.Path(input).dirpath)
-        else:
-            jinja2_template.filename = exceptions.format_text(string)
         self.jinja2_template: jinja2.Template = jinja2_template
         self.string: str = string
         self.input: Optional[str] = input
@@ -165,8 +258,6 @@ class RawTemplate(Template):
             with open(input, 'r', encoding = encoding or "utf-8") as file:
                 return RawTemplate(file.read(), input, output, encoding, newline, globals)
         except Exception as e:
-            import traceback
-            traceback.print_exc()
             raise exceptions.clean_traceback(e) from None
     @staticmethod
     def from_string(string: str, output: Optional[str] = None, encoding: Optional[str] = None, newline: Optional[str] = None, globals: Optional[Dict[str, Any]] = None) -> "RawTemplate":
@@ -220,8 +311,8 @@ class RawTemplateContext(Context[RawTemplate]):
 ### Generators
 
 class BaseGenerator(parser.Parser):
-    def __init__(self, string: str, settings: parser.ParserSettings):
-        super().__init__(string, settings)
+    def __init__(self, string: str, settings: parser.ParserSettings, lineno: Optional[int] = None, column: Optional[int] = None):
+        super().__init__(string, settings, lineno, column)
 
     def generate(self, edit_blocks_to_generate: Dict[str, parser.EditBlock], overriden_edits: Optional[Dict[str, str]], remove_markers: Optional[bool], globals: Optional[Dict[str, Any]], args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> str:
         ### Save settings
@@ -252,8 +343,8 @@ class BaseGenerator(parser.Parser):
     def generate_output(self, edit_blocks_to_generate: Dict[str, parser.EditBlock]) -> str:
         raise NotImplementedError() # To override
 
-    def evaluate(self, string: str) -> str:
-        generator = CogGenerator(string, self.settings)
+    def evaluate(self, string: str, lineno: int, column: int) -> str:
+        generator = CogGenerator(string, self.settings, lineno, column)
         generator.parse()
         generator.edit_blocks_to_generate = generator.edit_blocks.copy()
         generator.edit_blocks_to_generate.update(self.edit_blocks_to_generate)
@@ -265,8 +356,8 @@ class BaseGenerator(parser.Parser):
         return generator.generate_output({})
 
 class CogGenerator(BaseGenerator):
-    def __init__(self, string: str, settings: parser.ParserSettings):
-        super().__init__(string, settings)
+    def __init__(self, string: str, settings: parser.ParserSettings, lineno: Optional[int] = None, column: Optional[int] = None):
+        super().__init__(string, settings, lineno, column)
 
     def generate_output(self, edit_blocks_to_generate: Dict[str, parser.EditBlock]) -> str:
         self.edit_blocks_to_generate.update(edit_blocks_to_generate) # Update for generation
@@ -316,7 +407,7 @@ class CogGenerator(BaseGenerator):
             if marker.header_empty:
                 return None
             ### Generate raw template
-            template = RawTemplate(marker.header, globals = self.globals)
+            template = RawTemplate(marker.header, globals = self.globals, lineno = marker.parent_lineno + marker.header_start_lineno-1)
             output = template.context(*self.args, **self.kwargs).render()
         else:
             ### Check if edit already used
@@ -336,7 +427,7 @@ class CogGenerator(BaseGenerator):
             return ""
         try:
             ### Parse and generate again
-            result = self.evaluate(output)
+            result = self.evaluate(output, marker.parent_lineno + marker.body_lineno-1, marker.parent_column + marker.body_start_column)
             if result.endswith('\n'):
                 result = result[:-1]
             if self.settings.remove_markers and len(result) == 0:
@@ -346,8 +437,8 @@ class CogGenerator(BaseGenerator):
             raise exceptions.CommonException.from_exception(e, marker) from None
 
 class JinjaGenerator(BaseGenerator):
-    def __init__(self, string: str, settings: parser.ParserSettings):
-        super().__init__(string, settings)
+    def __init__(self, string: str, settings: parser.ParserSettings, lineno: Optional[int] = None, column: Optional[int] = None):
+        super().__init__(string, settings, lineno, column)
 
     def generate_output(self, edit_blocks_to_generate: Dict[str, parser.EditBlock]) -> str:
         to_reinsert: Dict[str, Tuple[parser.Marker, parser.Marker]] = {}
@@ -396,7 +487,7 @@ class JinjaGenerator(BaseGenerator):
         ### Parse and generate again
         self.edit_blocks_to_generate.update(edit_blocks_to_generate) # Update for generation
         if len(output) > 0:
-            output = self.evaluate(output)
+            output = self.evaluate(output, 1, 0)
         return output
 
     def unique_id(self, idx: int) -> str:

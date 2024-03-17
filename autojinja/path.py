@@ -268,7 +268,7 @@ def relpath(path: str, start: str = ".") -> str:
         return start
     try:
         result = os.path.relpath(path, start)
-    except:
+    except Exception:
         return no_antislash(path)
     if path[-1] in ['/', '\\']:
         return slash(result)

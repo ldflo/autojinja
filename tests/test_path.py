@@ -1257,7 +1257,7 @@ class TestDirPath:
             autojinja.path.DirPath(file3).getatime > 0
             autojinja.path.DirPath(file4).getatime > 0
             assert False
-        except:
+        except Exception:
             assert True
 
     def test_getmtime(self):
@@ -1270,7 +1270,7 @@ class TestDirPath:
             autojinja.path.DirPath(file3).getmtime > 0
             autojinja.path.DirPath(file4).getmtime > 0
             assert False
-        except:
+        except Exception:
             assert True
 
     def test_getctime(self):
@@ -1283,7 +1283,7 @@ class TestDirPath:
             autojinja.path.DirPath(file3).getctime > 0
             autojinja.path.DirPath(file4).getctime > 0
             assert False
-        except:
+        except Exception:
             assert True
 
     def test_isabs(self):
