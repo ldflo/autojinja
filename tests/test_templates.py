@@ -1280,6 +1280,37 @@ class Test_JinjaTemplate:
         assert len(template.blocks) == 2
         assert len(template.cog_blocks) == 0
         assert len(template.edit_blocks) == 2
+    
+    def test_31(self):
+        input    = "{{ a }}          //    [[[\n" \
+                   "{{ a }}          //    a\n" \
+                   "{{ a }}          //    b\n" \
+                   "                 //    c\n" \
+                   "                 //    ]]]\n" \
+                   "                 // [[[ end ]]]\n"
+        expected = "{{ a }}          //    [[[\n" \
+                   "{{ a }}          //    a\n" \
+                   "{{ a }}          //    b\n" \
+                   "                 //    c\n" \
+                   "                 //    ]]]\n" \
+                   "                 a\n" \
+                   "                 b\n" \
+                   "                 c\n" \
+                   "                 // [[[ end ]]]\n"
+        template = autojinja.JinjaTemplate.from_string(input)
+        result = template.context(a = "1\n2\n3").render()
+        if result != expected:
+            raise DiffException(result, expected)
+
+    def test_32(self):
+        input    = "{{ a }} // [[[ a ]]] [[[ end ]]]\n"
+        expected = "1\n" \
+                   "2\n" \
+                   "3 // [[[ a ]]] a [[[ end ]]]\n"
+        template = autojinja.JinjaTemplate.from_string(input)
+        result = template.context(a = "1\n2\n3").render()
+        if result != expected:
+            raise DiffException(result, expected)
 
 ### Miscellaneous
 

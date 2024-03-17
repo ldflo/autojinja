@@ -3,6 +3,7 @@ from . import path
 from . import parser
 from . import utils
 
+from collections import OrderedDict
 import importlib.util
 import inspect
 import io
@@ -441,7 +442,7 @@ class JinjaGenerator(BaseGenerator):
         super().__init__(string, settings, lineno, column)
 
     def generate_output(self, edit_blocks_to_generate: Dict[str, parser.EditBlock]) -> str:
-        to_reinsert: Dict[str, Tuple[parser.Marker, parser.Marker]] = {}
+        to_reinsert: Dict[str, Tuple[parser.Marker, parser.Marker]] = OrderedDict()
         stringio = io.StringIO()
         idx = 0
         depth = 0
@@ -453,18 +454,18 @@ class JinjaGenerator(BaseGenerator):
                     depth -= 1
                     if depth == 0:
                         prev_list[1] = marker # Update previous reinsert
-                        idx = marker.header_end
+                        idx = marker.header_close
                 else:
                     if depth == 0:
-                        stringio.write(self.string[idx:marker.header_end])
-                        idx = marker.header_end
+                        stringio.write(self.string[idx:marker.header_close])
+                        idx = marker.header_close
             ### Open marker
             else:
                 if not marker.is_edit:
                     depth += 1
                     if depth == 1:
                         prev_list = [marker, None]
-                        id = self.unique_id(idx)
+                        id = self.unique_id(marker)
                         to_reinsert[id] = prev_list # Update reinserts
                         stringio.write(self.string[idx:marker.header_start])
                         stringio.write(id) # Write id for later reinsertion
@@ -477,12 +478,12 @@ class JinjaGenerator(BaseGenerator):
 
     def generate_reinsert(self, string: str, to_reinsert: Dict[str, Tuple[parser.Marker, parser.Marker]], edit_blocks_to_generate: Dict[str, parser.EditBlock]) -> str:
         ### Generate raw template
-        template = RawTemplate(string, globals = self.globals)
+        template = RawTemplate(string, exceptions.format_text(self.string), globals = self.globals)
         output = template.context(*self.args, **self.kwargs).render()
         ### Reinsert cog markers
         for id, (marker_start, marker_end) in to_reinsert.items():
             if not marker_start.is_edit:
-                content = self.string[marker_start.header_start:marker_end.header_end]
+                content = self.string[marker_start.header_start:marker_end.header_close]
                 output = output.replace(id, content)
         ### Parse and generate again
         self.edit_blocks_to_generate.update(edit_blocks_to_generate) # Update for generation
@@ -490,8 +491,24 @@ class JinjaGenerator(BaseGenerator):
             output = self.evaluate(output, 1, 0)
         return output
 
-    def unique_id(self, idx: int) -> str:
-        return f"°#@[AUTOJINJA_{idx}]+&*"
+    def unique_id(self, marker: parser.Marker) -> str:
+        stringio = io.StringIO()
+        startidx = marker.header_start
+        idx = startidx
+        id = f"\x07{marker.header_start}"
+        while True:
+            idx = self.string.find('\n', startidx, marker.dual.header_close)
+            if idx < 0:
+                idx = marker.dual.header_close
+                break
+            stringio.write(self.repeat_to_length(id, idx-startidx))
+            stringio.write('\n')
+            startidx = idx + 1
+        stringio.write(self.repeat_to_length(id, idx-startidx))
+        return stringio.getvalue()
+    
+    def repeat_to_length(self, string_to_expand, length):
+        return (string_to_expand * (int(length/len(string_to_expand))+1))[:length]
 
 _Generator = TypeVar("_Generator", bound=BaseGenerator, covariant=True)
 

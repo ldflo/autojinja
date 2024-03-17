@@ -6,8 +6,18 @@ import os
 import sys
 
 def invalid_marker(input: str, output: str, exception_type: type, message: str, *args: str, **kwargs: str):
+    invalid_marker_CogTemplate(input, output, exception_type, message, *args, **kwargs)
+    invalid_marker_JinjaTemplate(input, output, exception_type, message, *args, **kwargs)
+
+def invalid_marker_CogTemplate(input: str, output: str, exception_type: type, message: str, *args: str, **kwargs: str):
     def function(*args: str, **kwargs: str):
         template = autojinja.CogTemplate.from_string(input)
+        template.context(*args, **kwargs).render(output)
+    assert_exception(function, exception_type, message, *args, **kwargs)
+
+def invalid_marker_JinjaTemplate(input: str, output: str, exception_type: type, message: str, *args: str, **kwargs: str):
+    def function(*args: str, **kwargs: str):
+        template = autojinja.JinjaTemplate.from_string(input)
         template.context(*args, **kwargs).render(output)
     assert_exception(function, exception_type, message, *args, **kwargs)
 
@@ -1238,10 +1248,10 @@ class Test_Jinja2Exceptions:
                         "[[[ end ]]]"
                 if sys.version_info[1] >= 10:
                     msg = "\n  File \"{{ ['arg1']|var_filter }}\", line 1, in top-level template code\n" \
-                          "Test_Jinja2Exceptions.Test_FilterError.test_1.<locals>.<lambda>() takes 0 positional arguments but 1 was given"
+                            "Test_Jinja2Exceptions.Test_FilterError.test_1.<locals>.<lambda>() takes 0 positional arguments but 1 was given"
                 else:
                     msg = "\n  File \"{{ ['arg1']|var_filter }}\", line 1, in top-level template code\n" \
-                          "<lambda>() takes 0 positional arguments but 1 was given"
+                            "<lambda>() takes 0 positional arguments but 1 was given"
                 invalid_marker(input, None, TypeError, msg)
             finally:
                 autojinja.RawTemplate.environment = None
@@ -1497,3 +1507,72 @@ class Test:
               "    ghijkl\n" \
               "autojinja.exceptions.Exception: line"
         assert str(autojinja.exceptions.prepend_jinja2_traceback(exception, tb)) == "\n  File <>\n    ghijkl\nline"
+
+class TestJinjaTemplate:
+    def test_1(self):
+        input = "{{ a }}\n" \
+                "{{ b }}\n"
+        msg = "\n  File \"{{ a }}\\n{{ b }}\\n\", line 1, in top-level template code\n" \
+                "'a' is undefined"
+        invalid_marker_JinjaTemplate(input, None, jinja2.exceptions.UndefinedError, msg)
+    
+    def test_2(self):
+        input = "\n" \
+                "{{ a }}\n" \
+                "{{ b }}\n"
+        msg = "\n  File \"\\n{{ a }}\\n{{ b }}\\n\", line 2, in top-level template code\n" \
+                "'a' is undefined"
+        invalid_marker_JinjaTemplate(input, None, jinja2.exceptions.UndefinedError, msg)
+    
+    def test_3(self):
+        input = "\n" \
+                "[[[ {{ a }} ]]] [[[ end ]]]\n" \
+                "{{ b }}\n"
+        msg = "\n  File \"\\n[[[ {{ a }} ]]] [[[ end ]]]\\n{{ b }}\\n\", line 3, in top-level template code\n" \
+                "'b' is undefined"
+        invalid_marker_JinjaTemplate(input, None, jinja2.exceptions.UndefinedError, msg)
+
+    def test_4(self):
+        input = "\n" \
+                "// [[[ {{ a }} ]]]\n" \
+                "// [[[ end ]]]\n" \
+                "{{ b }}\n"
+        msg = "\n  File \"\\n// [[[ {{ a }} ]]]\\n// [[[ end ]]]\\n{{ b }}\\n\", line 4, in top-level template code\n" \
+                "'b' is undefined"
+        invalid_marker_JinjaTemplate(input, None, jinja2.exceptions.UndefinedError, msg)
+
+    def test_5(self):
+        input = "\n" \
+                "// [[[ {{ a }} ]]]\n" \
+                "// [[[ end ]]]\n" \
+                "\n" \
+                "// [[[ {{ a }} ]]]\n" \
+                "// [[[ end ]]]\n" \
+                "{{ b }}\n"
+        msg = "\n  File \"\\n// [[[ {{ a }} ]]]\\n// [[[ end ]]]\\n\\n// [[[ {{ a }}...\", line 7, in top-level template code\n" \
+                "'b' is undefined"
+        invalid_marker_JinjaTemplate(input, None, jinja2.exceptions.UndefinedError, msg)
+
+    def test_6(self):
+        input = "\n" \
+                "// [[[ {{ a }} ]]]\n" \
+                "// [[[ {{ a }} ]]]\n" \
+                "// [[[ end ]]]\n" \
+                "// [[[ end ]]]\n" \
+                "\n" \
+                "// [[[ {{ a }} ]]]\n" \
+                "// [[[ end ]]]\n" \
+                "{{ b }}\n"
+        msg = "\n  File \"\\n// [[[ {{ a }} ]]]\\n// [[[ {{ a }} ]]]\\n// [[[ end ...\", line 9, in top-level template code\n" \
+                "'b' is undefined"
+        invalid_marker_JinjaTemplate(input, None, jinja2.exceptions.UndefinedError, msg)
+
+    def test_7(self):
+        input = "<<[ a ]>>\n" \
+                "{{ a }}\n" \
+                "<<[ end ]>>\n" \
+                "// [[[ {{ b }} ]]]\n" \
+                "// [[[ end ]]]\n"
+        msg = "\n  File \"{{ b }}\", line 6, in top-level template code\n" \
+                "'b' is undefined"
+        invalid_marker_JinjaTemplate(input, None, jinja2.exceptions.UndefinedError, msg, a = "1\n2\n3")
