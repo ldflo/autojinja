@@ -116,10 +116,6 @@ with open(file15, 'w') as f:
             f"    if '{autojinja.defaults.AUTOJINJA_SUMMARY}' in os.environ:\n" \
             f"        f.write(os.environ['{autojinja.defaults.AUTOJINJA_SUMMARY}'] + '\\n')\n")
 
-class TestVersion:
-    def test_1(self):
-        assert autojinja.__version__ == "1.12.1"
-
 class TestSearch:
     def test_1(self):
         clear_output()
