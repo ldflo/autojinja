@@ -6,7 +6,12 @@
         {
             "label": "vscode-snippets: generate",
             "type": "shell",
-            "command": "autojinja -a ."
+            "linux": {
+                "command": "python3 -m autojinja -a .",
+            },
+            "windows": {
+                "command": "python -m autojinja -a .",
+            },
         },
     ]
 }

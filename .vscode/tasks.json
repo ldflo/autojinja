@@ -7,10 +7,10 @@
             "label": "autojinja: install-dependencies",
             "type": "shell",
             "linux": {
-                "command": "pip3 install --user --upgrade pip ; pip3 install --user --no-warn-script-location -r requirements.txt",
+                "command": "python3 -m pip install --user --upgrade pip ; python3 -m pip install --user --no-warn-script-location -r requirements.txt",
             },
             "windows": {
-                "command": "pip install --user --upgrade pip ; pip install --user --no-warn-script-location -r requirements.txt",
+                "command": "python -m pip install --user --upgrade pip ; python -m pip install --user --no-warn-script-location -r requirements.txt",
             },
         },
         {
@@ -62,20 +62,20 @@
             "label": "autojinja: pip-reinstall",
             "type": "shell",
             "linux": {
-                "command": "pip3 install --user --force-reinstall --no-warn-script-location autojinja",
+                "command": "python3 -m pip install --user --force-reinstall --no-warn-script-location autojinja",
             },
             "windows": {
-                "command": "pip install --user --force-reinstall --no-warn-script-location autojinja",
+                "command": "python -m pip install --user --force-reinstall --no-warn-script-location autojinja",
             },
         },
         {
             "label": "autojinja: pip-reinstall-local",
             "type": "shell",
             "linux": {
-                "command": "python3 setup.py sdist bdist_wheel ; pip3 install --user --no-warn-script-location dist/autojinja-1.12.1.tar.gz",
+                "command": "python3 setup.py sdist bdist_wheel ; python3 -m pip install --user --no-warn-script-location .",
             },
             "windows": {
-                "command": "python setup.py sdist bdist_wheel ; pip install --user --no-warn-script-location dist/autojinja-1.12.1.tar.gz",
+                "command": "python setup.py sdist bdist_wheel ; python -m pip install --user --no-warn-script-location .",
             },
         },
     ]

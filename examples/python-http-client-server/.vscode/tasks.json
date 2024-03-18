@@ -16,7 +16,12 @@
         {
             "label": "python-http-client-server: generate",
             "type": "shell",
-            "command": "autojinja -e autojinja.env -a .",
+            "linux": {
+                "command": "python3 -m autojinja -e autojinja.env -a .",
+            },
+            "windows": {
+                "command": "python -m autojinja -e autojinja.env -a .",
+            },
         },
         {
             "label": "python-http-client-server: run server",
