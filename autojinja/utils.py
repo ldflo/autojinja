@@ -38,14 +38,15 @@ def generate_file(filepath: str, new_content: str, old_content: Optional[str] = 
     if summary == "0":
         pass
     elif summary == "1":
-        message = f"[autojinja]  {'  new  ' if created else 'changed' if changed else '-------'}  {filepath}  (from {path.no_antislash(sys.argv[0])})"
-    elif summary[2] == "1" and (not created and not changed):
+        message = f"[autojinja]  {'  new  ' if created else 'changed' if changed else '-------'}  {filepath}"
+    elif summary[0] == "1" and (not created and not changed):
         pass
     else:
-        executing_script = path.Path(sys.argv[0])
         message = f"[autojinja]  {'  new  ' if created else 'changed' if changed else '-------'}  "
-        message += filepath if summary[1] == "1" else filepath.relpath(executing_script.dirpath)
-        if summary[0] == "1":
+        message += filepath if summary[1] == "1" else filepath.relpath(defaults.osenviron_cwd())
+        if summary[2] == "1":
+            executing_script = path.Path(sys.argv[0])
+            executing_script = executing_script if summary[1] == "1" else executing_script.relpath(defaults.osenviron_cwd())
             message += f"  (from {executing_script})"
     if message != None:
         print(message)

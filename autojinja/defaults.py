@@ -1,4 +1,7 @@
+from . import path
+
 import os
+import sys
 from typing import Optional
 
 AUTOJINJA_DEFAULT_FILENAME   = "__jinja__.py"
@@ -10,10 +13,17 @@ AUTOJINJA_DEFAULT_EDIT_OPEN  = "<<["
 AUTOJINJA_DEFAULT_EDIT_CLOSE = "]>>"
 AUTOJINJA_DEFAULT_EDIT_END   = "end"
 
+AUTOJINJA_CWD            = "AUTOJINJA_CWD"
 AUTOJINJA_REMOVE_MARKERS = "AUTOJINJA_REMOVE_MARKERS"
 AUTOJINJA_SILENT         = "AUTOJINJA_SILENT"
 AUTOJINJA_SUMMARY        = "AUTOJINJA_SUMMARY"
 AUTOJINJA_THIS_DIRPATH   = "THIS_DIRPATH"
+
+def osenviron_cwd(env: Optional[os._Environ] = None) -> str:
+    env = env or os.environ
+    if AUTOJINJA_CWD not in env:
+        return path.dirpath(sys.argv[0])
+    return env[AUTOJINJA_CWD]
 
 def osenviron_remove_markers(env: Optional[os._Environ] = None) -> int:
     env = env or os.environ

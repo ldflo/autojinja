@@ -42,20 +42,20 @@ OPTIONS:
                                   Overrides environment variable 'AUTOJINJA_SUMMARY'
                                   Default value is '1':
                                       0: nothing
-                                      1: [autojinja]  -------  <abs_path>  (from <abs_path>)
+                                      1: [autojinja]  -------  <abs_path>
                                   Also accepts 3 flags instead:
                                       100
-                                      ^------ show (1) / hide (0) executing script path
-                                              0: [autojinja]  -------  <path>
-                                              1: [autojinja]  -------  <path>  (from <path>)
+                                      ^------ notification when changed only (1)
+                                              0: [autojinja]  -------  <path>  (from <path>)
+                                              1: [autojinja]  changed  <path>  (from <path>)
                                       010
                                        ^------ use absolute (1) / relative (0) paths
                                               0: [autojinja]  -------  <rel_path>  (from <rel_path>)
                                               1: [autojinja]  -------  <abs_path>  (from <abs_path>)
                                       001
-                                        ^------ notification when changed only (1)
-                                              0: [autojinja]  -------  <path>  (from <path>)
-                                              1: [autojinja]  changed  <path>  (from <path>)
+                                        ^------ show (1) / hide (0) executing script path
+                                              0: [autojinja]  -------  <path>
+                                              1: [autojinja]  -------  <path>  (from <path>)
 """
 
 from . import defaults
@@ -129,20 +129,20 @@ def main(*arguments):
                              f"Overrides environment variable '{defaults.AUTOJINJA_SUMMARY}'\n"
                              f"Default value is '1':\n"
                              f"    0: nothing\n"
-                             f"    1: [autojinja]  -------  <abs_path>  (from <abs_path>)\n"
+                             f"    1: [autojinja]  -------  <abs_path>\n"
                              f"Also accepts 3 flags instead:\n"
                              f"    100\n"
-                             f"    ^------ show (1) / hide (0) executing script path\n"
-                             f"            0: [autojinja]  -------  <path>\n"
-                             f"            1: [autojinja]  -------  <path>  (from <path>)\n"
+                             f"    ^------ notification when changed only (1)\n"
+                             f"            0: [autojinja]  -------  <path>  (from <path>)\n"
+                             f"            1: [autojinja]  changed  <path>  (from <path>)\n"
                              f"    010\n"
                              f"     ^------ use absolute (1) / relative (0) paths\n"
                              f"            0: [autojinja]  -------  <rel_path>  (from <rel_path>)\n"
                              f"            1: [autojinja]  -------  <abs_path>  (from <abs_path>)\n"
                              f"    001\n"
-                             f"      ^------ notification when changed only (1)\n"
-                             f"            0: [autojinja]  -------  <path>  (from <path>)\n"
-                             f"            1: [autojinja]  changed  <path>  (from <path>)")
+                             f"      ^------ show (1) / hide (0) executing script path\n"
+                             f"            0: [autojinja]  -------  <path>\n"
+                             f"            1: [autojinja]  -------  <path>  (from <path>)")
 
     args = parser.parse_args(arguments)
 
@@ -166,6 +166,9 @@ def main(*arguments):
         args.search_filename = True
         args.search_tag = True
         args.recursive = True
+
+    # cwd
+    env[defaults.AUTOJINJA_CWD] = path.no_antislash(os.getcwd())
 
     # remove_markers
     if args.remove_markers != None:

@@ -107,26 +107,26 @@ class Test:
             with open(file2, 'r', encoding="ascii") as f:
                 old_content = f.read()
                 assert old_content == "Test1"
-            assert sys.stdout.getvalue() == f"[autojinja]    new    {file2}  (from {autojinja.path.no_antislash(sys.argv[0])})\n"
+            assert sys.stdout.getvalue() == f"[autojinja]    new    {file2}\n"
             sys.stdout.truncate(0)
             sys.stdout.seek(0)
             autojinja.utils.generate_file(file2, "Test1", old_content, encoding="ascii")
             with open(file2, 'r', encoding="ascii") as f:
                 old_content = f.read()
                 assert old_content == "Test1"
-            assert sys.stdout.getvalue() == f"[autojinja]  -------  {file2}  (from {autojinja.path.no_antislash(sys.argv[0])})\n"
+            assert sys.stdout.getvalue() == f"[autojinja]  -------  {file2}\n"
             sys.stdout.truncate(0)
             sys.stdout.seek(0)
             autojinja.utils.generate_file(file2, "Test2\nTest2", None, encoding="ascii", newline="\r\n")
             with open(file2, 'r', encoding="ascii", newline="\r\n") as f:
                 old_content = f.read()
                 assert old_content == "Test2\r\nTest2"
-            assert sys.stdout.getvalue() == f"[autojinja]  changed  {file2}  (from {autojinja.path.no_antislash(sys.argv[0])})\n"
+            assert sys.stdout.getvalue() == f"[autojinja]  changed  {file2}\n"
         finally:
             sys.stdout = sys.__stdout__
 
     def test_generate_file_2(self):
-        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "110"
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "011"
         if file2.exists:
             os.remove(file2)
         try:
@@ -210,7 +210,7 @@ class Test:
             sys.stdout = sys.__stdout__
 
     def test_generate_file_5(self):
-        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "011"
+        os.environ[autojinja.defaults.AUTOJINJA_SUMMARY] = "110"
         if file2.exists:
             os.remove(file2)
         try:
