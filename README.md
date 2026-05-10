@@ -1,4 +1,4 @@
-# autojinja
+# autojinja ![](https://img.shields.io/badge/python-3.6+-blue.svg)
 
 **autojinja** is a Python3 module that allows generating code inside any file using [Jinja templates](https://github.com/pallets/jinja) in between comments. It aims to assist development workflows by using simple Python3 scripts that perform content generation of neighboring files, which enables generating code next to traditionally hand-made code efficiently.
 
